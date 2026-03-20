@@ -1,0 +1,31 @@
+name: Sync n8n Workflows
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Fetch workflows from n8n
+        run: |
+          mkdir -p workflows
+          curl -s -H "X-N8N-API-KEY: ${{ secrets.N8N_API_KEY }}" \
+            "${{ secrets.N8N_BASE_URL }}/api/v1/workflows" \
+            | jq -c '.data[]' \
+            | while read workflow; do
+                name=$(echo $workflow | jq -r '.name' | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
+                echo $workflow | jq '.' > "workflows/${name}.json"
+              done
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add workflows/
+          git diff --staged --quiet || git commit -m "sync: update workflows from n8n $(date +'%Y-%m-%d')"
+          git push
