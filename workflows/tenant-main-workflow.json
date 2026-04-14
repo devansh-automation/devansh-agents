@@ -1,0 +1,1204 @@
+{
+  "updatedAt": "2026-02-09T05:47:45.862Z",
+  "createdAt": "2025-10-27T06:54:03.691Z",
+  "id": "EinzweyMa9XbIVvI",
+  "name": "Tenant main workflow",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -100,
+        420
+      ],
+      "id": "0ca26109-0965-475a-81e9-37676785003f",
+      "name": "Telegram Trigger",
+      "webhookId": "3dffac3b-2b2a-49fb-870f-392cd177cb0a",
+      "credentials": {
+        "telegramApi": {
+          "id": "jczrU9c3KN1zgSA7",
+          "name": "Scaleupally_Tenant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "users",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "telegram_id",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+            },
+            {
+              "fieldId": "first_name",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.chat.first_name }}"
+            },
+            {
+              "fieldId": "last_name",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.chat.last_name }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "Tenant"
+            },
+            {
+              "fieldId": "tenant_tenancy",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.text.split(\" \")[1]}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        960
+      ],
+      "id": "5d261d62-41f8-4212-98b9-db4219239f27",
+      "name": "Create tenant in user table",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=👋 Hey {{ $('Telegram Trigger').item.json.message.chat.first_name }}, I’m Kove. I’ll keep your rent,  repairs, and lease simple. Want to get started?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🛠 Report a Problem",
+                    "additionalFields": {
+                      "callback_data": "I want to report a problem."
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "💰 Rent Info or Reminders",
+                    "additionalFields": {
+                      "callback_data": "I want my rent info/set up reminders."
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "📄 Lease, Guests, Pets, Rules",
+                    "additionalFields": {
+                      "callback_data": "I want to know some information regarding my lease."
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "❓ Ask Anything Else",
+                    "additionalFields": {
+                      "callback_data": "Something else."
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1340,
+        1220
+      ],
+      "id": "4599e142-6c92-4515-beb6-456f5e0dcdd9",
+      "name": "Send Welcome message",
+      "webhookId": "a954c3ce-7dd4-4484-afd0-d65cc1f8b0f3",
+      "credentials": {
+        "telegramApi": {
+          "id": "jczrU9c3KN1zgSA7",
+          "name": "Scaleupally_Tenant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=user:{{ $('Telegram Trigger').item.json.message?.text || $('Telegram Trigger').item.json.callback_query?.data }}\nassistant:",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# You are Kove, a smart telegram bot\n---\n\nGoal: Help tenants to create reminders, talk about their tenancies and/or raise tickets for repairs and issues in their property with sharp and concise messages.\n\nUser Details\n{{ Object.keys($('Get tenancy details').item.json)\n.filter((key) => ![\"id\", \"is_tenant_onboarded\", \"landlord_telegram_id\"].includes(key))\n.map((key) => `${key} - ${$('Get tenancy details').item.json[key] || \"Record Not Available\"}`).join('\\n') }}\n\n- Tenant may ask you to create or update maintenance tickets, you will use the **maintenance manager** tool to create them. A brief description of the issue is required by the user to log the ticket.\n- Tenant may ask you send reminders to themselves or their landlord, for that you will use **set reminders** tool.\nThese are reminders that are logged and sent later.\n- For sending reminder to landlord immediately use tool **Set reminder immediately**. We do need to have the remind_text as input from the user.You are responsible for understanding the task or reminder the user wants to send to the landlord. Do not generate a message unless the task/reminder is fully clear. If the input is ambiguous or incomplete, ask the user specific follow-up questions to clarify before proceeding.\n\n## Must follow rules\n- Always reply in a modern + energetic yet human-like way with very small(1-3 sentences) responses\n- When asking for input, phrase it conversationally. For example, instead of: *“Enter reminder text”*, say: *“What should I remind you about?”*\n- When creating buttons, make the **callback data** full, natural sentences and the label/text very short(3 words max) and meaningful\n  * Example: For a reminder button → `I want to set up a reminder` (instead of just `reminder`).\n- **Time Reference Guideline**\n\n   * Always use **{{ $now }}** as the reference point.\n   * This time is in the **Eastern Time Zone**.\n   * Ensure reminders are scheduled **only for future dates/times** relative to this reference.\n   * Use this as the baseline when checking or logging reminders.\n\n- DO NOT EXPOSE technial details (like IDs, database fields, or system codes)\n- Do not write unecessary details or explanations where it can be avoided.\n\n### NOTES\n- Each array in button property contain a button, arr1[arr2[button]], here the arr1 is number of rows, and arr2 contains all the buttons to show in a single row. Make sure to plan the rows accordingly\n- Buttons are predicted messages from user. DO NOT send unnecessary action buttons(e.g. adding submit buttons after a question), and make sure that the buttons sent are meaningful(e.g. if user can say, Send \"Hi\", make sure the button text is set accordingly).\n- On each task completion(e.g. creating a reminder, raising issues etc.), ask for user feedback and log it using the user feedback tool.\n\n## CONTEXT USAGE\n\n- You have access to the last 15 messages for context, but focus primarily on the latest message. Use conversation history to understand what the landlord is working on, but don't repeat information unnecessarily.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        2480,
+        420
+      ],
+      "id": "8170f576-5cdf-4376-b4ba-2cfb3c8f4e33",
+      "name": "AI Agent",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2280,
+        740
+      ],
+      "id": "3b406d5d-9b52-4cd9-9bfb-c64a81302887",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "Lease_Parse_Output",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_invite_id",
+              "keyValue": "={{ $('Get existing user').item.json.tenant_tenancy || $('Telegram Trigger').item.json.message.text.split(' ')[1] }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        420
+      ],
+      "id": "b2f2252d-0c3d-49d2-a73f-745ccf8b520e",
+      "name": "Get tenancy details",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "Reminders",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "send_to",
+              "fieldValue": "={{ $fromAI('for_self', ``, 'boolean') ? ($('Telegram Trigger').item.json.message?.chat.id || $('Telegram Trigger').item.json.callback_query.message?.chat.id) : $('Get tenancy details').item.json.landlord_telegram_id }}"
+            },
+            {
+              "fieldId": "created_by",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message?.chat?.id || $('Telegram Trigger').item.json.callback_query?.message?.chat?.id }}\n"
+            },
+            {
+              "fieldId": "remind_at",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues2_Field_Value', `time to remind at\nformat: iso datetime`, 'string') }}"
+            },
+            {
+              "fieldId": "reminder_text",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues3_Field_Value', `the text to be sent as reminder`, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        2500,
+        940
+      ],
+      "id": "5e0f14f3-3430-4fdd-a9be-46c34f376276",
+      "name": "Set Reminder",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to log/check/update maintenance tickets on behalf of user.",
+        "workflowId": {
+          "__rl": true,
+          "value": "9fmCeHfKgzKXvE2v",
+          "mode": "list",
+          "cachedResultName": "Tenant Maintenance Manager"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ $('Telegram Trigger').item.json.callback_query?.message?.chat?.id || $('Telegram Trigger').item.json.message?.chat?.id }}",
+            "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('description', `Proper description of Maintenance to be done. We have the following columns\nto log a maintenance issue\n\n- issue_description (Text): Detailed description of the problem (e.g., \"no hot water\", \"heater isn’t working\", \"mold under my sink\").\n- is_urgent (Boolean): Flags if the issue is urgent.\n\nIf and only if you think that tenant's message doesn't have proper description then ask for the necessary inputs. \n`, 'string') }}",
+            "tenancy": "={{ $('Get tenancy details').item.json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "tenancy",
+              "displayName": "tenancy",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2620,
+        740
+      ],
+      "id": "7e4b5601-8737-4d85-92cc-2c92545eb873",
+      "name": "Maintenance manager"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "Lease_Parse_Output",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_invite_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Telegram Trigger').item.json.message.text.split(' ')[1] }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "is_tenant_onboarded",
+              "fieldValue": "True"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        1220
+      ],
+      "id": "434069b4-7f89-4888-ab45-38fd0ec0b5e9",
+      "name": "Changing tenant onboarded status to true",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"message\": {\n      \"type\": \"string\"\n    },\n    \"buttons\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"text\": { \"type\": \"string\" },\n            \"callback_data\": { \"type\": \"string\" }\n          },\n          \"required\": [\"text\", \"callback_data\"],\n          \"additionalProperties\": false\n        }\n      }\n    }\n  },\n  \"required\": [\"message\", \"buttons\"],\n  \"additionalProperties\": false\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2860,
+        760
+      ],
+      "id": "01ab38b7-5639-4aca-9033-8295f9c1e4e6",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2940,
+        940
+      ],
+      "id": "e325308f-f3ac-43b7-91b1-f0f1931f5060",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let data = {\n  \"chat_id\": $('Telegram Trigger').first().json.message?.chat.id || $('Telegram Trigger').first().json.callback_query.message.chat.id,\n  \"text\": $input.first().json.output.message\n}\n\n// if ($json.output.buttons.length > 0) {\n//   data = {...data, reply_markup: {\n//     inline_keyboard: $json.output.buttons\n//   }}\n// }\n\nreturn data"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3300,
+        420
+      ],
+      "id": "88c736e7-088a-4069-be02-51420a392f56",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8218194749:AAFTSTEjk3yacDCmJV6KVU3vV1RIJQWBLe0/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{  JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3300,
+        660
+      ],
+      "id": "491ec6e1-c615-4a16-a374-26ad1003b6cb",
+      "name": "Send telegram message"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "users",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telegram_id",
+              "keyValue": "={{ $json.message?.chat?.id || $json.callback_query.message.chat.id }}"
+            },
+            {
+              "keyName": "role",
+              "keyValue": "Tenant"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        160,
+        420
+      ],
+      "id": "850e1636-c35c-4e44-8932-701cd1255a0b",
+      "name": "Get existing user",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fd16d40f-5cde-416f-aa38-619fbf3287bb",
+              "leftValue": "={{ $('Get existing user') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        820,
+        420
+      ],
+      "id": "a956f9db-43c0-443f-b9e7-cbf99c90226c",
+      "name": "Does User exists"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Thanks for visiting here!\nPlease ask your landlord to invite you on Kove.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        100,
+        1000
+      ],
+      "id": "5a2a3596-79e3-403e-9ec2-ac9b6151b463",
+      "name": "Tenant not invited",
+      "webhookId": "a9708c21-685a-4f80-9f5b-de456f037d73",
+      "credentials": {
+        "telegramApi": {
+          "id": "jczrU9c3KN1zgSA7",
+          "name": "Scaleupally_Tenant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dc4b7ce2-6e6c-444a-aaee-1b53d9038c0f",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        1000
+      ],
+      "id": "61146cb2-db69-4b4e-bb5d-f9b2a83315d0",
+      "name": "Invite is Valid"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "Lease_Parse_Output",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_invite_id",
+              "keyValue": "={{ $('Telegram Trigger').item.json.message.text.split(' ')[1] }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        460,
+        700
+      ],
+      "id": "2de32ba4-7960-40eb-9be9-b8bc4456d3d3",
+      "name": "Get Lease details from invite id",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "731e373a-8a43-4f43-be8a-fe984fc30b66",
+              "leftValue": "={{ $('Get existing user') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        980
+      ],
+      "id": "e15a3b45-33a5-4e90-a9db-5f174380e21e",
+      "name": "Is user new"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "users",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telegram_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tenant_tenancy",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.text.split('=')[1] }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        840,
+        1220
+      ],
+      "id": "d4f4e27c-1e51-4525-ad38-4093bc6b84a6",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0c682664-72a5-4a9a-a1aa-577d4ccd8aa9",
+              "leftValue": "={{ $('Telegram Trigger').item.json.message.text.startsWith(\"/start\") && $('Telegram Trigger').item.json.message.text.split(' ').length === 2 }}",
+              "rightValue": "/start",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        420
+      ],
+      "id": "a7b5e1db-099a-4403-85da-ba879600d9a9",
+      "name": "Came from invite"
+    },
+    {
+      "parameters": {
+        "operation": "sendChatAction",
+        "chatId": "={{ $('Telegram Trigger').item.json.message?.chat.id || $('Telegram Trigger').item.json.callback_query.message.chat.id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1200,
+        420
+      ],
+      "id": "83aa39cd-1bd3-4426-a2f8-bb0f272c65f0",
+      "name": "Send a chat action",
+      "webhookId": "632be389-5bba-4024-9142-e08aefe3fb04",
+      "credentials": {
+        "telegramApi": {
+          "id": "jczrU9c3KN1zgSA7",
+          "name": "Scaleupally_Tenant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "chats",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message?.chat?.id || $('Telegram Trigger').item.json.callback_query?.message?.chat?.id }}\n"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message?.text || $('Telegram Trigger').item.json.callback_query?.data }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "Tenant"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2020,
+        2020
+      ],
+      "id": "edac295a-d0de-4344-94f8-bd0cb9de3959",
+      "name": "Add user message to db"
+    },
+    {
+      "parameters": {
+        "tableId": "chats",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message?.chat?.id || $('Telegram Trigger').item.json.callback_query?.message?.chat?.id }}\n"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $('Code').item.json.text }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "Assistant"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2020,
+        2240
+      ],
+      "id": "b2bce07c-a86f-4b79-96d0-dc894bbd291a",
+      "name": "Add bot message to db"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.callback_query?.message?.chat?.id || $('Telegram Trigger').item.json.message?.chat?.id }}-tenant",
+        "contextWindowLength": 30
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        2420,
+        660
+      ],
+      "id": "1f05aece-993a-4c43-a899-411993b04521",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "KQeLHusfuaizRlmh",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "chats",
+        "limit": 7,
+        "filterType": "string",
+        "filterString": "=user_id=eq.{{ $('Telegram Trigger').item.json.message?.chat?.id || $('Telegram Trigger').item.json.callback_query?.message?.chat?.id }}\n&order=created_at.desc&limit=15"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b5719a4d-f746-4449-ba7b-3295339df177",
+      "name": "Get chats",
+      "executeOnce": false,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to send message to Landlord immediately",
+        "workflowId": {
+          "__rl": true,
+          "value": "lEGhcAAxoasqPC8f",
+          "mode": "list",
+          "cachedResultName": "Set reminder immediately - Tenant"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "property_id": "={{ $('Get tenancy details').item.json.id }}",
+            "remind_text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('remind_text', `Capture the reminder a tenant wants to send to their landlord. Always include the tenant’s name and unit/property details so the landlord knows who the message is from. Ensure the reminder is specific, polite, and reflects the tenant’s request accurately. If the tenant’s input is ambiguous, ask for clarification before sending.\"`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "property_id",
+              "displayName": "property_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "remind_text",
+              "displayName": "remind_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2740,
+        740
+      ],
+      "id": "f9f9bfaf-31fa-4e66-8d50-de5e70f24cd6",
+      "name": "Notify Landlord"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Log feedback from user.",
+        "tableId": "user_feedbacks",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_telegram_id",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.callback_query?.message?.chat?.id || $('Telegram Trigger').item.json.message?.chat?.id }}"
+            },
+            {
+              "fieldId": "user_comment",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues1_Field_Value', `comment/feedback provided by the user.`, 'string') }}"
+            },
+            {
+              "fieldId": "feature_used",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues2_Field_Value', \"Must be one of `create_reminder`, `find_vendors`, `create_ticket`, `add_lease`, `other`.\", 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        2680,
+        1040
+      ],
+      "id": "5316b611-690c-4fc5-82a5-c6bf965466bf",
+      "name": "User Feedback",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get existing user",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create tenant in user table": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Welcome message": {
+      "main": [
+        [
+          {
+            "node": "Changing tenant onboarded status to true",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get tenancy details": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Reminder": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Maintenance manager": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Send telegram message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get existing user": {
+      "main": [
+        [
+          {
+            "node": "Came from invite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Does User exists": {
+      "main": [
+        [
+          {
+            "node": "Send a chat action",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tenant not invited",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invite is Valid": {
+      "main": [
+        [
+          {
+            "node": "Is user new",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tenant not invited",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Lease details from invite id": {
+      "main": [
+        [
+          {
+            "node": "Invite is Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is user new": {
+      "main": [
+        [
+          {
+            "node": "Create tenant in user table",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Came from invite": {
+      "main": [
+        [
+          {
+            "node": "Get Lease details from invite id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Does User exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a chat action": {
+      "main": [
+        [
+          {
+            "node": "Get tenancy details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add user message to db": {
+      "main": [
+        [
+          {
+            "node": "Add bot message to db",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Landlord": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User Feedback": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "d898e7e5-4ecd-476e-9b62-cae1665e9c7f",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-10-27T06:54:03.695Z",
+      "createdAt": "2025-10-27T06:54:03.695Z",
+      "role": "workflow:owner",
+      "workflowId": "EinzweyMa9XbIVvI",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

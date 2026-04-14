@@ -1,0 +1,129 @@
+{
+  "updatedAt": "2025-10-27T07:55:37.000Z",
+  "createdAt": "2025-10-27T07:55:10.415Z",
+  "id": "tEBlnKx9aOtV9a5d",
+  "name": "Lease expiry reminder",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 12
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -460,
+        20
+      ],
+      "id": "eb0bc787-08d8-4c96-975d-d2b8af47f03e",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "Lease_Parse_Output",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lease_end_date",
+              "condition": "eq",
+              "keyValue": "={{ new Date(Date.now() + 90*24*60*60*1000).toISOString().split('T')[0] }}\n"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        20
+      ],
+      "id": "d67163cc-6768-4893-99d1-db7ff9b1ed31",
+      "name": "Get many rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.landlord_telegram_id }}",
+        "text": "=Tenant {{ $json.tenant_name }}'s Lease is going to expire on {{ $json.lease_end_date }}.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "22cee6e3-7ba6-4299-8efe-6e3911bbd088",
+      "name": "Send lease about to expire message",
+      "webhookId": "6703ef2f-066d-47d3-9864-687d6befc6d8",
+      "credentials": {
+        "telegramApi": {
+          "id": "jczrU9c3KN1zgSA7",
+          "name": "Scaleupally_Tenant"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Send lease about to expire message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "02e94d1f-5c9a-4ca7-b246-4ae2174bf052",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-27T07:55:10.419Z",
+      "createdAt": "2025-10-27T07:55:10.419Z",
+      "role": "workflow:owner",
+      "workflowId": "tEBlnKx9aOtV9a5d",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

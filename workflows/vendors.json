@@ -1,0 +1,876 @@
+{
+  "updatedAt": "2025-10-27T06:29:09.000Z",
+  "createdAt": "2025-10-27T06:28:01.456Z",
+  "id": "kLENhRKkmBKMuti0",
+  "name": "Vendors",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "chat_id"
+            },
+            {
+              "name": "keyword"
+            },
+            {
+              "name": "address"
+            },
+            {
+              "name": "zip_code"
+            },
+            {
+              "name": "country_code"
+            },
+            {
+              "name": "tag"
+            }
+          ]
+        }
+      },
+      "id": "a6531e21-6129-4c35-bdb4-5fc83036cfca",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -360,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "vendors",
+        "limit": 20,
+        "filterType": "string",
+        "filterString": "=country_code=eq.{{ $json.country_code }}&tag=eq.{{ $json.tag }}&address=phfts.{{ $json.address }}"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "fb75567f-9ed7-47a7-b7c0-c0291d18c30f",
+      "name": "Get many rows",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "vendors",
+        "limit": 20,
+        "filterType": "string",
+        "filterString": "=country_code=eq.{{ $('When Executed by Another Workflow').item.json.country_code }}&zipcode=eq.{{ $('When Executed by Another Workflow').item.json.zip_code }}&tag=eq.{{ $('When Executed by Another Workflow').item.json.tag }}"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        20,
+        220
+      ],
+      "id": "edccf14b-e391-47a6-82fa-d0fcb188ce66",
+      "name": "Get many rows1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "30f68ea7-3c7d-47f3-a788-520754cc20d4",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        300,
+        160
+      ],
+      "id": "ca728410-54aa-4720-835f-d6f107a59a34",
+      "name": "Check if data found"
+    },
+    {
+      "parameters": {
+        "url": "https://local-business-data.p.rapidapi.com/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $('When Executed by Another Workflow').item.json.keyword }} nearby {{ $('When Executed by Another Workflow').item.json.address }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-RapidAPI-Key",
+              "value": "e9b2a58135msh4dc30a5e3816449p1c003ajsn2d1a7f678a14"
+            },
+            {
+              "name": "X-RapidAPI-Host",
+              "value": "local-business-data.p.rapidapi.com"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        60
+      ],
+      "id": "c7b73f13-fd8a-4fe7-99bd-fea5ab35d38e",
+      "name": "Google Maps scraping"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        740,
+        60
+      ],
+      "id": "591ad239-ead7-4c24-a5b1-f775d86692ff",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "tableId": "vendors",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldId": "reviews",
+              "fieldValue": "={{ $json.review_count }}"
+            },
+            {
+              "fieldId": "rating",
+              "fieldValue": "={{ $json.rating }}"
+            },
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $json.phone_number }}"
+            },
+            {
+              "fieldId": "website",
+              "fieldValue": "={{ $json.website }}"
+            },
+            {
+              "fieldId": "tag",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.tag }}"
+            },
+            {
+              "fieldId": "latitude",
+              "fieldValue": "={{ $json.latitude }}"
+            },
+            {
+              "fieldId": "longitude",
+              "fieldValue": "={{ $json.longitude }}"
+            },
+            {
+              "fieldId": "full_address",
+              "fieldValue": "={{ $json.full_address }}"
+            },
+            {
+              "fieldId": "zipcode",
+              "fieldValue": "={{ $json.zipcode }}"
+            },
+            {
+              "fieldId": "country_code",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.country_code }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        960,
+        60
+      ],
+      "id": "dffa83b8-6f38-49d4-aa86-e9d0cd0032cd",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00110e8d-051b-4c9c-9bf8-79237f86b7d9",
+              "name": "vendors",
+              "value": "={{ $items(\"Split Out\").map(item => \n  `name: ${item.json.name},\naddress: ${item.json.full_address},\nphone: ${item.json.phone_number},\nrating: ${item.json.rating},\nreviews: ${item.json.review_count},\nwebsite: ${item.json.website}`\n).join(\"\\n---\\n\") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1180,
+        60
+      ],
+      "id": "c645c28c-f8ae-4d73-9bf3-64c1b941d053",
+      "name": "Set fields for agent",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        260
+      ],
+      "id": "20b9af8d-064c-44a0-a4d0-4c2ed0a2c216",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e70052a2-27ad-4373-9cab-5639c440ab22",
+              "leftValue": "={{ $json.zip_code }}",
+              "rightValue": "null",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -140,
+        120
+      ],
+      "id": "72b2ae8d-4a3b-499b-aecf-47b55097169c",
+      "name": "If"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Check if data found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows1": {
+      "main": [
+        [
+          {
+            "node": "Check if data found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if data found": {
+      "main": [
+        [
+          {
+            "node": "Google Maps scraping",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Maps scraping": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Set fields for agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get many rows1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "chat_id": "979280586",
+          "keyword": "AC repair",
+          "address": "120 Nassau Street Brooklyn, NY 11201",
+          "zip_code": "11201",
+          "country_code": "US",
+          "tag": "appliance"
+        }
+      }
+    ]
+  },
+  "versionId": "616af2e5-6398-412a-bc4e-9dac499801b4",
+  "activeVersionId": "616af2e5-6398-412a-bc4e-9dac499801b4",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-27T06:28:01.459Z",
+      "createdAt": "2025-10-27T06:28:01.459Z",
+      "role": "workflow:owner",
+      "workflowId": "kLENhRKkmBKMuti0",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-23T06:05:26.474Z",
+    "createdAt": "2025-12-23T06:05:26.474Z",
+    "versionId": "616af2e5-6398-412a-bc4e-9dac499801b4",
+    "workflowId": "kLENhRKkmBKMuti0",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "chat_id"
+              },
+              {
+                "name": "keyword"
+              },
+              {
+                "name": "address"
+              },
+              {
+                "name": "zip_code"
+              },
+              {
+                "name": "country_code"
+              },
+              {
+                "name": "tag"
+              }
+            ]
+          }
+        },
+        "id": "a6531e21-6129-4c35-bdb4-5fc83036cfca",
+        "typeVersion": 1.1,
+        "name": "When Executed by Another Workflow",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "position": [
+          -360,
+          120
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "vendors",
+          "limit": 20,
+          "filterType": "string",
+          "filterString": "=country_code=eq.{{ $json.country_code }}&tag=eq.{{ $json.tag }}&address=phfts.{{ $json.address }}"
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "fb75567f-9ed7-47a7-b7c0-c0291d18c30f",
+        "name": "Get many rows",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "vendors",
+          "limit": 20,
+          "filterType": "string",
+          "filterString": "=country_code=eq.{{ $('When Executed by Another Workflow').item.json.country_code }}&zipcode=eq.{{ $('When Executed by Another Workflow').item.json.zip_code }}&tag=eq.{{ $('When Executed by Another Workflow').item.json.tag }}"
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          20,
+          220
+        ],
+        "id": "edccf14b-e391-47a6-82fa-d0fcb188ce66",
+        "name": "Get many rows1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "30f68ea7-3c7d-47f3-a788-520754cc20d4",
+                "leftValue": "={{ $json }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "object",
+                  "operation": "empty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          300,
+          160
+        ],
+        "id": "ca728410-54aa-4720-835f-d6f107a59a34",
+        "name": "Check if data found"
+      },
+      {
+        "parameters": {
+          "url": "https://local-business-data.p.rapidapi.com/search",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "query",
+                "value": "={{ $('When Executed by Another Workflow').item.json.keyword }} nearby {{ $('When Executed by Another Workflow').item.json.address }}"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-RapidAPI-Key",
+                "value": "e9b2a58135msh4dc30a5e3816449p1c003ajsn2d1a7f678a14"
+              },
+              {
+                "name": "X-RapidAPI-Host",
+                "value": "local-business-data.p.rapidapi.com"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          520,
+          60
+        ],
+        "id": "c7b73f13-fd8a-4fe7-99bd-fea5ab35d38e",
+        "name": "Google Maps scraping"
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "data",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          740,
+          60
+        ],
+        "id": "591ad239-ead7-4c24-a5b1-f775d86692ff",
+        "name": "Split Out"
+      },
+      {
+        "parameters": {
+          "tableId": "vendors",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "name",
+                "fieldValue": "={{ $json.name }}"
+              },
+              {
+                "fieldId": "reviews",
+                "fieldValue": "={{ $json.review_count }}"
+              },
+              {
+                "fieldId": "rating",
+                "fieldValue": "={{ $json.rating }}"
+              },
+              {
+                "fieldId": "phone",
+                "fieldValue": "={{ $json.phone_number }}"
+              },
+              {
+                "fieldId": "website",
+                "fieldValue": "={{ $json.website }}"
+              },
+              {
+                "fieldId": "tag",
+                "fieldValue": "={{ $('When Executed by Another Workflow').item.json.tag }}"
+              },
+              {
+                "fieldId": "latitude",
+                "fieldValue": "={{ $json.latitude }}"
+              },
+              {
+                "fieldId": "longitude",
+                "fieldValue": "={{ $json.longitude }}"
+              },
+              {
+                "fieldId": "full_address",
+                "fieldValue": "={{ $json.full_address }}"
+              },
+              {
+                "fieldId": "zipcode",
+                "fieldValue": "={{ $json.zipcode }}"
+              },
+              {
+                "fieldId": "country_code",
+                "fieldValue": "={{ $('When Executed by Another Workflow').item.json.country_code }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          960,
+          60
+        ],
+        "id": "dffa83b8-6f38-49d4-aa86-e9d0cd0032cd",
+        "name": "Create a row",
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "00110e8d-051b-4c9c-9bf8-79237f86b7d9",
+                "name": "vendors",
+                "value": "={{ $items(\"Split Out\").map(item => \n  `name: ${item.json.name},\naddress: ${item.json.full_address},\nphone: ${item.json.phone_number},\nrating: ${item.json.rating},\nreviews: ${item.json.review_count},\nwebsite: ${item.json.website}`\n).join(\"\\n---\\n\") }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1180,
+          60
+        ],
+        "id": "c645c28c-f8ae-4d73-9bf3-64c1b941d053",
+        "name": "Set fields for agent",
+        "executeOnce": true
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{ $json }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          520,
+          260
+        ],
+        "id": "20b9af8d-064c-44a0-a4d0-4c2ed0a2c216",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "e70052a2-27ad-4373-9cab-5639c440ab22",
+                "leftValue": "={{ $json.zip_code }}",
+                "rightValue": "null",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -140,
+          120
+        ],
+        "id": "72b2ae8d-4a3b-499b-aecf-47b55097169c",
+        "name": "If"
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get many rows": {
+        "main": [
+          [
+            {
+              "node": "Check if data found",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get many rows1": {
+        "main": [
+          [
+            {
+              "node": "Check if data found",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check if data found": {
+        "main": [
+          [
+            {
+              "node": "Google Maps scraping",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Maps scraping": {
+        "main": [
+          [
+            {
+              "node": "Split Out",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Out": {
+        "main": [
+          [
+            {
+              "node": "Create a row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create a row": {
+        "main": [
+          [
+            {
+              "node": "Set fields for agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Get many rows",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Get many rows1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

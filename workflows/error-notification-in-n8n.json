@@ -1,0 +1,141 @@
+{
+  "updatedAt": "2026-04-13T10:37:54.362Z",
+  "createdAt": "2026-04-13T09:59:00.056Z",
+  "id": "MK8sDrOfVLRm36eQ",
+  "name": "Error Notification in n8n",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b898d435-2974-4ae9-ab3f-2260ecdc60b4",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "sendTo": "sapna.jain@scaleupally.io",
+        "subject": "={{ 'n8n Failed: ' + $json.workflow.name }}",
+        "emailType": "text",
+        "message": "=Workflow execution failed!\n\nWorkflow: {{ $json.workflow.name }}\nFailed Node: {{ $json.execution.error.node }} \nError: {{ $json.execution.error.message }}\n\nView execution:\n{{ $json.execution.url }}\n\nTime: {{ $now.toFormat('dd-MM-yyyy HH:mm') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "a7da0925-6307-4dd8-addc-3593a09c5505",
+      "name": "Send a message",
+      "webhookId": "67de3db2-3f50-4110-9c47-dd3c40a0b6f8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ti2a33QzoufeTVRS",
+          "name": "dev1 Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "22d98a68-ce9b-4f00-b9af-272173c03609",
+  "activeVersionId": "e0e01ad1-b588-4763-84b7-408d6d4d6e93",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-04-13T09:59:00.060Z",
+      "createdAt": "2026-04-13T09:59:00.060Z",
+      "role": "workflow:owner",
+      "workflowId": "MK8sDrOfVLRm36eQ",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-04-13T10:15:42.000Z",
+    "createdAt": "2026-04-13T10:14:15.959Z",
+    "versionId": "e0e01ad1-b588-4763-84b7-408d6d4d6e93",
+    "workflowId": "MK8sDrOfVLRm36eQ",
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "b898d435-2974-4ae9-ab3f-2260ecdc60b4",
+        "name": "Error Trigger"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "sendTo": "sapna.jain@scaleupally.io",
+          "subject": "={{ '❌ n8n Failed: ' + $json.workflow.name }}",
+          "emailType": "text",
+          "message": "=Workflow execution failed!\n\nWorkflow: {{ $json.workflow.name }}\nFailed Node: {{ $json.execution.error.node }}\nError: {{ $json.execution.error.message }}\n\nView execution:\n{{ $json.execution.url }}\n\nTime: {{ $now.toFormat('dd-MM-yyyy HH:mm') }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          208,
+          0
+        ],
+        "id": "a7da0925-6307-4dd8-addc-3593a09c5505",
+        "name": "Send a message",
+        "webhookId": "67de3db2-3f50-4110-9c47-dd3c40a0b6f8",
+        "credentials": {
+          "googleApi": {
+            "id": "j8zaGDLXXKmGIvjK",
+            "name": "Google Service Account account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "Send a message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dev Scaleupally",
+    "name": "Version e0e01ad1",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

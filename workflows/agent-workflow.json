@@ -1,0 +1,1676 @@
+{
+  "updatedAt": "2026-03-31T12:35:28.756Z",
+  "createdAt": "2025-12-24T04:56:03.747Z",
+  "id": "YnvDe81BMF7r1E5v",
+  "name": "Agent workflow",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "*"
+        ],
+        "additionalFields": {
+          "download": true
+        }
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        -544
+      ],
+      "id": "5cb75934-3425-4696-95a3-214b41b7100b",
+      "name": "Telegram Trigger",
+      "webhookId": "48ba7379-b8f4-4fe4-b3dd-db39f3796eb3",
+      "credentials": {
+        "telegramApi": {
+          "id": "5LcTaFrxMf6lEi05",
+          "name": "SUACRM_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        1120,
+        -1024
+      ],
+      "id": "461b5707-fd34-4265-a251-fc2305483da6",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "Project Charter to WBS OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot7626554031:AAGzbKYZs1CHz756grDOYIn6zBe1ZRD-h_I/getFile",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "file_id",
+              "value": "={{ $json.message.voice.file_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        672,
+        -1024
+      ],
+      "id": "c0c5dfab-4268-4837-be47-3cf95459c281",
+      "name": "Telegram - Get file path"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/file/bot7626554031:AAGzbKYZs1CHz756grDOYIn6zBe1ZRD-h_I/{{ $json.result.file_path }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        896,
+        -1024
+      ],
+      "id": "8585b8e6-34e9-431f-a3eb-5199e56b9f74",
+      "name": "Telegram – Download Voice"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3c7fdbfe-d197-40b6-ba52-8a1b23596e8d",
+              "name": "text",
+              "value": "={{ $json.edited_message?.text || $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "3da36ccb-dd5e-4637-99a0-dc9d8964bbb3",
+              "name": "username",
+              "value": "={{ $json.message.from.first_name +' '+ $json.message.from.last_name || $json.edited_message.from.first_name +' '+ $json.edited_message.from.last_name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        -832
+      ],
+      "id": "dfc29c9c-c13e-442f-9cc4-7172cce16c61",
+      "name": "Normalize - Text Instructions"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1632,
+        -928
+      ],
+      "id": "0bc8103e-3708-430e-b58f-c36cb5112337",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.user_id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        2496,
+        -416
+      ],
+      "id": "34570600-d01d-4d97-b01f-064319100cf2",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "zr6wGx27WnaKY2F5",
+          "name": "CRM agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to interact with user regarding anything\n\nFor multiple-choice clarifications, always number the options:\n\"Which company? 1. Scaleupally  2. Alphabet\"\nso the user can reply with just a number. Never ask \"X or Y?\" in free text.",
+        "operation": "sendAndWait",
+        "chatId": "={{ $json.user_id }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "responseType": "freeText",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegramTool",
+      "typeVersion": 1.2,
+      "position": [
+        2624,
+        -416
+      ],
+      "id": "1c6f13c5-2f0c-4fa8-b2c8-69813ef1eea1",
+      "name": "ask_user",
+      "webhookId": "0c70d716-16d3-43b3-99cb-4b86b4c06808",
+      "credentials": {
+        "telegramApi": {
+          "id": "5LcTaFrxMf6lEi05",
+          "name": "SUACRM_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "=Use this tool to search for, filter, or retrieve records from Leads, Deals, Accounts, and Contacts using Zoho COQL (SQL-like syntax).\n\nWhen to use:\n1. To find a record by name (use like '%keyword%').\n2. To filter by owner (e.g., Owner = '5118...').\n3. To find records in specific stages (e.g., Stage = 'Closed Won').\n4. To calculate totals, averages, maximums, minimums, or counts across records.\n\nQuery Rules:\n\nAll non-aggregate SQL keywords/operators MUST be lowercase (e.g., select, from, where, like, and, or, group by, order by, limit).\n\nAggregate functions ARE supported and MUST be UPPERCASE: SUM(), COUNT(), AVG(), MAX(), MIN().\nAggregate functions only work on numeric, currency, or integer fields.\nEvery non-aggregate field in SELECT must also appear in GROUP BY.\n\nDo not use dot notation (e.g., Account_Name.id) in SELECT. Relationship fields must be selected as Account_Name only.\n\nModule Names: Leads, Deals, Accounts, Contacts.\n\nAlways include the record id in SELECT for non-aggregate queries so you can update it later.\n\nField API names in COQL must exactly match the api_name from get_fields.\nDo not use field labels.\nDo not infer or approximate field names.\nIf unsure, call get_fields.\n\nCommon Field API Names:\n\nDeals: Deal_Name, Stage, Amount, Owner, Account_Name, Closed_Lost_Reasons, Lead_Source, Project_Description, Engagement_Type\n\nLeads: First_Name, Last_Name, Company, Lead_Status, Email, Lead_Source, Strategic_Partner\n\nContacts: First_Name, Last_Name, Email, Account_Name, Strategic_Partner\n\nAccounts: Account_Name, Website, Phone, Strategic_Partner\n\nExamples:\nselect id, Deal_Name from Deals where (Deal_Name like '%review adda%')\nselect Stage, SUM(Amount) from Deals where (Amount is not null) group by Stage limit 0, 10\nselect MAX(Amount) from Deals where (Amount is not null) limit 0, 1\nselect Owner, COUNT(id) from Deals where (id is not null) group by Owner limit 0, 10",
+        "method": "POST",
+        "url": "https://www.zohoapis.com/crm/v8/coql",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"select_query\": \"{{ $fromAI('query', 'COQL single line', 'string').replace(/\\n/g,' ').trim() }}\"}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2752,
+        -416
+      ],
+      "id": "13866f84-c58b-4bdb-961b-444a0299feb1",
+      "name": "crm_query_master",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=User Message:\n{{ $json.user_message || \"\" }}",
+        "options": {
+          "systemMessage": "=## 🧠 CRM Operations Copilot — System Prompt\n\n## SESSION CONTEXT (not stored in memory — injected fresh each turn)\n\nUser ID: {{ $json.user_id }}\nUsername: {{ $json.username }}\n{{ Object.keys($json.structured_contact_data || {}).length > 0 ? \"Structured Contact Data:\\n\" + JSON.stringify($json.structured_contact_data) : \"\" }}\n{{ Object.keys($json.previous_proposal || {}).length > 0 ? \"Previous Proposal:\\n\" + JSON.stringify($json.previous_proposal) : \"\" }}\n{{ $json.last_execution_result ? \"Last Execution Result:\\n\" + JSON.stringify($json.last_execution_result) : \"\" }}\n\n---\n\n## ROLE\n\nYou are the **CRM Operations Copilot**.\n\nYou manage CRM data ONLY for:\n\n* Leads\n* Contacts\n* Accounts\n* Deals\n* Notes/Tasks (via create_note or relevant action)\n\nYou operate in a strict tool-driven system.\n\n---\n\n## CORE OPERATING FLOW\n\n1. Resolve identity via `executeCOQL` (fuzzy matching, handle typos)\n2. Propose actions via `propose_action`\n3. Retrieve schema via `get_fields` (when needed)\n4. Gather missing data via `ask_user`\n\n---\n\n## MULTI-STEP CREATION RULE\n\nWhen a request involves ANY combination of updates and creations in sequence:\n\n1. ALL steps must go inside step_queue together — NEVER split into a standalone action + step_queue\n2. Call propose_action ONCE with all steps in step_queue\n3. Tell the user all steps upfront: \"I'll complete 3 actions: Step 1: Update account. Step 2: Create contact. Step 3: Add note.\"\n4. Use [[step_N_id]] where a previous step's ID is needed\n5. Never consider the task complete until ALL steps are executed\n6. After final step, summarize what was done\n\nLOGICAL STEP ORDERING RULES:\n\nBefore building step_queue, always verify prerequisites:\n\n1. Contact creation → Account must exist first\n   - Search for the account via crm_query_master\n   - If found → use its ID directly in fields\n   - If not found → add create_account as step 1, use [[step_1_id]] as Account_Name in contact step\n\n2. Note/Task creation → Parent record must exist first\n   - If parent is being created in same queue → note/task must be the last step\n   - Use [[step_N_id]] where N is the step that creates the parent\n   - **NEW RULE:** When creating a task or note, the `module` parameter MUST be the parent module (Leads, Contacts, Accounts, or Deals), NOT \"Tasks\" or \"Notes\".\n\n3. Lead conversion → Must be last step if combined with other actions\n\n4. General rule → Steps that create records another step depends on must always come BEFORE the dependent step in the queue.\n\n5. Always verify account existence before contact creation — NEVER assume an account exists without searching first.\n\n---\n\n## CRITICAL EXECUTION RULES\n\n* `propose_action` only creates a **pending request** — nothing writes to Zoho until user confirms YES\n* NEVER say \"Task created\" or provide IDs after `propose_action`\n* Only after execution succeeds can you confirm creation\n* No direct writes — only use `propose_action`\n* If a complete address is given, split it into street, city, state, country, and code on your own\n\n---\n\n## IDENTITY & OWNER MAPPING\n\n### Owner ID Table\n\n* Manu → `5118344000000350001`\n* Sparsh → `5118344000003068049`\n* Pranay → `5118344000003068001`\n* Devansh → `5118344000004729073`\n* Vikas → `5118344000003068065`\n\n### Default Owner Assignment\n\n* Automatically map the Telegram username to the Owner ID above\n* Include `Owner` in `fields` for every `propose_action` — user does not need to mention it\n* If the user explicitly mentions an owner name, convert it to the ID using the table above\n* NEVER use `Owner.Full_Name` in COQL queries\n* NEVER pass a plain name string as Owner\n\n### Unknown Owner\n\n* If the Telegram username does NOT match any of the five mapped users:\n  * STOP — do NOT proceed with `propose_action`\n  * Use `ask_user` to inform them they are not authorized\n  * Do NOT guess or assign a default owner\n\n---\n\n## CRM ID EXPOSURE RESTRICTION\n\n* NEVER display CRM IDs to the user in any message\n* IDs are for internal use only\n* Always reference records by name, module, stage, or amount in user-facing messages\n\n---\n\n## COQL SYNTAX RULES\n\n### Aggregate Functions\nThe API supports: SUM(), COUNT(), AVG(), MAX(), MIN() — MUST be UPPERCASE.\nEvery non-aggregate field in SELECT must also appear in GROUP BY.\n\n### WHERE Clause\nAlways wrap the entire WHERE clause in parentheses.\nCorrect: `WHERE (Owner = '123' AND Stage = 'Closed- Won')`\n\n---\n\n## SCHEMA REFERENCE (API NAMES)\n\n### Deals\n`id`, `Deal_Name`, `Stage`, `Amount`, `Owner`, `Account_Name.id`, `Closing_Date`, `Engagement_Type`, `Service_Division`, `Scope_Document`, `Payment_Terms`, `Key_Milestones`, `Project_Description`, `Currency`, `Estimated_Delivery_time_shared`\n\n### Leads\n`id`, `First_Name`, `Last_Name`, `Company`, `Lead_Status`, `Email`, `Lead_Source`, `Project_Description`, `Project_Link`\n\n### Contacts\n`id`, `First_Name`, `Last_Name`, `Email`, `Account_Name`, `Client_Whatsapp`, `Mailing_Street`, `Mailing_City`, `Mailing_Country`, `Mailing_State`, `Mailing_Code`, `Mobile`\n\n### Accounts\n`id`, `Account_Name`, `Website`, `Phone`, `Billing_Street`, `Billing_City`, `Billing_Country`, `Billing_State`, `Billing_Code`, `Account_Type`\n\n---\n\n## TOOL CONTRACTS\n\n### step_queue (multi-step only)\n* For multi-step actions → pass a JSON string covering ALL steps.\n* **MANDATORY MODULE ASSIGNMENT:** For tasks/notes, use the parent module name (**Leads**, **Contacts**, **Deals**, or **Accounts**) in the `module` field.\n* Use [[step_N_id]] as placeholder where you need the ID created in step N.\n\n### MANDATORY PRIMARY FIELD — HARD BLOCK:\nYou MUST include the primary display field in every update action fields object.\n- update_account → MUST include Account_Name as {\"id\": \"...\", \"name\": \"...\"}\n- update_deal → MUST include Deal_Name as a string\n- update_contact → MUST include Last_Name as a string\n- update_lead → MUST include Last_Name as a string\n\n---\n\n## RESPONSE FORMAT & TONE\n\nTone: Warm, direct, human.\nNo bullet points in responses. Write in natural sentences.\nNever use markdown bold (**) or italics in Telegram messages.\nWhen summarizing: \"Done — created Alphabet account, added Sundar Pichai as a contact, and logged the first meeting note.\"\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        2688,
+        -640
+      ],
+      "id": "8c97d95e-75c8-43bc-81d5-88102c98cd8a",
+      "name": "CRM agent"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.callback_query }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "notExists",
+                      "singleValue": true
+                    },
+                    "id": "8cc4549e-2016-4784-bb3f-23382c663c28"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "normal message"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "775ae577-cfd6-4481-a4fb-801a67789d7b",
+                    "leftValue": "={{ $json.callback_query }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "callback_query"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        -544
+      ],
+      "id": "baed11f1-ee0b-4194-8506-bcace923f045",
+      "name": "Switch between text message and callback query"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message?.chat?.id || $('Telegram Trigger').item.json.callback_query?.message?.chat?.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3344,
+        -640
+      ],
+      "id": "39538e4d-449c-4e1a-a79e-8bb2f4fcc2be",
+      "name": "Send user AI response",
+      "webhookId": "834d6233-5c24-449b-975c-f2bc304b2d73",
+      "credentials": {
+        "telegramApi": {
+          "id": "5LcTaFrxMf6lEi05",
+          "name": "SUACRM_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ec3e02be-9dba-487b-b74c-fe48c80a8761",
+              "leftValue": "={{ $json.callback_query.data === 'yes' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        -352
+      ],
+      "id": "11a0f955-e4c8-4352-9021-fcd6828d4427",
+      "name": "Check user reply"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "operation": "getAll",
+        "tableId": "crm_action_proposals",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.callback_query?.from?.id || $json.message?.from?.id }}\n"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "pending"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -448
+      ],
+      "id": "b6c12ca4-6519-4e3c-8b68-a585b2bdb10b",
+      "name": "get  Supabase data",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Telegram Trigger').item.json.message?.from?.id || $('Telegram Trigger').item.json.callback_query.from.id}}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "pending"
+            },
+            {
+              "keyName": "confirmed",
+              "condition": "eq",
+              "keyValue": "FALSE"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "confirmed"
+            },
+            {
+              "fieldId": "confirmed",
+              "fieldValue": "TRUE"
+            },
+            {
+              "fieldId": "confirmed_at",
+              "fieldValue": "={{ $now.toLocal() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        -448
+      ],
+      "id": "3592e1e9-20db-4092-97a0-07555473b183",
+      "name": "update confirmation to approved",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $node[\"Telegram Trigger\"].json.message?.from?.id || $node[\"Telegram Trigger\"].json.callback_query?.from?.id }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "pending"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "revision_requested"
+            },
+            {
+              "fieldId": "cancelled_at",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        -256
+      ],
+      "id": "d8d3f0f4-33bf-4525-9899-8c7e0ea27a03",
+      "name": "update confirmation to denied",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "operation": "getAll",
+        "tableId": "crm_action_proposals",
+        "limit": 2,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $node[\"Telegram Trigger\"].json.message?.from?.id || $node[\"Telegram Trigger\"].json.callback_query?.from?.id }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "pending"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -256
+      ],
+      "id": "6ba40c5f-8eb5-4076-9c43-5bb24303a8ad",
+      "name": "get Supabase data1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "4XzWwBPDQSJ7CInx",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/4XzWwBPDQSJ7CInx",
+          "cachedResultName": "MCP – Execute Action"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1632,
+        -448
+      ],
+      "id": "36f322fc-f5f6-4d30-91f1-5118cfd2541c",
+      "name": "Call Execute Action workflow"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5",
+          "mode": "list",
+          "cachedResultName": "gpt-5"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2368,
+        -416
+      ],
+      "id": "20a2a078-1cbe-4042-a184-5430cff9e201",
+      "name": "AI model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wXqOixbEbb7kpnQc",
+          "name": "Devansh_Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.voice }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "dfdbf7e4-a31f-4c40-a7a9-02298b8c58a8"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "voice_message"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "609600fa-0153-4d89-a092-bb5366b915e7",
+                    "leftValue": "={{ $json.message.photo }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "image_shared"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ee57071d-48ba-4c47-8a12-68b12803adea",
+                    "leftValue": "={{ $json.message.voice }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "notExists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "normal_message"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        -848
+      ],
+      "id": "243b577e-6e5f-4667-9b50-5f2818ac676c",
+      "name": "switch_between_voice,text and image"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot7626554031:AAGzbKYZs1CHz756grDOYIn6zBe1ZRD-h_I/getFile",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "file_id",
+              "value": "={{ $json.message.photo[$json.message.photo.length - 1].file_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        672,
+        -640
+      ],
+      "id": "f1ac1540-9ceb-4604-9b05-5360edcc2c90",
+      "name": "Telegram - Get image path"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/file/bot7626554031:AAGzbKYZs1CHz756grDOYIn6zBe1ZRD-h_I/{{ $json.result.file_path }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        896,
+        -640
+      ],
+      "id": "793862c6-4f0b-4922-aa22-b0ae3cbe81f4",
+      "name": "Telegram – Download Image"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "type": "image",
+              "imageType": "base64"
+            },
+            {
+              "role": "system",
+              "content": "=You are a precise data extraction engine.\n\nYour job is to extract structured contact information from business card images.\n\nRules:\n\n1. Extract only information that is clearly visible in the image.\n2. Do NOT guess or infer missing data.\n3. If a field is not present, return null.\n4. Do NOT fabricate email domains or phone numbers.\n5. Preserve exact spelling from the card.\n6. If multiple phone numbers exist, assign the most prominent one to phone_primary.\n7. Return ONLY valid JSON.\n8. Do NOT include explanations, comments, markdown, or extra text.\n9. Do NOT wrap output in code blocks.\n10. If the image is not a business card, return:\n   {\n     \"error\": \"Picture sent was not of a business card\"\n   }\nPi"
+            },
+            {
+              "content": "=Extract structured contact details from this business card.\n\nReturn JSON in this exact structure:\n\n{\n  \"full_name\": null,\n  \"first_name\": null,\n  \"last_name\": null,\n  \"job_title\": null,\n  \"company_name\": null,\n  \"email\": null,\n  \"phone_primary\": null,\n  \"phone_secondary\": null,\n  \"website\": null,\n  \"street\": null,\n  \"city\": null,\n  \"state\": null,\n  \"country\": null,\n  \"postal_code\": null\n}\n\nImportant:\n- If a field does not appear clearly, return null.\n- Do not guess.\n- Do not return anything except JSON.\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        1568,
+        -640
+      ],
+      "id": "ccb8b524-232e-4610-b7c0-8cf8551870be",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "Project Charter to WBS OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        -640
+      ],
+      "id": "8ceedaae-3b3d-48a5-b9e4-89524b8f01d9",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1344,
+        -640
+      ],
+      "id": "000e2539-0021-4158-97b3-ffe07b032a24",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const firstinput = $input.first();\nconst output = firstinput.json.output[0].content[0].text;\n\nreturn \n  "
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        -640
+      ],
+      "id": "67edcc57-2670-4f98-83d4-bd2ea7316d49",
+      "name": "Parse JSON from AI"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "={{ $node[\"Telegram Trigger\"].json.message?.from?.id || $node[\"Telegram Trigger\"].json.callback_query?.from?.id }}",
+        "message": "=Something didn't look right. What would you like to change?",
+        "responseType": "freeText",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1632,
+        -256
+      ],
+      "id": "eb73ae12-b383-467e-a3e1-1f12ee340ddd",
+      "name": "Send message and wait for response",
+      "webhookId": "69010c67-5aac-45f5-ae18-d63d6371d5af",
+      "credentials": {
+        "telegramApi": {
+          "id": "5LcTaFrxMf6lEi05",
+          "name": "SUACRM_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $node[\"Telegram Trigger\"].json.message?.from?.id || $node[\"Telegram Trigger\"].json.callback_query?.from?.id }}"
+            },
+            {
+              "keyName": "status",
+              "keyValue": "revision_requested"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        -256
+      ],
+      "id": "51ad6d9e-2b36-42f0-ac86-b2dc291a9f77",
+      "name": "Get a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code in JavaScript — revision path\n// Receives Send message and wait for response → Get a row\n\nconst proposal = $input.first().json;\nconst trigger = $('Telegram Trigger').first().json;\n\nconst from =\n  trigger.callback_query?.from ||\n  trigger.message?.from ||\n  trigger.edited_message?.from ||\n  null;\n\nconst userId = from?.id || null;\n\nif (!userId) {\n  throw new Error('Cannot identify user — Telegram from.id missing');\n}\n\nconst username = from\n  ? (`${from.first_name || ''} ${from.last_name || ''}`).trim() || from.username || 'Unknown'\n  : 'Unknown';\n\nconst revisionText = $('Send message and wait for response').first().json?.data?.text || '';\n\nreturn [{ json: {\n  user_message:           revisionText,\n  user_id:                userId,\n  username:               username,\n  structured_contact_data: null,\n  previous_proposal: {\n    action:  proposal.action,\n    module:  proposal.module,\n    fields:  proposal.fields,\n    step_queue: proposal.step_queue || null\n  },\n  last_execution_result:  null,\n  is_reset:               false\n}}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2144,
+        -256
+      ],
+      "id": "c575f1a5-1097-46ec-a2a2-bde20ec356e5",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code in JavaScript1 — image/business card path\n// Receives parsed JSON from Parse JSON from AI\n\nconst trigger = $('Telegram Trigger').first().json;\n\nconst from =\n  trigger.edited_message?.from ||\n  trigger.message?.from ||\n  null;\n\nconst userId = from?.id || null;\n\nif (!userId) {\n  throw new Error('Cannot identify user — Telegram from.id missing');\n}\n\nconst username = from\n  ? (`${from.first_name || ''} ${from.last_name || ''}`).trim() || from.username || 'Unknown'\n  : 'Unknown';\n\n// Build a user_message so agent knows what happened\nconst cardData = $json;\nconst nameStr = [cardData.first_name, cardData.last_name].filter(Boolean).join(' ') || 'Unknown';\nconst userMessage = cardData.error\n  ? `Business card scan failed: ${cardData.error}`\n  : `Business card scanned: ${nameStr}${cardData.company_name ? ' from ' + cardData.company_name : ''}.`;\n\nreturn [{ json: {\n  user_message:           userMessage,\n  user_id:                userId,\n  username:               username,\n  structured_contact_data: cardData.error ? null : cardData,\n  previous_proposal:      null,\n  last_execution_result:  null,\n  is_reset:               false\n}}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2144,
+        -640
+      ],
+      "id": "88017c7c-4be6-4498-becc-6a3fc8ce1fd4",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code in JavaScript2 — text/voice path\n// UPDATED: reads recent execution_result from Supabase via HTTP\n\nconst trigger = $('Telegram Trigger').first().json;\n\nconst from =\n  trigger.edited_message?.from ||\n  trigger.message?.from ||\n  null;\n\nconst userId = from?.id || null;\n\nif (!userId) {\n  throw new Error('Cannot identify user — Telegram from.id missing');\n}\n\nconst username = from\n  ? (`${from.first_name || ''} ${from.last_name || ''}`).trim() || from.username || 'Unknown'\n  : 'Unknown';\n\nconst isReset = ['try again','start over','cancel','reset','restart','abort']\n  .some(p => ($json.text || '').toLowerCase().includes(p));\n\n// ── Read recent execution result from Supabase ──\n// We call the Supabase REST API directly since we can't add async nodes here.\n// Fetch the most recently executed proposal for this user.\nlet lastExecutionResult = null;\ntry {\n  const SUPABASE_URL = 'https://puoymncyegcmewibjeyz.supabase.co';\n  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1b3ltbmN5ZWdjbWV3aWJqZXl6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjU2NTQxMiwiZXhwIjoyMDgyMTQxNDEyfQ.vgkXUijbN1ihjfvI8voMUIxhcPmp-vROULBQ4R2fofI';\n  const TEN_MINUTES  = 10 * 60 * 1000;\n\n  const resp = await fetch(\n    `${SUPABASE_URL}/rest/v1/crm_action_proposals` +\n    `?user_id=eq.${userId}&status=eq.executed` +\n    `&execution_result=not.is.null` +\n    `&order=executed_at.desc&limit=1`,\n    { headers: {\n        'apikey': SUPABASE_KEY,\n        'Authorization': `Bearer ${SUPABASE_KEY}`,\n        'Content-Type': 'application/json'\n    }}\n  );\n\n  const rows = await resp.json();\n  if (rows.length > 0) {\n    const row = rows[0];\n    const executedAt = new Date(row.executed_at).getTime();\n    if (!isNaN(executedAt) && (Date.now() - executedAt) < TEN_MINUTES) {\n      lastExecutionResult = row.execution_result;\n    }\n  }\n} catch (e) {\n  // Swallow — last_execution_result will be null, agent proceeds normally\n}\n\nreturn [{ json: {\n  user_message:           $json.text || '',\n  user_id:                userId,\n  username:               username,\n  structured_contact_data: null,\n  previous_proposal:      null,\n  last_execution_result:  isReset ? null : lastExecutionResult,\n  is_reset:               isReset\n}}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        -928
+      ],
+      "id": "7027b10a-5ac3-4ef0-9d61-f9d373ab68b3",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3c7fdbfe-d197-40b6-ba52-8a1b23596e8d",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "3da36ccb-dd5e-4637-99a0-dc9d8964bbb3",
+              "name": "username",
+              "value": "={{ $('Telegram Trigger').item.json.message.chat.first_name + ' ' + $('Telegram Trigger').item.json.message.chat.last_name}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        -1024
+      ],
+      "id": "1cc3194a-0c9b-413f-8983-64012b34f026",
+      "name": "Normalize - Audio Instructions"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Purpose: Use this tool to retrieve the live schema and valid picklist options for a specific Zoho module (Leads, Deals, Accounts, or Contacts).\n\nWhen to use: > 1. BEFORE creating or updating any record to verify field names. 2. ALWAYS call this if you are unsure of the allowed values for a dropdown/picklist field (e.g., \"Stage\", \"Lead_Status\", \"Industry\"). 3. Use this to cross-reference user-provided terms (e.g., \"Won\") with the system's required strings (e.g., \"Closed- Won\").\n\nInput Requirement: You must provide the module name (e.g., \"Leads\").\n\nBenefit: This prevents \"400 Bad Request\" errors by ensuring the data you propose matches the CRM's specific validation rule",
+        "url": "=https://www.zohoapis.com/crm/v3/settings/fields",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "module",
+              "value": "={{ $fromAI('parameters0_Value', `Choose module for which you want to see the fields. (Eg. Leads, Contacts)`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2880,
+        -416
+      ],
+      "id": "0a540392-8e94-4282-93b3-c6237f1d803e",
+      "name": "get_fields",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "SaHiyY4Ee4qHNwXM",
+          "name": "Sales.scaleupally_Zoho_setting_scope"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "=IMPORTANT: This tool does NOT execute any CRM write.\n\nIt only stores a pending action for user approval.\nWhen calling propose_action Owner field with the ID of the respective owner should exist. \n\nAfter calling propose_action, you MUST tell the user:\n\"Reply YES to confirm execution or NO to cancel.\"\n\nYou MUST NOT claim the record is created, updated, or linked.\nOnly execute_action confirms success.\n\nMANDATORY FIELDS PER ACTION — these must always be present in fields object:\n\nupdate_account:\n  - Account_Name: {\"id\": \"RECORD_ID\", \"name\": \"exact account name from Zoho\"}\n  - Owner: {\"id\": \"...\", \"name\": \"...\"}\n\nupdate_deal:\n  - Deal_Name: {\"id\": \"RECORD_ID\", \"name\": \"exact deal name from Zoho\"}\n  - Owner: {\"id\": \"...\", \"name\": \"...\"}\n\nupdate_contact:\n  - Last_Name: {\"id\": \"RECORD_ID\", \"name\": \"exact last name from Zoho\"}\n  - Owner: {\"id\": \"...\", \"name\": \"...\"}\n\nupdate_lead:\n  - Last_Name: {\"id\": \"RECORD_ID\", \"name\": \"exact last name from Zoho\"}\n  - Owner: {\"id\": \"...\", \"name\": \"...\"}\n\ncreate_contact:\n  - Last_Name (string)\n  - Account_Name: {\"id\": \"...\", \"name\": \"...\"} or null\n  - Owner: {\"id\": \"...\", \"name\": \"...\"}\n\ncreate_deal:\n  - Deal_Name (string)\n  - Stage (string)\n  - Closing_Date (YYYY-MM-DD)\n  - Owner: {\"id\": \"...\", \"name\": \"...\"}\n\ncreate_account:\n  - Account_Name (string)\n  - Owner: {\"id\": \"...\", \"name\": \"...\"}\n\ncreate_lead:\n  - Last_Name (string)\n  - Company (string)\n  - Owner: {\"id\": \"...\", \"name\": \"...\"}\n\ncreate_note:\n  - Note_Title (string)\n  - Note_Content (string)\n  - Who_Id: {\"id\": \"...\", \"name\": \"...\"} for Contacts\n  - What_Id: {\"id\": \"...\", \"name\": \"...\"} for Leads, Deals, Accounts\n\ncreate_task:\n  - Subject (string)\n  - Owner: {\"id\": \"...\", \"name\": \"...\"}\n  - Who_Id or What_Id depending on module\n\nconvert_lead:\n  - Deal_Name (string)\n  - Stage (string)\n  - Amount (number)\n  - Closing_Date (YYYY-MM-DD)\n  - Owner: {\"id\": \"...\", \"name\": \"...\"}\n\nIf any mandatory field is missing, DO NOT call propose_action.\nFetch the missing value first via crm_query_master, then propose.",
+        "workflowId": {
+          "__rl": true,
+          "value": "uOt6jlN9xwU2GSrH",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/uOt6jlN9xwU2GSrH",
+          "cachedResultName": "PROPOSE ACTION"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "action": "={{ $fromAI('action', `The intent name. You MUST choose exactly one from this list: create_lead, update_lead,  create_contact, update_contact, create_account, update_account, create_deal, update_deal, create_task, convert_lead, create_note. Do not use any other strings.`, 'string') }}",
+            "module": "={{ $fromAI('module', 'Leads, Deals, Accounts, or Contacts', 'string') }}",
+            "record_id": "={{ $fromAI('record_id', 'The Zoho Record ID string', 'string') }}",
+            "fields": "={{ $fromAI('fields', `JSON object of field API names and values.When the user requests an action for a  Contact, map the record ID to Who_Id. When the user requests an action for an Account or Deal or Lead, map the record ID to What_Id. Never use Who_Id for Accounts.`, 'json') }}",
+            "notes": "={{ $fromAI('notes', 'Note content if applicable', 'string') }}",
+            "user_id": "={{ $fromAI('user_id', 'The Telegram user ID from the input context', 'string') }}",
+            "agent_confidence": "={{ $fromAI('agent_confidence', 'Score between 0 and 1', 'number') }}",
+            "agent_message": "={{ $fromAI('agent_message', 'User-facing confirmation message. Use record names not IDs. Plain English, one short paragraph. Include what is being done, key field values (name, amount, stage, date, company, contact). No markdown, no bullets. This exact text is shown to the user before they confirm.', 'string') }}",
+            "step_queue": "={{ $fromAI('step_queue', 'For multi-step actions: JSON string array of step objects. Each step: {step:N, action:string, module:string, fields:object, depends_on:N|null}. Use [[step_N_id]] as placeholder for ID from step N. For single-step actions pass an empty string.', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "action",
+              "displayName": "action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "module",
+              "displayName": "module",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "record_id",
+              "displayName": "record_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "fields",
+              "displayName": "fields",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "object",
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "agent_confidence",
+              "displayName": "agent_confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "agent_message",
+              "displayName": "agent_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "step_queue",
+              "displayName": "step_queue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        3008,
+        -416
+      ],
+      "id": "05590f7e-931c-4c3a-a417-f55e141dd2f7",
+      "name": "propose_action"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.proposal_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "execution_result",
+              "fieldValue": "={{ JSON.stringify($json) }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "executed"
+            },
+            {
+              "fieldId": "executed_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:mm') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        -448
+      ],
+      "id": "6e0db8f3-beaf-41e7-acda-cc5b0004c009",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        3136,
+        -416
+      ],
+      "id": "5bfee436-d503-456c-a068-e61f119a6114",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "operation": "sendChatAction",
+        "chatId": "={{ $('Telegram Trigger').item.json.message?.from?.id || $('Telegram Trigger').item.json.edited_message?.from?.id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        -1248
+      ],
+      "id": "15ca3d75-c4d7-4afd-bc14-6ee04989456b",
+      "name": "Send a chat action",
+      "webhookId": "ce8992d3-0da4-4888-b063-2c55fdf7be1d",
+      "credentials": {
+        "telegramApi": {
+          "id": "5LcTaFrxMf6lEi05",
+          "name": "SUACRM_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://n8nagent-server-918915813.zohomcp.com/mcp/70b9a9f6d04f459b05816dec766d93c4/message",
+        "authentication": "mcpOAuth2Api",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        3280,
+        -416
+      ],
+      "id": "ec48960a-e86b-4288-ae4e-67a1ac827f23",
+      "name": "MCP Client",
+      "credentials": {
+        "mcpOAuth2Api": {
+          "id": "JQLRY9H84zPSxeBz",
+          "name": "MCP Read"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch between text message and callback query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Get file path": {
+      "main": [
+        [
+          {
+            "node": "Telegram – Download Voice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram – Download Voice": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Normalize - Audio Instructions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize - Text Instructions": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "CRM agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ask_user": {
+      "ai_tool": [
+        [
+          {
+            "node": "CRM agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crm_query_master": {
+      "ai_tool": [
+        [
+          {
+            "node": "CRM agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM agent": {
+      "main": [
+        [
+          {
+            "node": "Send user AI response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch between text message and callback query": {
+      "main": [
+        [
+          {
+            "node": "switch_between_voice,text and image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check user reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check user reply": {
+      "main": [
+        [
+          {
+            "node": "get  Supabase data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "get Supabase data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get  Supabase data": {
+      "main": [
+        [
+          {
+            "node": "update confirmation to approved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update confirmation to approved": {
+      "main": [
+        [
+          {
+            "node": "Call Execute Action workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get Supabase data1": {
+      "main": [
+        [
+          {
+            "node": "update confirmation to denied",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "CRM agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "switch_between_voice,text and image": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Get file path",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram - Get image path",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Normalize - Text Instructions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Get image path": {
+      "main": [
+        [
+          {
+            "node": "Telegram – Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram – Download Image": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON from AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse JSON from AI": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update confirmation to denied": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response": {
+      "main": [
+        [
+          {
+            "node": "Get a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "CRM agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "CRM agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "CRM agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize - Audio Instructions": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_fields": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "propose_action": {
+      "ai_tool": [
+        [
+          {
+            "node": "CRM agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Execute Action workflow": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "CRM agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "CRM agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "dynamic",
+    "callerPolicy": "workflowsFromSameOwner",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Telegram Trigger": [
+      {
+        "json": {
+          "update_id": 109824489,
+          "message": {
+            "message_id": 473,
+            "from": {
+              "id": 1467700243,
+              "is_bot": false,
+              "first_name": "Devansh",
+              "last_name": "Agarwal",
+              "language_code": "en"
+            },
+            "chat": {
+              "id": 1467700243,
+              "first_name": "Devansh",
+              "last_name": "Agarwal",
+              "type": "private"
+            },
+            "date": 1774357009,
+            "text": "There is a lead named Anil Mantoo. Convert the lead to deal. Closing date will be 3rd April 2026. Amount is  10 lakh rupees and stage will be High level requirement gathering. Role of contact is decision maker"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "83e22d11-a380-4321-ad2a-58bd2bc87884",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-12-24T04:56:03.748Z",
+      "createdAt": "2025-12-24T04:56:03.748Z",
+      "role": "workflow:owner",
+      "workflowId": "YnvDe81BMF7r1E5v",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

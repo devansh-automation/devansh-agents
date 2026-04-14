@@ -1,0 +1,2360 @@
+{
+  "updatedAt": "2026-03-27T08:21:25.363Z",
+  "createdAt": "2025-11-06T06:15:30.479Z",
+  "id": "0jGBksrKybdcwLfp",
+  "name": "Zoho CRM mailing function",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "deal",
+        "operation": "getAll",
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.zohoCrm",
+      "typeVersion": 1,
+      "position": [
+        224,
+        320
+      ],
+      "id": "a287a94e-90d7-47d1-8dfb-c55d46c5a9ec",
+      "name": "Get Deals",
+      "credentials": {
+        "zohoOAuth2Api": {
+          "id": "fA1s2XDiaal5SVFC",
+          "name": "sales.scaleupally CRM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "04cfa1b9-a71a-461f-a822-822f7590ef17",
+              "leftValue": "={{ $json.dealCategory }}",
+              "rightValue": "MISSING",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        320
+      ],
+      "id": "3f41d447-1905-4872-b057-555bd2b06c76",
+      "name": "Split between Complete Deals and Missing Deals"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        896,
+        -16
+      ],
+      "id": "7f1b33db-189f-447e-9839-1de7f65aabda",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        64
+      ],
+      "id": "24830929-4d5f-4509-9c24-c800cac1f261"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "accountId": "={{ $json.Account_Name?.id }}"
+      },
+      "type": "n8n-nodes-base.zohoCrm",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -16
+      ],
+      "id": "e01a6578-e679-4657-b761-4f1a411b3ca1",
+      "name": "Get an account",
+      "alwaysOutputData": true,
+      "credentials": {
+        "zohoOAuth2Api": {
+          "id": "C6MyN1YfHNKIEYPf",
+          "name": "Zoho account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the single account record correctly\nconst account = $input.first().json;\n\nconst billingFields = [\n  'Billing_Street',\n  'Billing_City',\n  'Billing_State',\n  'Billing_Country',\n  'Billing_Code'\n];\n\nconst missingBillingFields = billingFields.filter(field => {\n  const value = account[field];\n  return (\n    value === null ||\n    value === undefined ||\n    (typeof value === 'string' && value.trim() === '')\n  );\n});\n\nreturn [{\n  json: {\n    accountId: account.id,\n    accountName: account.Account_Name,\n    missingBillingFields,\n    isBillingComplete: missingBillingFields.length === 0\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        -16
+      ],
+      "id": "0d2c4a91-d375-4b6b-81ff-8768d9d5800d",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mandatory fields for Closed-Won deals\nconst mandatoryFields = [\n  \"Service_Division\",\n  \"Service_Type\",\n  \"Expected_Start_Date\",\n  \"Expected_End_Date\",\n  \"Key_Milestones\",\n  \"Payment_Terms\",\n  \"Scope_Document\",\n  \"Closing_Date\",\n  \"Amount\",\n  \"Estimated_Delivery_time_shared\",\n  \"Engagement_Type\"\n];\n\nconst outputItems = [];\n\nfor (const item of $input.all()) {\n  const deal = item.json;\n\n  // Only Closed-Won deals\n  if (deal.Stage !== \"Closed- Won\") continue;\n\n  if (!deal.Account_Name || !deal.Account_Name?.id) continue;\n\n  const missingFields = mandatoryFields.filter(field => {\n    const value = deal[field];\n    if (value === null || value === undefined) return true;\n    if (typeof value === \"string\" && value.trim() === \"\") return true;\n    if (Array.isArray(value) && value.length === 0) return true;\n    return false;\n  });\n\n  outputItems.push({\n    json: {\n      ...deal,\n      missingFields,\n      isComplete: missingFields.length === 0,\n      dealCategory: missingFields.length === 0 ? \"COMPLETE\" : \"MISSING\"\n    }\n  });\n}\n\n// ✅ Single-output, n8n-safe return\nreturn outputItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        320
+      ],
+      "id": "7e896426-8799-472c-ba80-f9c998bda2a7",
+      "name": "Filter Deal Stage"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the current deal from the loop iteration\nconst deal = $('Loop Over Items').first().json;\n\n// Get account data from previous node\n\nreturn [{\n  json: {\n    owner: deal.Owner,\n    dealName: deal.Deal_Name,\n    dealMissingFields: deal.missingFields,\n    billingMissingFields: $json.missingBillingFields,\n    accountName: $json.accountName\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        -16
+      ],
+      "id": "e286191e-9e22-43e0-a4aa-e47a65a8d222",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.email }}",
+                    "rightValue": "sparsh.gupta@scaleupally.io",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "a14a7746-ec5a-495a-8752-ae6ba935fabc"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Sparsh's Mail"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c15f824a-89fd-43a1-83f1-b2a06ebbb14c",
+                    "leftValue": "={{ $json.email }}",
+                    "rightValue": "=pranay.agrawal@scaleupally.io",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Pranay's Mail"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9db2588d-7a6b-4e35-ab73-db73819057df",
+                    "leftValue": "={{ $json.email }}",
+                    "rightValue": "vikas.singh@scaleupally.io",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Vikas's Mail"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "704b6348-4d8a-4630-9962-4c1d619dc9cd",
+                    "leftValue": "={{ $json.email }}",
+                    "rightValue": "manu.jain@scaleupally.io",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Manu's Mail"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1840,
+        -544
+      ],
+      "id": "282204a6-4a82-4f18-b94f-caa6192bfd8a",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "Incomplete Deal Details",
+        "message": "=<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\">\n  <tr>\n    <th>Deal Name</th>\n    <th>Account Name</th>\n    <th>Missing Deal Fields</th>\n    <th>Missing Billing Fields</th>\n  </tr>\n  {{ $json.rows.map(r => `\n    <tr>\n      <td>${r.dealName}</td>\n      <td>${r.accountName}</td>\n      <td>${r.dealMissingFields}</td>\n      <td>${r.billingMissingFields}</td>\n    </tr>\n  `).join(\"\") }}\n</table>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2064,
+        -800
+      ],
+      "id": "488fc4d1-befe-47bf-b372-684b9b5147eb",
+      "name": "Send Sparsh Mail",
+      "webhookId": "5b17c4d7-afee-4d27-bcfb-3f59906a6abd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Incomplete Deal Details",
+        "message": "=<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\">\n  <tr>\n    <th>Deal Name</th>\n    <th>Account Name</th>\n    <th>Missing Deal Fields</th>\n    <th>Missing Billing Fields</th>\n  </tr>\n  {{ $json.rows.map(r => `\n    <tr>\n      <td>${r.dealName}</td>\n      <td>${r.accountName}</td>\n      <td>${r.dealMissingFields}</td>\n      <td>${r.billingMissingFields}</td>\n    </tr>\n  `).join(\"\") }}\n</table>\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2064,
+        -608
+      ],
+      "id": "649f0d1c-3cf4-4847-b017-9669130c02b5",
+      "name": "Send Pranay Mail",
+      "webhookId": "5b17c4d7-afee-4d27-bcfb-3f59906a6abd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Incomplete Deal Details",
+        "message": "=<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\">\n  <tr>\n    <th>Deal Name</th>\n    <th>Account Name</th>\n    <th>Missing Deal Fields</th>\n    <th>Missing Billing Fields</th>\n  </tr>\n  {{ $json.rows.map(r => `\n    <tr>\n      <td>${r.dealName}</td>\n      <td>${r.accountName}</td>\n      <td>${r.dealMissingFields}</td>\n      <td>${r.billingMissingFields}</td>\n    </tr>\n  `).join(\"\") }}\n</table>\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2064,
+        -416
+      ],
+      "id": "fdfc6857-410d-4db5-8f20-6f042be1e8c9",
+      "name": "Send Vikas Mail",
+      "webhookId": "5b17c4d7-afee-4d27-bcfb-3f59906a6abd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Incomplete Deal Details",
+        "message": "=<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\">\n  <tr>\n    <th>Deal Name</th>\n    <th>Account Name</th>\n    <th>Missing Deal Fields</th>\n    <th>Missing Billing Fields</th>\n  </tr>\n  {{ $json.rows.map(r => `\n    <tr>\n      <td>${r.dealName}</td>\n      <td>${r.accountName}</td>\n      <td>${r.dealMissingFields}</td>\n      <td>${r.billingMissingFields}</td>\n    </tr>\n  `).join(\"\") }}\n</table>\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2064,
+        -224
+      ],
+      "id": "1016003e-8599-4a7b-a838-92a6497455e4",
+      "name": "Send Manu Mail",
+      "webhookId": "5b17c4d7-afee-4d27-bcfb-3f59906a6abd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get all items entering the node\nconst items = $input.all();\n\n// 2. Map over every item to check its billing details\nreturn items.map(item => {\n  const account = item.json;\n\n  const billingFields = [\n    'Billing_Street',\n    'Billing_City',\n    'Billing_State',\n    'Billing_Country',\n    'Billing_Code'\n  ];\n\n  // Check which fields are missing or just empty strings\n  const missingBillingDetails = billingFields.filter(field => {\n    const value = account[field];\n    return (\n      value === null ||\n      value === undefined ||\n      (typeof value === 'string' && (value.trim() === '' ))\n    );\n  });\n\n  // Return the item in the format you prefer\n  return {\n    json: {\n      Account_Name: account.Account_Name,\n      Account_Id: account.id,\n      Missing_Billing_Details: missingBillingDetails,\n      Is_Billing_Complete: missingBillingDetails.length === 0,\n      // We keep the original billing data so it can be used later\n      Billing_Street: account.Billing_Street,\n      Billing_City: account.Billing_City,\n      Billing_State: account.Billing_State,\n      Billing_Country: account.Billing_Country,\n      Billing_Code: account.Billing_Code\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        656
+      ],
+      "id": "0808e316-24ee-4d64-98e9-ed5210641ea1",
+      "name": "check Billing details."
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get ALL items entering this node (the billing check results)\nconst inputItems = $input.all();\n\n// 2. Get the master list of all deals once\nconst allDeals = $(\"Filter Deal Stage\").all();\n\n// 3. Loop through every billing check item\nreturn inputItems.map(item => {\n  const billingInfo = item.json;\n  const accountId = billingInfo.Account_Id;\n\n  // Find the specific deal that matches this account ID\n  const dealItem = allDeals.find(\n    i => i.json.Account_Name?.id === accountId\n  );\n\n  let owner, dealName, serviceDivision, dealId;\n\n  if (dealItem) {\n    owner = dealItem.json.Owner;\n    dealName = dealItem.json.Deal_Name;\n    serviceDivision = dealItem.json.Service_Division?.toLowerCase();\n    dealId = dealItem.json.id;\n  }\n\n  // Return a consolidated object for every item\n  return {\n    json: {\n      Owner_Name: owner?.name || '-',\n      Owner_Email: owner?.email || '-',\n      Deal_Name: dealName || '-',\n      Deal_Id: dealId || '-',\n      Account_Name: billingInfo.Account_Name,\n      Account_Id: accountId,\n      Service_Division: serviceDivision || '-',\n      Billing_Missing_Fields: billingInfo.Missing_Billing_Details,\n      Is_Billing_Complete: billingInfo.Is_Billing_Complete\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        656
+      ],
+      "id": "e820c209-ff94-4e1a-9592-fb2e8b8e94e1",
+      "name": "Consolidate deal and billing details"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "78f6f8f5-d5a7-4368-bb82-2a44f66d9f54",
+              "leftValue": "={{ $json.Is_Billing_Complete }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        368
+      ],
+      "id": "b7e65318-1bc7-45bf-b208-5cd92649aabf",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst groupedByEmail = {};\n\nfor (const item of items) {\n  const {\n    owner,\n    dealName,\n    accountName,\n    billingMissingfields\n  } = item.json;\n\n  const email = owner.email;\n\n  if (!groupedByEmail[email]) {\n    groupedByEmail[email] = {\n      email,\n      ownerName: owner.name,\n      rows: []\n    };\n  }\n\n  groupedByEmail[email].rows.push({\n    dealName,\n    accountName,\n    billingMissingfields: billingMissingfields.length\n      ? billingMissingfields.join(\", \")\n      : \"—\"\n  });\n}\n\n// Convert object → n8n items\nreturn Object.values(groupedByEmail).map(group => ({\n  json: group\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        464
+      ],
+      "id": "3b1175f1-3cb1-4e0d-8fa5-55f131ac729b",
+      "name": "Aggregate – Owner Mail"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst grouped = {};\n\nfor (const item of items) {\n  // 1. Update these variable names to match the output of your \n  // \"Consolidate deal and billing details\" node\n  const {\n    Owner_Name,\n    Owner_Email,\n    Deal_Name,\n    Deal_Id,\n    Account_Name,\n    Account_Id,\n    Service_Division,\n    Billing_Missing_Fields\n  } = item.json;\n\n  // 2. Safety guard using the new key name\n  if (!Owner_Email) continue;\n\n  const service = Service_Division || 'unknown';\n\n  // 3. Create the grouping key (Owner + Service)\n  const groupKey = `${Owner_Email}__${service}`;\n\n  if (!grouped[groupKey]) {\n    grouped[groupKey] = {\n      Owner_Email: Owner_Email,\n      Owner_Name: Owner_Name,\n      Service_Division: service,\n      Rows: [] // Capitalized to match your preference\n    };\n  }\n\n  // 4. Push the deal info into the rows array\n  grouped[groupKey].Rows.push({\n    Deal_Name: Deal_Name,\n    Deal_Id: Deal_Id,\n    Account_Name: Account_Name,\n    Account_Id: Account_Id,\n    Billing_Missing_Fields: Billing_Missing_Fields?.length\n      ? Billing_Missing_Fields.join(', ')\n      : '—'\n  });\n}\n\n// 5. Convert the grouped object back into n8n items\nreturn Object.values(grouped).map(group => ({\n  json: group\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        272
+      ],
+      "id": "12664e29-c826-4563-9a03-b7ccfeef8209",
+      "name": "Aggregate – Team Mail"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Incomplete Deal Details",
+        "message": "=<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\">\n  <tr>\n    <th>Deal Name</th>\n    <th>Account Name</th>\n    <th>Missing Billing Fields</th>\n  </tr>\n  {{ $json.rows.map(r => `\n    <tr>\n      <td>${r.dealName}</td>\n      <td>${r.accountName}</td>\n      <td>${r.billingMissingFields}</td>\n    </tr>\n  `).join(\"\") }}\n</table>\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1648,
+        464
+      ],
+      "id": "541ba631-2d90-4a08-94f2-88cbf308de0c",
+      "name": "Send Owner Mail",
+      "webhookId": "5b17c4d7-afee-4d27-bcfb-3f59906a6abd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{\n(() => {\n\n  const serviceDiv = ($json.Service_Division || \"\").toLowerCase().trim();\n\n  if (!serviceDiv) {\n    return \"devanshagarwal1101@gmail.com\";\n  }\n\n\n  const divisionEmails = {\n    \"tech services\": \"suprabhat.sen@scaleupally.io,anubhav.kumaragarwal@scaleupally.io\",\n    \"data services\": \"tarsem.singh@scaleupally.io,anubhav.kumaragarwal@scaleupally.io\",\n  };\n\n\n  if (divisionEmails[serviceDiv]) {\n    return divisionEmails[serviceDiv];\n  }\n\n\n  return \"ops@company.com\";\n\n})()\n}}\n",
+        "subject": "=New Project Closed - {{ $json.Rows.Deal_Name }}",
+        "message": "=<p>Hello Team,</p>\n\n<p>\nThe following deal(s) have been <b>Closed</b> and are ready for execution. \nPlease find the project and billing details below.\n</p>\n\n<h3>Deal & Project Details</h3>\n\n<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\"\n       style=\"border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; font-size: 14px;\">\n\n  <!-- Header Row -->\n  <tr style=\"background-color: #f2f2f2; font-weight: bold;\">\n    <th>Deal Name</th>\n    <th>Deal Owner</th>\n    <th>Account Name</th>\n    <th>Contact Name</th>\n    <th>Service Division</th>\n    <th>Service Type</th>\n    <th>Engagement Type</th>\n    <th>Amount</th>\n    <th>Expected Start Date</th>\n    <th>Expected End Date</th>\n    <th>Estimated Delivery Shared</th>\n    <th>Key Milestones</th>\n    <th>Payment Terms</th>\n    <th>Scope Document</th>\n    <th>Closing Date</th>\n  </tr>\n{{ \n(() => {\n  const currentDealId = $json.Rows.Deal_Id;\n\n  const deal = $('Filter Deal Stage').all().find(d => d.json.id === currentDealId)?.json;\n\n  if(!deal) return \"\";\n  return`\n  <tr>\n      <td>${deal.Deal_Name || \"-\"}</td>\n      <td>${deal.Owner.name || \"-\"}</td>\n      <td>${$json.Rows.Account_Name || \"-\"}</td>\n      <td>${deal.Contact_Name.name || \"-\"}</td>\n      <td>${deal.Service_Division || \"-\"}</td>\n      <td>${deal.Service_Type || \"-\"}</td>\n      <td>${deal.Engagement_Type || \"-\"}</td>\n      <td>${deal.Amount || \"-\"}</td>\n      <td>${deal.Expected_Start_Date || \"-\"}</td>\n      <td>${deal.Expected_End_Date || \"-\"}</td>\n      <td>${deal.Estimated_Delivery_time_shared || \"-\"}</td>\n      <td>${deal.Key_Milestones || \"-\"}</td>\n      <td>${deal.Payment_Terms || \"-\"}</td>\n      <td>${deal.Scope_Document || \"-\"}</td>\n      <td>${deal.Closing_Date || \"-\"}</td>\n  </tr>\n  `;\n})()\n}}\n\n\n</table>\n\n\n\n<h3>Billing Details</h3>\n\n<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse: collapse; width: 60%;\">\n  <tr>\n    <th align=\"left\" style=\"background-color: #f2f2f2; width: 40%;\">Billing Street</th>\n    <td>{{ $json.Billing_Street || '-' }}</td>\n  </tr>\n  <tr>\n    <th align=\"left\" style=\"background-color: #f2f2f2;\">Billing City</th>\n    <td>{{ $json.Billing_City || '-' }}</td>\n  </tr>\n  <tr>\n    <th align=\"left\" style=\"background-color: #f2f2f2;\">Billing State</th>\n    <td>{{ $json.Billing_State || '-' }}</td>\n  </tr>\n  <tr>\n    <th align=\"left\" style=\"background-color: #f2f2f2;\">Billing Country</th>\n    <td>{{ $json.Billing_Country || '-' }}</td>\n  </tr>\n  <tr>\n    <th align=\"left\" style=\"background-color: #f2f2f2;\">Postal Code</th>\n    <td>{{ $json.Billing_Code || '-' }}</td>\n  </tr>\n</table>\n\n<br/>\n\n<p>\nRegards,<br/>\nDevansh\n</p>",
+        "options": {
+          "appendAttribution": false,
+          "ccList": "="
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2384,
+        336
+      ],
+      "id": "749e6bb9-ef9d-413c-a8ac-fb593a8a556c",
+      "name": "Send Team Mail",
+      "webhookId": "7cfd45fc-fd27-42f2-b4b6-c26264460602",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "Rows",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        304
+      ],
+      "id": "e63e17de-5fe8-4cee-b007-a1a59216b54f",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3152,
+        272
+      ],
+      "id": "eeec5268-73bc-4b0c-be47-b12272dc3042",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ",
+          "mode": "list",
+          "cachedResultName": "n8n_Mail_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Mail_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1920,
+        368
+      ],
+      "id": "6ebfc3fa-484c-4918-a0da-d496c42662cf",
+      "name": "match_Deal_from_sheet",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cby4gQ9hDXfjYT1n",
+          "name": "Mis_Google_Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ",
+          "mode": "list",
+          "cachedResultName": "n8n_Mail_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Mail_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Deal_ID": "={{ $('Code in JavaScript2').item.json.Rows.Deal_Id }}",
+            "Service_Division": "={{ $('Code in JavaScript2').item.json.Service_Division }}",
+            "Last_Notified_at": "={{ $now.setZone('Asia/Kolkata').format('dd-MM-yyyy HH:mm') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "key",
+              "displayName": "key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Deal_ID",
+              "displayName": "Deal_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Service_Division",
+              "displayName": "Service_Division",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last_Notified_at",
+              "displayName": "Last_Notified_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2640,
+        336
+      ],
+      "id": "6d113ecd-da68-4d61-b078-647fbd3d6bd4",
+      "name": "add_log_of_Mail_sent",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cby4gQ9hDXfjYT1n",
+          "name": "Mis_Google_Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst groupedByEmail = {};\n\nfor (const item of items) {\n  const {\n    owner,\n    dealName,\n    accountName,\n    dealMissingFields,\n    billingMissingFields\n  } = item.json;\n\n  const email = owner.email;\n\n  if (!groupedByEmail[email]) {\n    groupedByEmail[email] = {\n      email,\n      ownerName: owner.name,\n      rows: []\n    };\n  }\n\n  groupedByEmail[email].rows.push({\n    dealName,\n    accountName,\n    dealMissingFields: dealMissingFields.length\n      ? dealMissingFields.join(\", \")\n      : \"—\",\n    billingMissingFields: billingMissingFields.length\n      ? billingMissingFields.join(\", \")\n      : \"—\"\n  });\n}\n\n// Convert object → n8n items\nreturn Object.values(groupedByEmail).map(group => ({\n  json: group\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        -528
+      ],
+      "id": "f94100d5-e829-4428-b007-b7421564c1b5",
+      "name": "aggregate_onbasisof_Owner"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ",
+          "mode": "list",
+          "cachedResultName": "n8n_Mail_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 884408132,
+          "mode": "list",
+          "cachedResultName": "Weekly_Report_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ/edit#gid=884408132"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1440,
+        -224
+      ],
+      "id": "578794d4-2405-4257-97ef-fcfbc3c454e4",
+      "name": "read_Weekly_report_log",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cby4gQ9hDXfjYT1n",
+          "name": "Mis_Google_Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Helper: ISO week number\nfunction getISOWeek(date) {\n  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));\n  const dayNum = d.getUTCDay() || 7;\n  d.setUTCDate(d.getUTCDate() + 4 - dayNum);\n  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));\n  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);\n}\n\nconst now = new Date();\nconst week = getISOWeek(now);\nconst year = now.getFullYear();\n\nconst currentWeekKey = `${year}-W${week}`;\n\n// Last week stored in sheet\nconst lastSent = $items('read_Weekly_report_log')[0]?.json?.Last_Week_Sent;\n\n// Stop if already sent this week\nif (lastSent === currentWeekKey) {\n  return [];\n}\n\n// Continue if not sent\nreturn [\n  {\n    json: {\n      ownersData: $('aggregate_onbasisof_Owner').all().map(i => i.json),\n      currentWeekKey\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1648,
+        -224
+      ],
+      "id": "077d3f52-4a6e-45b2-afe5-4f295aa9174b",
+      "name": "Weekly_gate_check"
+    },
+    {
+      "parameters": {
+        "sendTo": "=manu.jain@scaleupally.io",
+        "subject": "=Weekly Missing fields Report(CRM)",
+        "message": "=<p>Hello Manu,</p>\n\n<p>Here is the weekly summary of all deals with missing mandatory or billing details.</p>\n\n<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse; width:100%;\">\n  <tr style=\"background:#f2f2f2;\">\n    <th>Owner</th>\n    <th>Deal Name</th>\n    <th>Account</th>\n    <th>Missing Deal Fields</th>\n    <th>Missing Billing Fields</th>\n  </tr>\n\n  {{\n    $json.ownersData.map(ownerBlock =>\n      ownerBlock.rows.map(r => `\n        <tr>\n          <td>${ownerBlock.ownerName}</td>\n          <td>${r.dealName}</td>\n          <td>${r.accountName}</td>\n          <td>${r.dealMissingFields}</td>\n          <td>${r.billingMissingFields}</td>\n        </tr>\n      `).join(\"\")\n    ).join(\"\")\n  }}\n\n</table>\n\n<p>Regards,<br/>Devansh</p>\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1904,
+        -96
+      ],
+      "id": "a3e0708c-2d86-49e5-bdab-636def545830",
+      "name": "Send_Master_Mail",
+      "webhookId": "5b17c4d7-afee-4d27-bcfb-3f59906a6abd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 12 * * THU,MON"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2860542e-59e1-42df-91f5-f8ab7fc16c6d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ",
+          "mode": "list",
+          "cachedResultName": "n8n_Mail_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 884408132,
+          "mode": "list",
+          "cachedResultName": "Weekly_Report_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ/edit#gid=884408132"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Last_Week_Sent": "={{ $('Weekly_gate_check').item.json.currentWeekKey }}"
+          },
+          "matchingColumns": [
+            "Last_Week_Sent"
+          ],
+          "schema": [
+            {
+              "id": "Last_Week_Sent",
+              "displayName": "Last_Week_Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2112,
+        -96
+      ],
+      "id": "af7920d4-60d9-4433-8517-b7a283568efd",
+      "name": "add_weekly_report_log",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cby4gQ9hDXfjYT1n",
+          "name": "Mis_Google_Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "accountId": "={{ $json.Account_Name?.id }}"
+      },
+      "type": "n8n-nodes-base.zohoCrm",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        656
+      ],
+      "id": "36c91564-617c-467b-8b93-8494004f69c4",
+      "name": "filter_account_on_basis_of_id",
+      "credentials": {
+        "zohoOAuth2Api": {
+          "id": "C6MyN1YfHNKIEYPf",
+          "name": "Zoho account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the actual deal being processed from upstream\nconst deal = $('Split Out').item.json;\n\n// All already-notified Deal IDs from the log sheet\nconst existingDealIds = $('match_Deal_from_sheet').all()\n  .map(item => item.json.Deal_ID)\n  .filter(Boolean);\n\n// If already notified, skip\nconst dealId = deal.Deal_Id || deal.id;\nif (existingDealIds.includes(dealId)) {\n  return [];\n}\n\n// Attach billing data\nconst billingData = $('check Billing details.').all();\nconst match = billingData.find(acc => acc.json.Account_Id === deal.Rows?.Account_Id);\n\nreturn [{\n  json: {\n    ...deal,\n    Billing_Street: match ? match.json.Billing_Street : '-',\n    Billing_City: match ? match.json.Billing_City : '-',\n    Billing_State: match ? match.json.Billing_State : '-',\n    Billing_Country: match ? match.json.Billing_Country : '-',\n    Billing_Code: match ? match.json.Billing_Code : '-'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2128,
+        368
+      ],
+      "id": "053e9e3a-448e-4318-8d8a-e7f4df00d702",
+      "name": "Code in JavaScript2"
+    }
+  ],
+  "connections": {
+    "Get Deals": {
+      "main": [
+        [
+          {
+            "node": "Filter Deal Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split between Complete Deals and Missing Deals": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "filter_account_on_basis_of_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "aggregate_onbasisof_Owner",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get an account",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get an account": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Deal Stage": {
+      "main": [
+        [
+          {
+            "node": "Split between Complete Deals and Missing Deals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send Sparsh Mail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Pranay Mail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Vikas Mail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Manu Mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check Billing details.": {
+      "main": [
+        [
+          {
+            "node": "Consolidate deal and billing details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidate deal and billing details": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Aggregate – Team Mail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate – Owner Mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate – Team Mail": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate – Owner Mail": {
+      "main": [
+        [
+          {
+            "node": "Send Owner Mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "match_Deal_from_sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Team Mail": {
+      "main": [
+        [
+          {
+            "node": "add_log_of_Mail_sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "match_Deal_from_sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "aggregate_onbasisof_Owner": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "read_Weekly_report_log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read_Weekly_report_log": {
+      "main": [
+        [
+          {
+            "node": "Weekly_gate_check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly_gate_check": {
+      "main": [
+        [
+          {
+            "node": "Send_Master_Mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send_Master_Mail": {
+      "main": [
+        [
+          {
+            "node": "add_weekly_report_log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Deals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter_account_on_basis_of_id": {
+      "main": [
+        [
+          {
+            "node": "check Billing details.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Send Team Mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2026-03-02T12:30:00.003+05:30",
+          "Readable date": "March 2nd 2026, 12:30:00 pm",
+          "Readable time": "12:30:00 pm",
+          "Day of week": "Monday",
+          "Year": "2026",
+          "Month": "March",
+          "Day of month": "02",
+          "Hour": "12",
+          "Minute": "30",
+          "Second": "00",
+          "Timezone": "Asia/Calcutta (UTC+05:30)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "e0554cf5-1fc9-4b09-930a-cc737d6deda9",
+  "activeVersionId": "e0554cf5-1fc9-4b09-930a-cc737d6deda9",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-11-06T06:15:30.517Z",
+      "createdAt": "2025-11-06T06:15:30.517Z",
+      "role": "workflow:owner",
+      "workflowId": "0jGBksrKybdcwLfp",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-03-27T08:23:02.000Z",
+    "createdAt": "2026-03-27T08:21:25.364Z",
+    "versionId": "e0554cf5-1fc9-4b09-930a-cc737d6deda9",
+    "workflowId": "0jGBksrKybdcwLfp",
+    "nodes": [
+      {
+        "parameters": {
+          "resource": "deal",
+          "operation": "getAll",
+          "returnAll": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.zohoCrm",
+        "typeVersion": 1,
+        "position": [
+          224,
+          320
+        ],
+        "id": "a287a94e-90d7-47d1-8dfb-c55d46c5a9ec",
+        "name": "Get Deals",
+        "credentials": {
+          "zohoOAuth2Api": {
+            "id": "fA1s2XDiaal5SVFC",
+            "name": "sales.scaleupally CRM"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "04cfa1b9-a71a-461f-a822-822f7590ef17",
+                "leftValue": "={{ $json.dealCategory }}",
+                "rightValue": "MISSING",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {
+            "ignoreCase": false
+          }
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          672,
+          320
+        ],
+        "id": "3f41d447-1905-4872-b057-555bd2b06c76",
+        "name": "Split between Complete Deals and Missing Deals"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          896,
+          -16
+        ],
+        "id": "7f1b33db-189f-447e-9839-1de7f65aabda",
+        "name": "Loop Over Items"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "name": "Replace Me",
+        "typeVersion": 1,
+        "position": [
+          1792,
+          64
+        ],
+        "id": "24830929-4d5f-4509-9c24-c800cac1f261"
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "accountId": "={{ $json.Account_Name?.id }}"
+        },
+        "type": "n8n-nodes-base.zohoCrm",
+        "typeVersion": 1,
+        "position": [
+          1120,
+          -16
+        ],
+        "id": "e01a6578-e679-4657-b761-4f1a411b3ca1",
+        "name": "Get an account",
+        "alwaysOutputData": true,
+        "credentials": {
+          "zohoOAuth2Api": {
+            "id": "C6MyN1YfHNKIEYPf",
+            "name": "Zoho account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Get the single account record correctly\nconst account = $input.first().json;\n\nconst billingFields = [\n  'Billing_Street',\n  'Billing_City',\n  'Billing_State',\n  'Billing_Country',\n  'Billing_Code'\n];\n\nconst missingBillingFields = billingFields.filter(field => {\n  const value = account[field];\n  return (\n    value === null ||\n    value === undefined ||\n    (typeof value === 'string' && value.trim() === '')\n  );\n});\n\nreturn [{\n  json: {\n    accountId: account.id,\n    accountName: account.Account_Name,\n    missingBillingFields,\n    isBillingComplete: missingBillingFields.length === 0\n  }\n}];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1344,
+          -16
+        ],
+        "id": "0d2c4a91-d375-4b6b-81ff-8768d9d5800d",
+        "name": "Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Mandatory fields for Closed-Won deals\nconst mandatoryFields = [\n  \"Service_Division\",\n  \"Service_Type\",\n  \"Expected_Start_Date\",\n  \"Expected_End_Date\",\n  \"Key_Milestones\",\n  \"Payment_Terms\",\n  \"Scope_Document\",\n  \"Closing_Date\",\n  \"Amount\",\n  \"Estimated_Delivery_time_shared\",\n  \"Engagement_Type\"\n];\n\nconst outputItems = [];\n\nfor (const item of $input.all()) {\n  const deal = item.json;\n\n  // Only Closed-Won deals\n  if (deal.Stage !== \"Closed- Won\") continue;\n\n  if (!deal.Account_Name || !deal.Account_Name?.id) continue;\n\n  const missingFields = mandatoryFields.filter(field => {\n    const value = deal[field];\n    if (value === null || value === undefined) return true;\n    if (typeof value === \"string\" && value.trim() === \"\") return true;\n    if (Array.isArray(value) && value.length === 0) return true;\n    return false;\n  });\n\n  outputItems.push({\n    json: {\n      ...deal,\n      missingFields,\n      isComplete: missingFields.length === 0,\n      dealCategory: missingFields.length === 0 ? \"COMPLETE\" : \"MISSING\"\n    }\n  });\n}\n\n// ✅ Single-output, n8n-safe return\nreturn outputItems;\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          448,
+          320
+        ],
+        "id": "7e896426-8799-472c-ba80-f9c998bda2a7",
+        "name": "Filter Deal Stage"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Get the current deal from the loop iteration\nconst deal = $('Loop Over Items').first().json;\n\n// Get account data from previous node\n\nreturn [{\n  json: {\n    owner: deal.Owner,\n    dealName: deal.Deal_Name,\n    dealMissingFields: deal.missingFields,\n    billingMissingFields: $json.missingBillingFields,\n    accountName: $json.accountName\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1568,
+          -16
+        ],
+        "id": "e286191e-9e22-43e0-a4aa-e47a65a8d222",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.email }}",
+                      "rightValue": "sparsh.gupta@scaleupally.io",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "a14a7746-ec5a-495a-8752-ae6ba935fabc"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Sparsh's Mail"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "c15f824a-89fd-43a1-83f1-b2a06ebbb14c",
+                      "leftValue": "={{ $json.email }}",
+                      "rightValue": "=pranay.agrawal@scaleupally.io",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Pranay's Mail"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "9db2588d-7a6b-4e35-ab73-db73819057df",
+                      "leftValue": "={{ $json.email }}",
+                      "rightValue": "vikas.singh@scaleupally.io",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Vikas's Mail"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "704b6348-4d8a-4630-9962-4c1d619dc9cd",
+                      "leftValue": "={{ $json.email }}",
+                      "rightValue": "manu.jain@scaleupally.io",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Manu's Mail"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          1840,
+          -544
+        ],
+        "id": "282204a6-4a82-4f18-b94f-caa6192bfd8a",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $json.email }}",
+          "subject": "Incomplete Deal Details",
+          "message": "=<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\">\n  <tr>\n    <th>Deal Name</th>\n    <th>Account Name</th>\n    <th>Missing Deal Fields</th>\n    <th>Missing Billing Fields</th>\n  </tr>\n  {{ $json.rows.map(r => `\n    <tr>\n      <td>${r.dealName}</td>\n      <td>${r.accountName}</td>\n      <td>${r.dealMissingFields}</td>\n      <td>${r.billingMissingFields}</td>\n    </tr>\n  `).join(\"\") }}\n</table>\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          2064,
+          -800
+        ],
+        "id": "488fc4d1-befe-47bf-b372-684b9b5147eb",
+        "name": "Send Sparsh Mail",
+        "webhookId": "5b17c4d7-afee-4d27-bcfb-3f59906a6abd",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $json.email }}",
+          "subject": "=Incomplete Deal Details",
+          "message": "=<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\">\n  <tr>\n    <th>Deal Name</th>\n    <th>Account Name</th>\n    <th>Missing Deal Fields</th>\n    <th>Missing Billing Fields</th>\n  </tr>\n  {{ $json.rows.map(r => `\n    <tr>\n      <td>${r.dealName}</td>\n      <td>${r.accountName}</td>\n      <td>${r.dealMissingFields}</td>\n      <td>${r.billingMissingFields}</td>\n    </tr>\n  `).join(\"\") }}\n</table>\n",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          2064,
+          -608
+        ],
+        "id": "649f0d1c-3cf4-4847-b017-9669130c02b5",
+        "name": "Send Pranay Mail",
+        "webhookId": "5b17c4d7-afee-4d27-bcfb-3f59906a6abd",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $json.email }}",
+          "subject": "=Incomplete Deal Details",
+          "message": "=<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\">\n  <tr>\n    <th>Deal Name</th>\n    <th>Account Name</th>\n    <th>Missing Deal Fields</th>\n    <th>Missing Billing Fields</th>\n  </tr>\n  {{ $json.rows.map(r => `\n    <tr>\n      <td>${r.dealName}</td>\n      <td>${r.accountName}</td>\n      <td>${r.dealMissingFields}</td>\n      <td>${r.billingMissingFields}</td>\n    </tr>\n  `).join(\"\") }}\n</table>\n",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          2064,
+          -416
+        ],
+        "id": "fdfc6857-410d-4db5-8f20-6f042be1e8c9",
+        "name": "Send Vikas Mail",
+        "webhookId": "5b17c4d7-afee-4d27-bcfb-3f59906a6abd",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $json.email }}",
+          "subject": "=Incomplete Deal Details",
+          "message": "=<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\">\n  <tr>\n    <th>Deal Name</th>\n    <th>Account Name</th>\n    <th>Missing Deal Fields</th>\n    <th>Missing Billing Fields</th>\n  </tr>\n  {{ $json.rows.map(r => `\n    <tr>\n      <td>${r.dealName}</td>\n      <td>${r.accountName}</td>\n      <td>${r.dealMissingFields}</td>\n      <td>${r.billingMissingFields}</td>\n    </tr>\n  `).join(\"\") }}\n</table>\n",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          2064,
+          -224
+        ],
+        "id": "1016003e-8599-4a7b-a838-92a6497455e4",
+        "name": "Send Manu Mail",
+        "webhookId": "5b17c4d7-afee-4d27-bcfb-3f59906a6abd",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. Get all items entering the node\nconst items = $input.all();\n\n// 2. Map over every item to check its billing details\nreturn items.map(item => {\n  const account = item.json;\n\n  const billingFields = [\n    'Billing_Street',\n    'Billing_City',\n    'Billing_State',\n    'Billing_Country',\n    'Billing_Code'\n  ];\n\n  // Check which fields are missing or just empty strings\n  const missingBillingDetails = billingFields.filter(field => {\n    const value = account[field];\n    return (\n      value === null ||\n      value === undefined ||\n      (typeof value === 'string' && (value.trim() === '' ))\n    );\n  });\n\n  // Return the item in the format you prefer\n  return {\n    json: {\n      Account_Name: account.Account_Name,\n      Account_Id: account.id,\n      Missing_Billing_Details: missingBillingDetails,\n      Is_Billing_Complete: missingBillingDetails.length === 0,\n      // We keep the original billing data so it can be used later\n      Billing_Street: account.Billing_Street,\n      Billing_City: account.Billing_City,\n      Billing_State: account.Billing_State,\n      Billing_Country: account.Billing_Country,\n      Billing_Code: account.Billing_Code\n    }\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1344,
+          656
+        ],
+        "id": "0808e316-24ee-4d64-98e9-ed5210641ea1",
+        "name": "check Billing details."
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. Get ALL items entering this node (the billing check results)\nconst inputItems = $input.all();\n\n// 2. Get the master list of all deals once\nconst allDeals = $(\"Filter Deal Stage\").all();\n\n// 3. Loop through every billing check item\nreturn inputItems.map(item => {\n  const billingInfo = item.json;\n  const accountId = billingInfo.Account_Id;\n\n  // Find the specific deal that matches this account ID\n  const dealItem = allDeals.find(\n    i => i.json.Account_Name?.id === accountId\n  );\n\n  let owner, dealName, serviceDivision, dealId;\n\n  if (dealItem) {\n    owner = dealItem.json.Owner;\n    dealName = dealItem.json.Deal_Name;\n    serviceDivision = dealItem.json.Service_Division?.toLowerCase();\n    dealId = dealItem.json.id;\n  }\n\n  // Return a consolidated object for every item\n  return {\n    json: {\n      Owner_Name: owner?.name || '-',\n      Owner_Email: owner?.email || '-',\n      Deal_Name: dealName || '-',\n      Deal_Id: dealId || '-',\n      Account_Name: billingInfo.Account_Name,\n      Account_Id: accountId,\n      Service_Division: serviceDivision || '-',\n      Billing_Missing_Fields: billingInfo.Missing_Billing_Details,\n      Is_Billing_Complete: billingInfo.Is_Billing_Complete\n    }\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1568,
+          656
+        ],
+        "id": "e820c209-ff94-4e1a-9592-fb2e8b8e94e1",
+        "name": "Consolidate deal and billing details"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "78f6f8f5-d5a7-4368-bb82-2a44f66d9f54",
+                "leftValue": "={{ $json.Is_Billing_Complete }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1120,
+          368
+        ],
+        "id": "b7e65318-1bc7-45bf-b208-5cd92649aabf",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\nconst groupedByEmail = {};\n\nfor (const item of items) {\n  const {\n    owner,\n    dealName,\n    accountName,\n    billingMissingfields\n  } = item.json;\n\n  const email = owner.email;\n\n  if (!groupedByEmail[email]) {\n    groupedByEmail[email] = {\n      email,\n      ownerName: owner.name,\n      rows: []\n    };\n  }\n\n  groupedByEmail[email].rows.push({\n    dealName,\n    accountName,\n    billingMissingfields: billingMissingfields.length\n      ? billingMissingfields.join(\", \")\n      : \"—\"\n  });\n}\n\n// Convert object → n8n items\nreturn Object.values(groupedByEmail).map(group => ({\n  json: group\n}));\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1344,
+          464
+        ],
+        "id": "3b1175f1-3cb1-4e0d-8fa5-55f131ac729b",
+        "name": "Aggregate – Owner Mail"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst grouped = {};\n\nfor (const item of items) {\n  // 1. Update these variable names to match the output of your \n  // \"Consolidate deal and billing details\" node\n  const {\n    Owner_Name,\n    Owner_Email,\n    Deal_Name,\n    Deal_Id,\n    Account_Name,\n    Account_Id,\n    Service_Division,\n    Billing_Missing_Fields\n  } = item.json;\n\n  // 2. Safety guard using the new key name\n  if (!Owner_Email) continue;\n\n  const service = Service_Division || 'unknown';\n\n  // 3. Create the grouping key (Owner + Service)\n  const groupKey = `${Owner_Email}__${service}`;\n\n  if (!grouped[groupKey]) {\n    grouped[groupKey] = {\n      Owner_Email: Owner_Email,\n      Owner_Name: Owner_Name,\n      Service_Division: service,\n      Rows: [] // Capitalized to match your preference\n    };\n  }\n\n  // 4. Push the deal info into the rows array\n  grouped[groupKey].Rows.push({\n    Deal_Name: Deal_Name,\n    Deal_Id: Deal_Id,\n    Account_Name: Account_Name,\n    Account_Id: Account_Id,\n    Billing_Missing_Fields: Billing_Missing_Fields?.length\n      ? Billing_Missing_Fields.join(', ')\n      : '—'\n  });\n}\n\n// 5. Convert the grouped object back into n8n items\nreturn Object.values(grouped).map(group => ({\n  json: group\n}));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1344,
+          272
+        ],
+        "id": "12664e29-c826-4563-9a03-b7ccfeef8209",
+        "name": "Aggregate – Team Mail"
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $json.email }}",
+          "subject": "=Incomplete Deal Details",
+          "message": "=<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\">\n  <tr>\n    <th>Deal Name</th>\n    <th>Account Name</th>\n    <th>Missing Billing Fields</th>\n  </tr>\n  {{ $json.rows.map(r => `\n    <tr>\n      <td>${r.dealName}</td>\n      <td>${r.accountName}</td>\n      <td>${r.billingMissingFields}</td>\n    </tr>\n  `).join(\"\") }}\n</table>\n",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          1648,
+          464
+        ],
+        "id": "541ba631-2d90-4a08-94f2-88cbf308de0c",
+        "name": "Send Owner Mail",
+        "webhookId": "5b17c4d7-afee-4d27-bcfb-3f59906a6abd",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "={{\n(() => {\n\n  const serviceDiv = ($json.Service_Division || \"\").toLowerCase().trim();\n\n  if (!serviceDiv) {\n    return \"devanshagarwal1101@gmail.com\";\n  }\n\n\n  const divisionEmails = {\n    \"tech services\": \"suprabhat.sen@scaleupally.io,anubhav.kumaragarwal@scaleupally.io\",\n    \"data services\": \"tarsem.singh@scaleupally.io,anubhav.kumaragarwal@scaleupally.io\",\n  };\n\n\n  if (divisionEmails[serviceDiv]) {\n    return divisionEmails[serviceDiv];\n  }\n\n\n  return \"ops@company.com\";\n\n})()\n}}\n",
+          "subject": "=New Project Closed - {{ $json.Rows.Deal_Name }}",
+          "message": "=<p>Hello Team,</p>\n\n<p>\nThe following deal(s) have been <b>Closed</b> and are ready for execution. \nPlease find the project and billing details below.\n</p>\n\n<h3>Deal & Project Details</h3>\n\n<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\"\n       style=\"border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; font-size: 14px;\">\n\n  <!-- Header Row -->\n  <tr style=\"background-color: #f2f2f2; font-weight: bold;\">\n    <th>Deal Name</th>\n    <th>Deal Owner</th>\n    <th>Account Name</th>\n    <th>Contact Name</th>\n    <th>Service Division</th>\n    <th>Service Type</th>\n    <th>Engagement Type</th>\n    <th>Amount</th>\n    <th>Expected Start Date</th>\n    <th>Expected End Date</th>\n    <th>Estimated Delivery Shared</th>\n    <th>Key Milestones</th>\n    <th>Payment Terms</th>\n    <th>Scope Document</th>\n    <th>Closing Date</th>\n  </tr>\n{{ \n(() => {\n  const currentDealId = $json.Rows.Deal_Id;\n\n  const deal = $('Filter Deal Stage').all().find(d => d.json.id === currentDealId)?.json;\n\n  if(!deal) return \"\";\n  return`\n  <tr>\n      <td>${deal.Deal_Name || \"-\"}</td>\n      <td>${deal.Owner.name || \"-\"}</td>\n      <td>${$json.Rows.Account_Name || \"-\"}</td>\n      <td>${deal.Contact_Name.name || \"-\"}</td>\n      <td>${deal.Service_Division || \"-\"}</td>\n      <td>${deal.Service_Type || \"-\"}</td>\n      <td>${deal.Engagement_Type || \"-\"}</td>\n      <td>${deal.Amount || \"-\"}</td>\n      <td>${deal.Expected_Start_Date || \"-\"}</td>\n      <td>${deal.Expected_End_Date || \"-\"}</td>\n      <td>${deal.Estimated_Delivery_time_shared || \"-\"}</td>\n      <td>${deal.Key_Milestones || \"-\"}</td>\n      <td>${deal.Payment_Terms || \"-\"}</td>\n      <td>${deal.Scope_Document || \"-\"}</td>\n      <td>${deal.Closing_Date || \"-\"}</td>\n  </tr>\n  `;\n})()\n}}\n\n\n</table>\n\n\n\n<h3>Billing Details</h3>\n\n<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse: collapse; width: 60%;\">\n  <tr>\n    <th align=\"left\" style=\"background-color: #f2f2f2; width: 40%;\">Billing Street</th>\n    <td>{{ $json.Billing_Street || '-' }}</td>\n  </tr>\n  <tr>\n    <th align=\"left\" style=\"background-color: #f2f2f2;\">Billing City</th>\n    <td>{{ $json.Billing_City || '-' }}</td>\n  </tr>\n  <tr>\n    <th align=\"left\" style=\"background-color: #f2f2f2;\">Billing State</th>\n    <td>{{ $json.Billing_State || '-' }}</td>\n  </tr>\n  <tr>\n    <th align=\"left\" style=\"background-color: #f2f2f2;\">Billing Country</th>\n    <td>{{ $json.Billing_Country || '-' }}</td>\n  </tr>\n  <tr>\n    <th align=\"left\" style=\"background-color: #f2f2f2;\">Postal Code</th>\n    <td>{{ $json.Billing_Code || '-' }}</td>\n  </tr>\n</table>\n\n<br/>\n\n<p>\nRegards,<br/>\nDevansh\n</p>",
+          "options": {
+            "appendAttribution": false,
+            "ccList": "="
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          2384,
+          336
+        ],
+        "id": "749e6bb9-ef9d-413c-a8ac-fb593a8a556c",
+        "name": "Send Team Mail",
+        "webhookId": "7cfd45fc-fd27-42f2-b4b6-c26264460602",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "Rows",
+          "include": "allOtherFields",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          1680,
+          304
+        ],
+        "id": "e63e17de-5fe8-4cee-b007-a1a59216b54f",
+        "name": "Split Out"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          3152,
+          272
+        ],
+        "id": "eeec5268-73bc-4b0c-be47-b12272dc3042",
+        "name": "No Operation, do nothing"
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ",
+            "mode": "list",
+            "cachedResultName": "n8n_Mail_Log",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Mail_Log",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ/edit#gid=0"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1920,
+          368
+        ],
+        "id": "6ebfc3fa-484c-4918-a0da-d496c42662cf",
+        "name": "match_Deal_from_sheet",
+        "alwaysOutputData": true,
+        "executeOnce": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "cby4gQ9hDXfjYT1n",
+            "name": "Mis_Google_Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ",
+            "mode": "list",
+            "cachedResultName": "n8n_Mail_Log",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Mail_Log",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Deal_ID": "={{ $('Code in JavaScript2').item.json.Rows.Deal_Id }}",
+              "Service_Division": "={{ $('Code in JavaScript2').item.json.Service_Division }}",
+              "Last_Notified_at": "={{ $now.setZone('Asia/Kolkata').format('dd-MM-yyyy HH:mm') }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "key",
+                "displayName": "key",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Deal_ID",
+                "displayName": "Deal_ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Service_Division",
+                "displayName": "Service_Division",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Last_Notified_at",
+                "displayName": "Last_Notified_at",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          2640,
+          336
+        ],
+        "id": "6d113ecd-da68-4d61-b078-647fbd3d6bd4",
+        "name": "add_log_of_Mail_sent",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "cby4gQ9hDXfjYT1n",
+            "name": "Mis_Google_Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\nconst groupedByEmail = {};\n\nfor (const item of items) {\n  const {\n    owner,\n    dealName,\n    accountName,\n    dealMissingFields,\n    billingMissingFields\n  } = item.json;\n\n  const email = owner.email;\n\n  if (!groupedByEmail[email]) {\n    groupedByEmail[email] = {\n      email,\n      ownerName: owner.name,\n      rows: []\n    };\n  }\n\n  groupedByEmail[email].rows.push({\n    dealName,\n    accountName,\n    dealMissingFields: dealMissingFields.length\n      ? dealMissingFields.join(\", \")\n      : \"—\",\n    billingMissingFields: billingMissingFields.length\n      ? billingMissingFields.join(\", \")\n      : \"—\"\n  });\n}\n\n// Convert object → n8n items\nreturn Object.values(groupedByEmail).map(group => ({\n  json: group\n}));\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1088,
+          -528
+        ],
+        "id": "f94100d5-e829-4428-b007-b7421564c1b5",
+        "name": "aggregate_onbasisof_Owner"
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ",
+            "mode": "list",
+            "cachedResultName": "n8n_Mail_Log",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 884408132,
+            "mode": "list",
+            "cachedResultName": "Weekly_Report_Log",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ/edit#gid=884408132"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1440,
+          -224
+        ],
+        "id": "578794d4-2405-4257-97ef-fcfbc3c454e4",
+        "name": "read_Weekly_report_log",
+        "alwaysOutputData": true,
+        "executeOnce": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "cby4gQ9hDXfjYT1n",
+            "name": "Mis_Google_Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Helper: ISO week number\nfunction getISOWeek(date) {\n  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));\n  const dayNum = d.getUTCDay() || 7;\n  d.setUTCDate(d.getUTCDate() + 4 - dayNum);\n  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));\n  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);\n}\n\nconst now = new Date();\nconst week = getISOWeek(now);\nconst year = now.getFullYear();\n\nconst currentWeekKey = `${year}-W${week}`;\n\n// Last week stored in sheet\nconst lastSent = $items('read_Weekly_report_log')[0]?.json?.Last_Week_Sent;\n\n// Stop if already sent this week\nif (lastSent === currentWeekKey) {\n  return [];\n}\n\n// Continue if not sent\nreturn [\n  {\n    json: {\n      ownersData: $('aggregate_onbasisof_Owner').all().map(i => i.json),\n      currentWeekKey\n    }\n  }\n];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1648,
+          -224
+        ],
+        "id": "077d3f52-4a6e-45b2-afe5-4f295aa9174b",
+        "name": "Weekly_gate_check"
+      },
+      {
+        "parameters": {
+          "sendTo": "=manu.jain@scaleupally.io",
+          "subject": "=Weekly Missing fields Report(CRM)",
+          "message": "=<p>Hello Manu,</p>\n\n<p>Here is the weekly summary of all deals with missing mandatory or billing details.</p>\n\n<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse; width:100%;\">\n  <tr style=\"background:#f2f2f2;\">\n    <th>Owner</th>\n    <th>Deal Name</th>\n    <th>Account</th>\n    <th>Missing Deal Fields</th>\n    <th>Missing Billing Fields</th>\n  </tr>\n\n  {{\n    $json.ownersData.map(ownerBlock =>\n      ownerBlock.rows.map(r => `\n        <tr>\n          <td>${ownerBlock.ownerName}</td>\n          <td>${r.dealName}</td>\n          <td>${r.accountName}</td>\n          <td>${r.dealMissingFields}</td>\n          <td>${r.billingMissingFields}</td>\n        </tr>\n      `).join(\"\")\n    ).join(\"\")\n  }}\n\n</table>\n\n<p>Regards,<br/>Devansh</p>\n",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          1904,
+          -96
+        ],
+        "id": "a3e0708c-2d86-49e5-bdab-636def545830",
+        "name": "Send_Master_Mail",
+        "webhookId": "5b17c4d7-afee-4d27-bcfb-3f59906a6abd",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "30 12 * * THU,MON"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          0
+        ],
+        "id": "2860542e-59e1-42df-91f5-f8ab7fc16c6d",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ",
+            "mode": "list",
+            "cachedResultName": "n8n_Mail_Log",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 884408132,
+            "mode": "list",
+            "cachedResultName": "Weekly_Report_Log",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k82Y-K30WZv74uIu19fM7pIqDY30fCpnUKnxniwNSRQ/edit#gid=884408132"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Last_Week_Sent": "={{ $('Weekly_gate_check').item.json.currentWeekKey }}"
+            },
+            "matchingColumns": [
+              "Last_Week_Sent"
+            ],
+            "schema": [
+              {
+                "id": "Last_Week_Sent",
+                "displayName": "Last_Week_Sent",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          2112,
+          -96
+        ],
+        "id": "af7920d4-60d9-4433-8517-b7a283568efd",
+        "name": "add_weekly_report_log",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "cby4gQ9hDXfjYT1n",
+            "name": "Mis_Google_Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "accountId": "={{ $json.Account_Name?.id }}"
+        },
+        "type": "n8n-nodes-base.zohoCrm",
+        "typeVersion": 1,
+        "position": [
+          1120,
+          656
+        ],
+        "id": "36c91564-617c-467b-8b93-8494004f69c4",
+        "name": "filter_account_on_basis_of_id",
+        "credentials": {
+          "zohoOAuth2Api": {
+            "id": "C6MyN1YfHNKIEYPf",
+            "name": "Zoho account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Get the actual deal being processed from upstream\nconst deal = $('Split Out').item.json;\n\n// All already-notified Deal IDs from the log sheet\nconst existingDealIds = $('match_Deal_from_sheet').all()\n  .map(item => item.json.Deal_ID)\n  .filter(Boolean);\n\n// If already notified, skip\nconst dealId = deal.Deal_Id || deal.id;\nif (existingDealIds.includes(dealId)) {\n  return [];\n}\n\n// Attach billing data\nconst billingData = $('check Billing details.').all();\nconst match = billingData.find(acc => acc.json.Account_Id === deal.Rows?.Account_Id);\n\nreturn [{\n  json: {\n    ...deal,\n    Billing_Street: match ? match.json.Billing_Street : '-',\n    Billing_City: match ? match.json.Billing_City : '-',\n    Billing_State: match ? match.json.Billing_State : '-',\n    Billing_Country: match ? match.json.Billing_Country : '-',\n    Billing_Code: match ? match.json.Billing_Code : '-'\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2128,
+          368
+        ],
+        "id": "053e9e3a-448e-4318-8d8a-e7f4df00d702",
+        "name": "Code in JavaScript2"
+      }
+    ],
+    "connections": {
+      "Get Deals": {
+        "main": [
+          [
+            {
+              "node": "Filter Deal Stage",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split between Complete Deals and Missing Deals": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "filter_account_on_basis_of_id",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [
+            {
+              "node": "aggregate_onbasisof_Owner",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Get an account",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Replace Me": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get an account": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter Deal Stage": {
+        "main": [
+          [
+            {
+              "node": "Split between Complete Deals and Missing Deals",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Replace Me",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "Send Sparsh Mail",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send Pranay Mail",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send Vikas Mail",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send Manu Mail",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "check Billing details.": {
+        "main": [
+          [
+            {
+              "node": "Consolidate deal and billing details",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Consolidate deal and billing details": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Aggregate – Team Mail",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Aggregate – Owner Mail",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aggregate – Team Mail": {
+        "main": [
+          [
+            {
+              "node": "Split Out",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aggregate – Owner Mail": {
+        "main": [
+          [
+            {
+              "node": "Send Owner Mail",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Out": {
+        "main": [
+          [
+            {
+              "node": "match_Deal_from_sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Team Mail": {
+        "main": [
+          [
+            {
+              "node": "add_log_of_Mail_sent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "match_Deal_from_sheet": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "aggregate_onbasisof_Owner": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "read_Weekly_report_log",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "read_Weekly_report_log": {
+        "main": [
+          [
+            {
+              "node": "Weekly_gate_check",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Weekly_gate_check": {
+        "main": [
+          [
+            {
+              "node": "Send_Master_Mail",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send_Master_Mail": {
+        "main": [
+          [
+            {
+              "node": "add_weekly_report_log",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Get Deals",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "filter_account_on_basis_of_id": {
+        "main": [
+          [
+            {
+              "node": "check Billing details.",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript2": {
+        "main": [
+          [
+            {
+              "node": "Send Team Mail",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dev Scaleupally",
+    "name": "Version e0554cf5",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

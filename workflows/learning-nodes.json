@@ -1,0 +1,32 @@
+{
+  "updatedAt": "2026-03-27T07:18:33.000Z",
+  "createdAt": "2026-03-19T13:09:38.354Z",
+  "id": "2DfCcGEcETmhpnfB",
+  "name": "learning nodes",
+  "active": false,
+  "isArchived": true,
+  "nodes": [],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "8919c791-beff-4d65-8a00-b03e4ad04aae",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-19T13:09:38.357Z",
+      "createdAt": "2026-03-19T13:09:38.357Z",
+      "role": "workflow:owner",
+      "workflowId": "2DfCcGEcETmhpnfB",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

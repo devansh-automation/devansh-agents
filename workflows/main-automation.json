@@ -1,0 +1,188 @@
+{
+  "updatedAt": "2025-07-15T10:45:07.000Z",
+  "createdAt": "2025-07-11T08:15:12.191Z",
+  "id": "p8MDjvk9FudVioUZ",
+  "name": "Main automation",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        80,
+        0
+      ],
+      "id": "1feda78d-5c08-41ca-b838-522ca4e04499",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "url": "https://www.zohoapis.com/crm/v8/Contacts",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "Email,Last_Name"
+            },
+            {
+              "name": "ids",
+              "value": "={{ $json.body.id }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Zoho-oauthtoken {{ $json.access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        340,
+        -20
+      ],
+      "id": "9a2cc2d8-a13f-4d30-95ed-973f328a1af8",
+      "name": "Get contact Data"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contact",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -420,
+        -40
+      ],
+      "id": "fac51ad4-22b5-45b0-a873-7c6f04f77aaf",
+      "name": "Zoho Contact update webhook",
+      "webhookId": "6a078ab8-c9a2-42c3-b538-ddd839427d88"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://accounts.zoho.com/oauth/v2/token",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "refresh_token",
+              "value": "1000.4a3578fac43b72095553dabf162297f4.197f1538d7c3fee320f5bd883089b3a0"
+            },
+            {
+              "name": "client_id",
+              "value": "1000.KF7TDPSEBGWA4EGKT9IRNF5MTLFMXU"
+            },
+            {
+              "name": "client_secret",
+              "value": "7839be994a32efc7bf0f9ad3a455c202011cf3b7e2"
+            },
+            {
+              "name": "grant_type",
+              "value": "refresh_token"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        120
+      ],
+      "id": "979c2f22-5c62-481b-8070-420307507217",
+      "name": "Access Token "
+    }
+  ],
+  "connections": {
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Get contact Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get contact Data": {
+      "main": [
+        []
+      ]
+    },
+    "Zoho Contact update webhook": {
+      "main": [
+        [
+          {
+            "node": "Access Token ",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Access Token ": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "0f44fc31-8507-485f-a397-a46816c5ae0c",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-07-11T08:15:12.195Z",
+      "createdAt": "2025-07-11T08:15:12.195Z",
+      "role": "workflow:owner",
+      "workflowId": "p8MDjvk9FudVioUZ",
+      "projectId": "kL4d2d65bbWAOPAf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [
+    {
+      "updatedAt": "2025-07-11T06:51:09.214Z",
+      "createdAt": "2025-07-11T06:51:09.214Z",
+      "id": "aWMwlIwltEZ3FZgD",
+      "name": "BA automation workflow"
+    }
+  ]
+}

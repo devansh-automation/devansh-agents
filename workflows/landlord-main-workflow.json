@@ -1,0 +1,748 @@
+{
+  "updatedAt": "2026-02-09T05:47:47.519Z",
+  "createdAt": "2025-10-27T05:48:03.677Z",
+  "id": "WrhAYi5lINAWwOyd",
+  "name": "Landlord Main Workflow",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -860,
+        320
+      ],
+      "id": "aee52026-e473-4e40-97d7-3048ac4e8b3a",
+      "name": "Telegram Trigger",
+      "webhookId": "e98420be-0dcb-405a-89c9-5bb610ed853e",
+      "credentials": {
+        "telegramApi": {
+          "id": "BK9Q6BAVIG4zhnJV",
+          "name": "Scaleupally_kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message?.from?.id || $('Telegram Trigger').item.json.callback_query?.from?.id }}\n",
+        "text": "=👋 Hey {{ $('Telegram Trigger').item.json.message.from.first_name }} — welcome to Kove. You’re part of our Founders Circle — one of the first landlords shaping \nhow this works. I’ll take care of the busywork so you can focus on the big stuff. Ready?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🧰 Log / track a repair",
+                    "additionalFields": {
+                      "callback_data": "I want to log an issue/repair ticket"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": " 💵 Remind a tenant about rent",
+                    "additionalFields": {
+                      "callback_data": "I want to create a rent reminder for my tenant."
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "📄 Set up a property",
+                    "additionalFields": {
+                      "callback_data": "I want to add new property."
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🤔 Learn what I can help with",
+                    "additionalFields": {
+                      "callback_data": "What can you help me with?"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        20
+      ],
+      "id": "42022fee-3650-48a3-ad18-158a0d0c6a8d",
+      "name": "Send welcome message",
+      "webhookId": "dae1dbc7-9792-4efa-bee8-65d32991df12",
+      "credentials": {
+        "telegramApi": {
+          "id": "BK9Q6BAVIG4zhnJV",
+          "name": "Scaleupally_kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "users",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telegram_id",
+              "keyValue": "={{ $json.result.chat.id }}"
+            },
+            {
+              "keyName": "role",
+              "keyValue": "Landlord"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        220,
+        20
+      ],
+      "id": "3081fb1e-6c84-4015-8399-65f0f0e14020",
+      "name": "User check on supabase",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cd90d8d9-d91d-4c08-beb9-9e14a678ed91",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        420,
+        20
+      ],
+      "id": "0fe4d0fe-4a95-4563-90b7-f1317a447beb",
+      "name": "Routing based on User Existence"
+    },
+    {
+      "parameters": {
+        "tableId": "users",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "telegram_id",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.from.id }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "Landlord"
+            },
+            {
+              "fieldId": "first_name",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.from.first_name }}"
+            },
+            {
+              "fieldId": "last_name",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.chat.last_name }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        680,
+        20
+      ],
+      "id": "b57e6cee-425b-44a5-bfc1-890ad3bc378f",
+      "name": "Add user to table users",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "uD1PGHRDak9ukkbg",
+          "mode": "list",
+          "cachedResultName": "Lease Parse Output flow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Everything": "={{ $json }}"
+          },
+          "matchingColumns": [
+            "file_id"
+          ],
+          "schema": [
+            {
+              "id": "Everything",
+              "displayName": "Everything",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        260,
+        460
+      ],
+      "id": "a2904ce8-eb6e-4ba2-a2b3-84eef2d742cb",
+      "name": "Execute Workflow"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/start",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "3c62c7fd-6c5b-410c-b2f3-13e6a8636bb1"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "/start message"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "74ad0d99-9526-43ae-a959-1c5e86eca697",
+                    "leftValue": "={{ $json.message.document }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Lease Upload"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f937f30e-a8f3-4408-8600-015418874786",
+                    "leftValue": "={{ $json.callback_query.message.reply_markup.inline_keyboard[0][0].callback_data }}",
+                    "rightValue": "generate_link",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "callback_data"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ecbf791f-d2f2-40dd-b42d-2c524f3311f1",
+                    "leftValue": "={{$json.message.entities[0].type}}",
+                    "rightValue": "bot_command",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "bot_command"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1061a1a7-f329-4bf5-a1e4-58f52bdb0bf1",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "any other message"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -460,
+        400
+      ],
+      "id": "a02fbbfd-bde0-4dd0-834b-a73811b28fd5",
+      "name": "Check What message received"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "Hi there! Thanks for sharing the file. At the moment, we’re only able to accept PDF files.\nCould you please upload the document again in PDF format so we can proceed?",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        220,
+        220
+      ],
+      "id": "3f2bdd0c-6d2a-4632-a0ea-fe6440877f2f",
+      "name": "Message - Wrong file type",
+      "webhookId": "a0fc5b55-949f-4ac8-a907-263507fbb5c5",
+      "credentials": {
+        "telegramApi": {
+          "id": "BK9Q6BAVIG4zhnJV",
+          "name": "Scaleupally_kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "s5xTEqTQvx2BopxA",
+          "mode": "list",
+          "cachedResultName": "Commands Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "text": "={{ $json.message.text }}",
+            "chat_id": "={{ $json.message.chat.id }}"
+          },
+          "matchingColumns": [
+            "text"
+          ],
+          "schema": [
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        720
+      ],
+      "id": "be1165f5-2d19-4869-8bad-fd7cf4bb5139",
+      "name": "Handle commands"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0b5a0b70-ccbe-4407-81c9-8ab907819d79",
+              "leftValue": "={{ $json.message.document.mime_type }}",
+              "rightValue": "application/pdf",
+              "operator": {
+                "type": "string",
+                "operation": "notEndsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        320
+      ],
+      "id": "198aceb5-a1cf-4c8f-a246-f6484ccbc4e9",
+      "name": "File type check"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ey9pmv8REdqqoUl8",
+          "mode": "list",
+          "cachedResultName": "Landlord Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Everything": "={{ $json }}"
+          },
+          "matchingColumns": [
+            "Everything"
+          ],
+          "schema": [
+            {
+              "id": "Everything",
+              "displayName": "Everything",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -480,
+        820
+      ],
+      "id": "b76925b4-eb19-41c7-aa4a-af73adce501a",
+      "name": "Landlord Agent"
+    },
+    {
+      "parameters": {
+        "tableId": "n8n_chat_histories",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "session_id",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $('Send welcome message').item.json.result.text }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        900,
+        20
+      ],
+      "id": "419571b8-f5fb-4f12-ba24-7d078541b5da",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $json.callback_query.id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -820,
+        660
+      ],
+      "id": "22d4873e-8098-43ab-a058-7749611c3852",
+      "name": "Answer Query a callback",
+      "webhookId": "dad00d2d-8df0-4843-b4db-d72858171f50",
+      "credentials": {
+        "telegramApi": {
+          "id": "BK9Q6BAVIG4zhnJV",
+          "name": "Scaleupally_kove"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check What message received",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Answer Query a callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send welcome message": {
+      "main": [
+        [
+          {
+            "node": "User check on supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User check on supabase": {
+      "main": [
+        [
+          {
+            "node": "Routing based on User Existence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Routing based on User Existence": {
+      "main": [
+        [
+          {
+            "node": "Add user to table users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add user to table users": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check What message received": {
+      "main": [
+        [
+          {
+            "node": "Send welcome message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "File type check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Landlord Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle commands",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Landlord Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File type check": {
+      "main": [
+        [
+          {
+            "node": "Message - Wrong file type",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "eb0db921-6474-4ea5-b65a-0f9957b50aad",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-10-27T05:48:03.691Z",
+      "createdAt": "2025-10-27T05:48:03.691Z",
+      "role": "workflow:owner",
+      "workflowId": "WrhAYi5lINAWwOyd",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

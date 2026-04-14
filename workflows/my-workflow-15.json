@@ -1,0 +1,295 @@
+{
+  "updatedAt": "2026-01-30T10:06:23.350Z",
+  "createdAt": "2026-01-29T11:19:11.185Z",
+  "id": "1QMG7eGjHqz2MVWn",
+  "name": "My workflow 15",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f568c07a-bb08-4338-9f8b-445a88f2224e",
+      "name": "When chat message received",
+      "webhookId": "9f6d8d5b-259d-420a-b57c-21f4744819bd"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Database schema:\n\naccounts(account_id, account_name, industry, region, created_date, status)\nuseor(user_id, account_id, user_name, role, created_date)\ndeals(deal_id, account_id, deal_value, stage, created_date, closed_date, sales_owner)\ninvoices(invoice_id, deal_id, invoice_amount, invoice_date, due_date, status)\npayments(payment_id, invoice_id, payment_amount, payment_date)\nproduct_usage(usage_id, account_id, usage_date, api_calls, active_users)\n\nUser request:\n{{ $json.chatInput }}\n",
+        "options": {
+          "systemMessage": "=You are a senior data analyst and an autonomous SQL agent.\n\nYou have access to a SQL Server tool that can execute T-SQL queries against the database.\n\nPrimary responsibility:\n- When data is required, you MUST use the SQL Server tool to retrieve it\n\nTool usage rules:\n- Use the SQL Server tool by providing a JSON object with a single key named \"query\"\n- The value of \"query\" must be a valid SQL Server (T-SQL) SELECT statement\n- Output ONLY a SQL SELECT query when calling the tool\n- DO NOT include explanations, comments, or markdown when calling the tool\n\nSQL rules:\n- DO NOT use DELETE, UPDATE, INSERT, DROP, TRUNCATE, or ALTER\n- Use only the provided tables and columns\n- Use SQL Server–compatible syntax only\n- Prefer CTEs for complex logic\n- Always alias tables\n- Handle NULLs safely using COALESCE\n- Use CASE WHEN where business logic is needed\n- Use window functions when ranking, deduplication, or ordering is required\n- Limit result size unless the user explicitly asks for full data\n\nOutput contract (MANDATORY):\n- Always return a JSON object with the following keys:\n  - \"format\"\n  - \"output\"\n\nFormat rules:\n- Set \"format\" to \"csv\" if the user explicitly asks for CSV, Excel, download, or file output\n- Set \"format\" to \"text\" for all other cases\n\nOutput rules:\n- If format = \"csv\":\n  - output must contain ONLY raw CSV data with a header row\n  - do NOT include explanations, bullet points, or extra text\n- If format = \"text\":\n  - output must be a concise natural-language summary of the result\n  - do NOT include CSV or tabular formatting\n\nFailure handling:\n- If the user request cannot be answered using the available tables or columns:\n  - set \"format\" to \"text\"\n  - clearly state that the data is not available\n  - do NOT guess or hallucinate\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        192,
+        0
+      ],
+      "id": "e8807c12-87bc-4c5e-8056-fbbf518157d8",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.query }}\n"
+      },
+      "type": "n8n-nodes-base.microsoftSqlTool",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        208
+      ],
+      "id": "8fa6ca19-2595-48e7-8a77-83e23936e761",
+      "name": "Microsoft SQL",
+      "credentials": {
+        "microsoftSql": {
+          "id": "oQzuaRrONIEY0r0V",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5",
+          "mode": "list",
+          "cachedResultName": "gpt-5"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        208
+      ],
+      "id": "d46264ed-414d-4d4f-974e-734a3f1231ea",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wXqOixbEbb7kpnQc",
+          "name": "Devansh_Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        -16
+      ],
+      "id": "ab7fb932-4e28-4b71-9f5f-bec25e326e0b",
+      "name": "Respond to Chat"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "output",
+        "options": {
+          "encoding": "utf8",
+          "fileName": "report.csv"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        992,
+        -144
+      ],
+      "id": "56343d93-717a-4306-81bf-b66b56e4f143",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const raw = item.json.output;\n\n  // Remove ```json and ``` wrappers\n  const cleaned = raw\n    .replace(/```json\\s*/i, '')\n    .replace(/```/g, '')\n    .trim();\n\n  // Parse the cleaned JSON string\n  const parsed = JSON.parse(cleaned);\n\n  results.push({\n    json: {\n      format: parsed.format,\n      output: parsed.output\n    }\n  });\n}\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        0
+      ],
+      "id": "f1650bd4-0bc2-4508-b73c-c17c129916f7",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.format }}",
+                    "rightValue": "csv",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ad814150-518d-4df2-b5c7-4052d3c325da"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "csv"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "3d3ec502-e721-4e46-acd5-e43573343e26",
+                    "leftValue": "={{ $json.format }}",
+                    "rightValue": "text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        -128
+      ],
+      "id": "51ea1b49-12dd-43c0-ad87-b411966cd346",
+      "name": "Switch"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "36a92920-b126-488a-9160-096cf9007f39",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-29T11:19:11.206Z",
+      "createdAt": "2026-01-29T11:19:11.206Z",
+      "role": "workflow:owner",
+      "workflowId": "1QMG7eGjHqz2MVWn",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

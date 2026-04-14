@@ -1,0 +1,1667 @@
+{
+  "updatedAt": "2026-02-21T08:28:29.407Z",
+  "createdAt": "2026-01-12T08:16:01.968Z",
+  "id": "K7pLp1H34yaFuxom",
+  "name": "Upwork Leads extension",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        688,
+        -32
+      ],
+      "id": "086f04f7-2f45-4f72-93ed-d5f29c9dcb38",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wXqOixbEbb7kpnQc",
+          "name": "Devansh_Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1584,
+        -272
+      ],
+      "id": "6c83598d-493c-4a14-8164-a0eaf1bf2470",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "687f2324-5f52-4364-967d-93b9f1f754e3",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 204,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        432,
+        -320
+      ],
+      "id": "5fc2d88f-7b90-469b-8d55-eb00389486c3",
+      "name": "IF lead not exists"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "687f2324-5f52-4364-967d-93b9f1f754e3",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 204,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        16
+      ],
+      "id": "f2d62af1-f4ac-4e77-9f11-838fc8d2ade8",
+      "name": "IF lead not exists1"
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://www.zohoapis.com/crm/v8/Leads/search?criteria=((Project_Link:equals:\\'' + encodeURIComponent($('Fetch leads').item.json.body.project_link) + '\\'))' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        256,
+        -320
+      ],
+      "id": "eac45071-4988-4423-96d8-630a4561e980",
+      "name": "GET Zoho UW leads",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://www.zohoapis.com/crm/v8/Leads/search?criteria=((Project_Link:equals:\\'' + encodeURIComponent($('Fetch leads').item.json.body.project_link) + '\\'))' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        256,
+        16
+      ],
+      "id": "542667e5-a81a-48b8-a94a-d6f2988fcda5",
+      "name": "GET Zoho FV leads",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "https://www.zohoapis.com/crm/v2/Leads",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ \n( () => {\n  const ownerMap = {\n    \"Manu\": \"5118344000000350001\",\n    \"sales.scaleupally\": \"5118344000004729073\",\n    \"Pranay\": \"5118344000003068001\",\n    \"Sparsh\": \"5118344000003068049\",\n    \"Vikas\": \"5118344000003068065\"\n  };\n\n  return {\n    data: [\n      {\n        id: $json.id,\n        Owner: {\n          id: ownerMap[$('Fetch leads').item.json.body.lead_owner] || \"5118344000000350001\"\n        }\n      }\n    ]\n  };\n})()\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1088,
+        -496
+      ],
+      "id": "675114a8-2cca-402b-9c37-faf6418e0c9d",
+      "name": "Update lead owner",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "https://www.zohoapis.com/crm/v2/Leads",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ \n(() => {\n  const ownerMap = {\n    \"Manu\": \"5118344000000350001\",\n    \"sales.scaleupally\": \"5118344000004729073\",\n    \"Pranay\": \"5118344000003068001\",\n    \"Sparsh\": \"5118344000003068049\",\n    \"Vikas\": \"5118344000003068065\"\n  };\n\n  return {\n    data: [\n      {\n        id: $json.id,\n        Owner: {\n          id: ownerMap[$('Fetch leads').item.json.body.lead_owner] || \"5118344000000350001\"\n        }\n      }\n    ]\n  };\n})()\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1088,
+        -160
+      ],
+      "id": "1a23a90a-ffa2-4de2-b6c6-acc957759c56",
+      "name": "Update lead owner1",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "Company": "={{ $('Fetch leads')?.item?.json?.body?.company_name || null }}",
+        "lastName": "={{ $('Fetch leads').item.json.body.lead_name }}",
+        "additionalFields": {
+          "customFields": {
+            "customFields": [
+              {
+                "fieldId": "Project_Description",
+                "value": "={{ $('Fetch leads').item.json.body.project_description }}"
+              },
+              {
+                "fieldId": "Project_Link",
+                "value": "={{ $('Fetch leads').item.json.body.project_link }}"
+              },
+              {
+                "fieldId": "Lead_Location",
+                "value": "={{ $('Fetch leads')?.item?.json?.body?.country_name || null }}"
+              },
+              {
+                "fieldId": "Inbound_or_Not",
+                "value": "={{ $('Fetch leads').item.json.body.in_out_bound }}"
+              },
+              {
+                "fieldId": "Bidder_Name",
+                "value": "={{ $('Fetch leads').item.json.body.bidder_name }}"
+              }
+            ]
+          },
+          "Lead_Source": "={{ $('Fetch leads').item.json.body.lead_source }}",
+          "Lead_Status": "Nurturing/ Contacted"
+        }
+      },
+      "type": "n8n-nodes-base.zohoCrm",
+      "typeVersion": 1,
+      "position": [
+        928,
+        -496
+      ],
+      "id": "88d93d3c-23d8-4def-925a-f7ac6ac8f1aa",
+      "name": "Create lead",
+      "alwaysOutputData": false,
+      "credentials": {
+        "zohoOAuth2Api": {
+          "id": "fA1s2XDiaal5SVFC",
+          "name": "sales.scaleupally CRM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "Company": "={{ $('Fetch leads')?.item?.json?.body?.company_name || null }}",
+        "lastName": "={{ $('Fetch leads').item.json.body.lead_name }}",
+        "additionalFields": {
+          "customFields": {
+            "customFields": [
+              {
+                "fieldId": "Project_Description",
+                "value": "={{ $('Fiverr Desc. Summarizer').item.json.text }}"
+              },
+              {
+                "fieldId": "Project_Link",
+                "value": "={{ $('Fetch leads').item.json.body.project_link }}"
+              },
+              {
+                "fieldId": "Lead_Location",
+                "value": "={{ $('Fetch leads')?.item?.json?.body?.country_name || null }}"
+              },
+              {
+                "fieldId": "Inbound_or_Not",
+                "value": "={{ $('Fetch leads').item.json.body.in_out_bound }}"
+              },
+              {
+                "fieldId": "Bidder_Name",
+                "value": "={{ $('Fetch leads').item.json.body.bidder_name }}"
+              }
+            ]
+          },
+          "Lead_Source": "={{ $('Fetch leads').item.json.body.lead_source }}",
+          "Lead_Status": "Nurturing/ Contacted"
+        }
+      },
+      "type": "n8n-nodes-base.zohoCrm",
+      "typeVersion": 1,
+      "position": [
+        928,
+        -160
+      ],
+      "id": "7d55ebbd-f0e4-42f3-ae71-34b7d28bce11",
+      "name": "Create lead1",
+      "credentials": {
+        "zohoOAuth2Api": {
+          "id": "fA1s2XDiaal5SVFC",
+          "name": "sales.scaleupally CRM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7922cdc2-593a-46fd-a790-f0bf9ccfb244",
+              "name": "exists",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "912c6801-dc64-4038-8387-8c308f40302f",
+              "name": "message",
+              "value": "Creating a new lead",
+              "type": "string"
+            },
+            {
+              "id": "33d5eee5-16ee-4195-b0dd-7124565ac5d1",
+              "name": "platform",
+              "value": "Fiverr",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1264,
+        -160
+      ],
+      "id": "6d4797b2-0ef0-4e2d-94c3-2d4260602556",
+      "name": "SET lead created1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7922cdc2-593a-46fd-a790-f0bf9ccfb244",
+              "name": "exists",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "912c6801-dc64-4038-8387-8c308f40302f",
+              "name": "message",
+              "value": "Creating a new lead",
+              "type": "string"
+            },
+            {
+              "id": "33d5eee5-16ee-4195-b0dd-7124565ac5d1",
+              "name": "platform",
+              "value": "Upwork",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1264,
+        -496
+      ],
+      "id": "8fe2427d-a0d1-4e89-a4cf-61cf67bbda74",
+      "name": "SET lead created"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "72c412d0-bec0-41bf-b2d2-7896af03eefe",
+              "name": "exists",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "b9475f1e-e899-499a-ac77-0a16091b8d3b",
+              "name": "message",
+              "value": "Upwork Lead already exists",
+              "type": "string"
+            },
+            {
+              "id": "180c99c3-a09a-454b-bd9f-a55222f21ef3",
+              "name": "platform",
+              "value": "Upwork",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1264,
+        -304
+      ],
+      "id": "c756039c-210c-4533-99ab-37b4dc22f758",
+      "name": "SET lead exists"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "72c412d0-bec0-41bf-b2d2-7896af03eefe",
+              "name": "exists",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "b9475f1e-e899-499a-ac77-0a16091b8d3b",
+              "name": "message",
+              "value": "Upwork Lead already exists",
+              "type": "string"
+            },
+            {
+              "id": "180c99c3-a09a-454b-bd9f-a55222f21ef3",
+              "name": "platform",
+              "value": "Fiverr",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1264,
+        32
+      ],
+      "id": "d2316e94-8296-4d3f-946a-8b869604686f",
+      "name": "SET lead exists1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is a conversation between a client and a freelancer from {{ $('Fetch leads').item.json.body.project_description }}.\n\nExtract a clean project description that can be saved in a CRM.\n\nConversation:\n\n{{ $json.body.project_description }}\n\nOutput only the project description.\nDo not include headings, bullet points, or explanations.",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are an assistant that extracts structured business information from client conversations.\n\nYour task:\n- Generate a professional CRM project description\n- Maximum length: 250 characters (strict limit)\n- If the description exceeds 250 characters, shorten it automatically\n- Do NOT explain or justify\n- Do NOT add greetings or filler text\n- Output ONLY the final description text\n\nThe description must:\n- Clearly state what the client wants\n- Mention tools/platforms if referenced\n- Mention scope and deliverables if available\n- Be neutral and professional\n"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        624,
+        -160
+      ],
+      "id": "02bc736f-7897-41fd-bebb-5c9f4ea66717",
+      "name": "Fiverr Desc. Summarizer"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.platform }}",
+                    "rightValue": "Upwork",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "d8e53719-7557-438e-a5e0-da22a1e83e11"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Upwork Lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "32a790f0-1d65-46ac-a290-5ac198882ba6",
+                    "leftValue": "={{ $json.body.platform }}",
+                    "rightValue": "Fiverr",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Fiverr Lead"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        16,
+        -160
+      ],
+      "id": "d4943420-1064-441d-9d1c-7c8411ff1bcc",
+      "name": "Check platform"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upwork-leads",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -192,
+        -160
+      ],
+      "id": "2d04150f-4fe4-4e3c-a881-e153b65e1a7a",
+      "name": "Fetch leads",
+      "webhookId": "ac0fc3a8-5a99-4f3d-96a9-e645ebe3288b"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1792,
+        -240
+      ],
+      "id": "01c39de5-5e1d-4adb-b758-d20f7c3f9835",
+      "name": "Respond to extension"
+    },
+    {
+      "parameters": {
+        "content": "## AI Optimized Task Instruction Set",
+        "height": 80,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        288,
+        -752
+      ],
+      "typeVersion": 1,
+      "id": "d35b681a-0f5a-4f04-ad27-be76975dbbca",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# Role\nYou are an assistant that extracts structured business requirements from client conversations and converts them into a concise, professional CRM project description.\n\n# Instructions\n- Generate a single professional project description suitable for a CRM\n- Clearly state what the client wants\n- Include tools, platforms, or technologies only if explicitly mentioned\n- Include scope and deliverables if available\n- Maintain a neutral, business-appropriate tone\n- Enforce a strict maximum length of 250 characters\n- If the content exceeds 250 characters, automatically shorten it while preserving meaning\n\n# Rules\n- Use only information explicitly present in the conversation\n- Do not infer, assume, or invent missing details\n- Do not add explanations, greetings, headings, or filler text\n- Output ONLY the final description text\n- If the conversation does not contain a clear project requirement, output a concise neutral description based strictly on available facts without speculation",
+        "height": 192,
+        "width": 304
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        400,
+        -672
+      ],
+      "typeVersion": 1,
+      "id": "6e6f5fee-690a-4f0d-8671-bf8b49b6f191",
+      "name": "Sticky Note1"
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Fiverr Desc. Summarizer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Respond to extension",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF lead not exists": {
+      "main": [
+        [
+          {
+            "node": "Create lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SET lead exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF lead not exists1": {
+      "main": [
+        [
+          {
+            "node": "Fiverr Desc. Summarizer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SET lead exists1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Zoho UW leads": {
+      "main": [
+        [
+          {
+            "node": "IF lead not exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Zoho FV leads": {
+      "main": [
+        [
+          {
+            "node": "IF lead not exists1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update lead owner": {
+      "main": [
+        [
+          {
+            "node": "SET lead created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update lead owner1": {
+      "main": [
+        [
+          {
+            "node": "SET lead created1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create lead": {
+      "main": [
+        [
+          {
+            "node": "Update lead owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create lead1": {
+      "main": [
+        [
+          {
+            "node": "Update lead owner1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SET lead created1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "SET lead created": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SET lead exists": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "SET lead exists1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Fiverr Desc. Summarizer": {
+      "main": [
+        [
+          {
+            "node": "Create lead1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check platform": {
+      "main": [
+        [
+          {
+            "node": "GET Zoho UW leads",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GET Zoho FV leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch leads": {
+      "main": [
+        [
+          {
+            "node": "Check platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "0b442029-6aa9-4522-a6b9-7254b8613b29",
+  "activeVersionId": "0b442029-6aa9-4522-a6b9-7254b8613b29",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-12T08:16:01.971Z",
+      "createdAt": "2026-01-12T08:16:01.971Z",
+      "role": "workflow:owner",
+      "workflowId": "K7pLp1H34yaFuxom",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-02-21T08:28:45.000Z",
+    "createdAt": "2026-02-21T08:28:29.407Z",
+    "versionId": "0b442029-6aa9-4522-a6b9-7254b8613b29",
+    "workflowId": "K7pLp1H34yaFuxom",
+    "nodes": [
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-5-mini",
+            "mode": "list",
+            "cachedResultName": "gpt-5-mini"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          688,
+          -32
+        ],
+        "id": "086f04f7-2f45-4f72-93ed-d5f29c9dcb38",
+        "name": "OpenAI Chat Model",
+        "credentials": {
+          "openAiApi": {
+            "id": "wXqOixbEbb7kpnQc",
+            "name": "Devansh_Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "numberInputs": 4
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          1584,
+          -272
+        ],
+        "id": "6c83598d-493c-4a14-8164-a0eaf1bf2470",
+        "name": "Merge"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "687f2324-5f52-4364-967d-93b9f1f754e3",
+                "leftValue": "={{ $json.statusCode }}",
+                "rightValue": 204,
+                "operator": {
+                  "type": "number",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          432,
+          -320
+        ],
+        "id": "5fc2d88f-7b90-469b-8d55-eb00389486c3",
+        "name": "IF lead not exists"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "687f2324-5f52-4364-967d-93b9f1f754e3",
+                "leftValue": "={{ $json.statusCode }}",
+                "rightValue": 204,
+                "operator": {
+                  "type": "number",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          448,
+          16
+        ],
+        "id": "f2d62af1-f4ac-4e77-9f11-838fc8d2ade8",
+        "name": "IF lead not exists1"
+      },
+      {
+        "parameters": {
+          "url": "={{ 'https://www.zohoapis.com/crm/v8/Leads/search?criteria=((Project_Link:equals:\\'' + encodeURIComponent($('Fetch leads').item.json.body.project_link) + '\\'))' }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "neverError": true
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          256,
+          -320
+        ],
+        "id": "eac45071-4988-4423-96d8-630a4561e980",
+        "name": "GET Zoho UW leads",
+        "credentials": {
+          "oAuth2Api": {
+            "id": "kLkpyrqVf8bU8wEr",
+            "name": "Zoho CRM API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "={{ 'https://www.zohoapis.com/crm/v8/Leads/search?criteria=((Project_Link:equals:\\'' + encodeURIComponent($('Fetch leads').item.json.body.project_link) + '\\'))' }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "neverError": true
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          256,
+          16
+        ],
+        "id": "542667e5-a81a-48b8-a94a-d6f2988fcda5",
+        "name": "GET Zoho FV leads",
+        "credentials": {
+          "oAuth2Api": {
+            "id": "kLkpyrqVf8bU8wEr",
+            "name": "Zoho CRM API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "https://www.zohoapis.com/crm/v2/Leads",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ \n( () => {\n  const ownerMap = {\n    \"Manu\": \"5118344000000350001\",\n    \"sales.scaleupally\": \"5118344000004729073\",\n    \"Pranay\": \"5118344000003068001\",\n    \"Sparsh\": \"5118344000003068049\",\n    \"Vikas\": \"5118344000003068065\"\n  };\n\n  return {\n    data: [\n      {\n        id: $json.id,\n        Owner: {\n          id: ownerMap[$('Fetch leads').item.json.body.lead_owner] || \"5118344000000350001\"\n        }\n      }\n    ]\n  };\n})()\n}}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1088,
+          -496
+        ],
+        "id": "675114a8-2cca-402b-9c37-faf6418e0c9d",
+        "name": "Update lead owner",
+        "credentials": {
+          "oAuth2Api": {
+            "id": "kLkpyrqVf8bU8wEr",
+            "name": "Zoho CRM API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "https://www.zohoapis.com/crm/v2/Leads",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ \n(() => {\n  const ownerMap = {\n    \"Manu\": \"5118344000000350001\",\n    \"sales.scaleupally\": \"5118344000004729073\",\n    \"Pranay\": \"5118344000003068001\",\n    \"Sparsh\": \"5118344000003068049\",\n    \"Vikas\": \"5118344000003068065\"\n  };\n\n  return {\n    data: [\n      {\n        id: $json.id,\n        Owner: {\n          id: ownerMap[$('Fetch leads').item.json.body.lead_owner] || \"5118344000000350001\"\n        }\n      }\n    ]\n  };\n})()\n}}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1088,
+          -160
+        ],
+        "id": "1a23a90a-ffa2-4de2-b6c6-acc957759c56",
+        "name": "Update lead owner1",
+        "credentials": {
+          "oAuth2Api": {
+            "id": "kLkpyrqVf8bU8wEr",
+            "name": "Zoho CRM API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "lead",
+          "Company": "={{ $('Fetch leads')?.item?.json?.body?.company_name || null }}",
+          "lastName": "={{ $('Fetch leads').item.json.body.lead_name }}",
+          "additionalFields": {
+            "customFields": {
+              "customFields": [
+                {
+                  "fieldId": "Project_Description",
+                  "value": "={{ $('Fetch leads').item.json.body.project_description }}"
+                },
+                {
+                  "fieldId": "Project_Link",
+                  "value": "={{ $('Fetch leads').item.json.body.project_link }}"
+                },
+                {
+                  "fieldId": "Lead_Location",
+                  "value": "={{ $('Fetch leads')?.item?.json?.body?.country_name || null }}"
+                },
+                {
+                  "fieldId": "Inbound_or_Not",
+                  "value": "={{ $('Fetch leads').item.json.body.in_out_bound }}"
+                },
+                {
+                  "fieldId": "Bidder_Name",
+                  "value": "={{ $('Fetch leads').item.json.body.bidder_name }}"
+                }
+              ]
+            },
+            "Lead_Source": "={{ $('Fetch leads').item.json.body.lead_source }}",
+            "Lead_Status": "Nurturing/ Contacted"
+          }
+        },
+        "type": "n8n-nodes-base.zohoCrm",
+        "typeVersion": 1,
+        "position": [
+          928,
+          -496
+        ],
+        "id": "88d93d3c-23d8-4def-925a-f7ac6ac8f1aa",
+        "name": "Create lead",
+        "alwaysOutputData": false,
+        "credentials": {
+          "zohoOAuth2Api": {
+            "id": "fA1s2XDiaal5SVFC",
+            "name": "sales.scaleupally CRM"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "lead",
+          "Company": "={{ $('Fetch leads')?.item?.json?.body?.company_name || null }}",
+          "lastName": "={{ $('Fetch leads').item.json.body.lead_name }}",
+          "additionalFields": {
+            "customFields": {
+              "customFields": [
+                {
+                  "fieldId": "Project_Description",
+                  "value": "={{ $('Fiverr Desc. Summarizer').item.json.text }}"
+                },
+                {
+                  "fieldId": "Project_Link",
+                  "value": "={{ $('Fetch leads').item.json.body.project_link }}"
+                },
+                {
+                  "fieldId": "Lead_Location",
+                  "value": "={{ $('Fetch leads')?.item?.json?.body?.country_name || null }}"
+                },
+                {
+                  "fieldId": "Inbound_or_Not",
+                  "value": "={{ $('Fetch leads').item.json.body.in_out_bound }}"
+                },
+                {
+                  "fieldId": "Bidder_Name",
+                  "value": "={{ $('Fetch leads').item.json.body.bidder_name }}"
+                }
+              ]
+            },
+            "Lead_Source": "={{ $('Fetch leads').item.json.body.lead_source }}",
+            "Lead_Status": "Nurturing/ Contacted"
+          }
+        },
+        "type": "n8n-nodes-base.zohoCrm",
+        "typeVersion": 1,
+        "position": [
+          928,
+          -160
+        ],
+        "id": "7d55ebbd-f0e4-42f3-ae71-34b7d28bce11",
+        "name": "Create lead1",
+        "credentials": {
+          "zohoOAuth2Api": {
+            "id": "fA1s2XDiaal5SVFC",
+            "name": "sales.scaleupally CRM"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "7922cdc2-593a-46fd-a790-f0bf9ccfb244",
+                "name": "exists",
+                "value": false,
+                "type": "boolean"
+              },
+              {
+                "id": "912c6801-dc64-4038-8387-8c308f40302f",
+                "name": "message",
+                "value": "Creating a new lead",
+                "type": "string"
+              },
+              {
+                "id": "33d5eee5-16ee-4195-b0dd-7124565ac5d1",
+                "name": "platform",
+                "value": "Fiverr",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1264,
+          -160
+        ],
+        "id": "6d4797b2-0ef0-4e2d-94c3-2d4260602556",
+        "name": "SET lead created1"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "7922cdc2-593a-46fd-a790-f0bf9ccfb244",
+                "name": "exists",
+                "value": false,
+                "type": "boolean"
+              },
+              {
+                "id": "912c6801-dc64-4038-8387-8c308f40302f",
+                "name": "message",
+                "value": "Creating a new lead",
+                "type": "string"
+              },
+              {
+                "id": "33d5eee5-16ee-4195-b0dd-7124565ac5d1",
+                "name": "platform",
+                "value": "Upwork",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1264,
+          -496
+        ],
+        "id": "8fe2427d-a0d1-4e89-a4cf-61cf67bbda74",
+        "name": "SET lead created"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "72c412d0-bec0-41bf-b2d2-7896af03eefe",
+                "name": "exists",
+                "value": true,
+                "type": "boolean"
+              },
+              {
+                "id": "b9475f1e-e899-499a-ac77-0a16091b8d3b",
+                "name": "message",
+                "value": "Upwork Lead already exists",
+                "type": "string"
+              },
+              {
+                "id": "180c99c3-a09a-454b-bd9f-a55222f21ef3",
+                "name": "platform",
+                "value": "Upwork",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1264,
+          -304
+        ],
+        "id": "c756039c-210c-4533-99ab-37b4dc22f758",
+        "name": "SET lead exists"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "72c412d0-bec0-41bf-b2d2-7896af03eefe",
+                "name": "exists",
+                "value": true,
+                "type": "boolean"
+              },
+              {
+                "id": "b9475f1e-e899-499a-ac77-0a16091b8d3b",
+                "name": "message",
+                "value": "Upwork Lead already exists",
+                "type": "string"
+              },
+              {
+                "id": "180c99c3-a09a-454b-bd9f-a55222f21ef3",
+                "name": "platform",
+                "value": "Fiverr",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1264,
+          32
+        ],
+        "id": "d2316e94-8296-4d3f-946a-8b869604686f",
+        "name": "SET lead exists1"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=Here is a conversation between a client and a freelancer from {{ $('Fetch leads').item.json.body.project_description }}.\n\nExtract a clean project description that can be saved in a CRM.\n\nConversation:\n\n{{ $json.body.project_description }}\n\nOutput only the project description.\nDo not include headings, bullet points, or explanations.",
+          "messages": {
+            "messageValues": [
+              {
+                "message": "=You are an assistant that extracts structured business information from client conversations.\n\nYour task:\n- Generate a professional CRM project description\n- Maximum length: 250 characters (strict limit)\n- If the description exceeds 250 characters, shorten it automatically\n- Do NOT explain or justify\n- Do NOT add greetings or filler text\n- Output ONLY the final description text\n\nThe description must:\n- Clearly state what the client wants\n- Mention tools/platforms if referenced\n- Mention scope and deliverables if available\n- Be neutral and professional\n"
+              }
+            ]
+          },
+          "batching": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.chainLlm",
+        "typeVersion": 1.7,
+        "position": [
+          624,
+          -160
+        ],
+        "id": "02bc736f-7897-41fd-bebb-5c9f4ea66717",
+        "name": "Fiverr Desc. Summarizer"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.body.platform }}",
+                      "rightValue": "Upwork",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "d8e53719-7557-438e-a5e0-da22a1e83e11"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Upwork Lead"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "32a790f0-1d65-46ac-a290-5ac198882ba6",
+                      "leftValue": "={{ $json.body.platform }}",
+                      "rightValue": "Fiverr",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Fiverr Lead"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          16,
+          -160
+        ],
+        "id": "d4943420-1064-441d-9d1c-7c8411ff1bcc",
+        "name": "Check platform"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "upwork-leads",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -192,
+          -160
+        ],
+        "id": "2d04150f-4fe4-4e3c-a881-e153b65e1a7a",
+        "name": "Fetch leads",
+        "webhookId": "ac0fc3a8-5a99-4f3d-96a9-e645ebe3288b"
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          1792,
+          -240
+        ],
+        "id": "01c39de5-5e1d-4adb-b758-d20f7c3f9835",
+        "name": "Respond to extension"
+      },
+      {
+        "parameters": {
+          "content": "## AI Optimized Task Instruction Set",
+          "height": 80,
+          "color": 4
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          288,
+          -752
+        ],
+        "typeVersion": 1,
+        "id": "d35b681a-0f5a-4f04-ad27-be76975dbbca",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "content": "# Role\nYou are an assistant that extracts structured business requirements from client conversations and converts them into a concise, professional CRM project description.\n\n# Instructions\n- Generate a single professional project description suitable for a CRM\n- Clearly state what the client wants\n- Include tools, platforms, or technologies only if explicitly mentioned\n- Include scope and deliverables if available\n- Maintain a neutral, business-appropriate tone\n- Enforce a strict maximum length of 250 characters\n- If the content exceeds 250 characters, automatically shorten it while preserving meaning\n\n# Rules\n- Use only information explicitly present in the conversation\n- Do not infer, assume, or invent missing details\n- Do not add explanations, greetings, headings, or filler text\n- Output ONLY the final description text\n- If the conversation does not contain a clear project requirement, output a concise neutral description based strictly on available facts without speculation",
+          "height": 192,
+          "width": 304
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          400,
+          -672
+        ],
+        "typeVersion": 1,
+        "id": "6e6f5fee-690a-4f0d-8671-bf8b49b6f191",
+        "name": "Sticky Note1"
+      }
+    ],
+    "connections": {
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Fiverr Desc. Summarizer",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Respond to extension",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF lead not exists": {
+        "main": [
+          [
+            {
+              "node": "Create lead",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "SET lead exists",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF lead not exists1": {
+        "main": [
+          [
+            {
+              "node": "Fiverr Desc. Summarizer",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "SET lead exists1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GET Zoho UW leads": {
+        "main": [
+          [
+            {
+              "node": "IF lead not exists",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GET Zoho FV leads": {
+        "main": [
+          [
+            {
+              "node": "IF lead not exists1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update lead owner": {
+        "main": [
+          [
+            {
+              "node": "SET lead created",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update lead owner1": {
+        "main": [
+          [
+            {
+              "node": "SET lead created1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create lead": {
+        "main": [
+          [
+            {
+              "node": "Update lead owner",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create lead1": {
+        "main": [
+          [
+            {
+              "node": "Update lead owner1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "SET lead created1": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 2
+            }
+          ]
+        ]
+      },
+      "SET lead created": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "SET lead exists": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "SET lead exists1": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 3
+            }
+          ]
+        ]
+      },
+      "Fiverr Desc. Summarizer": {
+        "main": [
+          [
+            {
+              "node": "Create lead1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check platform": {
+        "main": [
+          [
+            {
+              "node": "GET Zoho UW leads",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "GET Zoho FV leads",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch leads": {
+        "main": [
+          [
+            {
+              "node": "Check platform",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dev Scaleupally",
+    "name": "Version 0b442029",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

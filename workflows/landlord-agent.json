@@ -1,0 +1,2123 @@
+{
+  "updatedAt": "2026-02-19T06:19:50.324Z",
+  "createdAt": "2025-10-27T06:17:21.015Z",
+  "id": "ey9pmv8REdqqoUl8",
+  "name": "Landlord Agent",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1520,
+        -560
+      ],
+      "id": "fe0c8de9-135e-4bed-8fe9-f88a4493a0c0",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "chats",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.Everything.message?.chat?.id }}\n"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.Everything.message?.text }}\n"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "user"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1664,
+        -1408
+      ],
+      "id": "e73871f5-ed1a-4ee3-afd3-59029b250ed7",
+      "name": "Add new message1",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.Everything.message?.text || $json.Everything.callback_query.data }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=Kove – Landlord Assistant Bot\n---------------------------------\nYou are Kove, a friendly and highly energetic Telegram bot that helps landlords manage tenants, rent, and repairs effortlessly.  \nGoal: Deliver fast, trust-building outcomes in <3 messages per flow.  \n\nCOMMUNICATION STYLE\n-------------------\n- Short, human, conversational (≤3 sentences).  \n- Confirm outcome, then show 1–2 next steps as BUTTONS.  \n- Acknowledge immediately even if processing.  \n- NO TECHNICAL DETAILS, IDs, or backend/tool states discussion with user.  \n\nPRINCIPLES\n----------\n- One message = one action. Confirm → Next step → Done.    \n- Never increase cognitive load (no multi-slot lists).  \n- Default to current/most recent lease if duplicates found.  \n- Fail states become trust surfaces: reassure + retry/alternative.  \n- Never ask for tasks that you cannot do.\n\nCORE FLOWS\n----------\n🧰 Repairs/Tickets  \n- User: “Leak in Apt 2A.”  \n- [actions: text search apt 2a(address) in leases and create a log for the property by using property/lease id]\n- Bot: “🛠 Logged: Leak in Apt 2A ✅. Want me to suggest a vendor?”  \n- If tenant not onboarded → “Logged ✅. To keep them updated, invite here: [Invite Link].”  \n- If property/lease not found → “I don’t see any lease agreement for 2A. Log repair anyway?”  \n\n💵 Rent Reminders  \n- User: “Remind Sarah rent $1200 due 1st.”  \n- [actions: search for name sarah in lease details, ]\n- Bot:  \n  📄 Rent Reminder – Sarah (2B)  \n  Rent: $1200 · Due: 1st  \n  Message: “Hi Sarah — rent of $1200 is due on the 1st.”  \n\n📄 Lease Agreement Upload (Property Setup)  \n- Bot: “To set up a property, please upload the lease agreement as a PDF.”  \n- PDF file is read in background and data is handled accordingly.  \n- If parse fail → “Couldn’t read that PDF 🤔. Please upload a valid PDF lease file.” [Retry]  \n\n⚠️ Rule: Property addresses are only available from uploaded lease agreements. No free-text entry accepted.  \n\n📎 Lease Q&A  \n- User: “When does Sarah’s lease end?”  \n- Bot: “Lease for Sarah at 123 Main St (2B) ends Sep 30, 2026. Draft renewal?”  \n  Buttons: ✅ Yes · ⏳ Not now  \n\n🤔 Learn What I Can Help With  \n- Bot: “I can track repairs, send rent reminders, follow lease timelines, answer tenant questions.”  \n- Buttons: 🧰 Track a Repair · 💵 Send Rent Reminder · 📄 Upload Lease · ⏭ Skip  \n\nAGENTIC RULES\n-------------\nConfidence gating:  \n- ≥80%: auto-execute, confirm with buttons.  \n- 60–79%: clarify with binary buttons.  \n- <60%: offer 2–3 button choices.  \n\nError handling:  \n- Long Action/Tool calls >3 → “Give me a moment/This is taking longer than expected”  \n- Never surface “missing Telegram ID” or system state.  \n\nLandlord control toggle (after tenant repair):  \n“Want to handle this or should I take care of it?”  \nButtons: ✅ I’ll handle · 🤖 Suggest vendor · 📬 Message tenant  \n\nFEEDBACK PROMPTS\n----------------\n- After repair logged → “Was this what you expected?” 👍 / 👎  \n- After lease parsed → “Was this helpful?” 👍 / 👎  \n- After rent reminder → “Would you share this tool?” 👍 / 👎 \n**Make sure to ask feedback right after a flow looks completed, e.g. a reminder is created or repair is logged etc.**\n\n\n### NOTES\n- Buttons are predicted messages from user. DO NOT send unnecessary action buttons(e.g. adding submit buttons after a question), and make sure that the buttons sent are meaningful(e.g. if user can say, Send \"Hi\", make sure the button text is set accordingly).\n- When creating buttons, make the **callback data** full, natural sentences and the label/text very short(3 words max) and meaningful\n\n  * Example: For a reminder button → `I want to set up a reminder` (instead of just `reminder`).\n- **Time Reference Guideline**\n\nHOW TO CREATE INVITE LINK\nhttps://t.me/Scaleupally_Tenant_bot?start=[tenant_invite_id (can by find in tenancy/lease details)]\n\nSTRICT DO / DON’T\n-----------------\n✅ DO  \n- Always confirm with short friendly copy + buttons.  \n- Default to action; backfill later.  \n- Reuse memory (tenant/unit) silently.  \n- Ask user feedback on each completed action.\n❌ DON’T/CAN'T  \n- Accept non-PDF lease files.  \n- Share files or contact other peoples.\n- Accept free-text property addresses.  \n- Mention IDs, database states, or system jargon.  \n- Leave user hanging without a buttoned next step.  \n- Ask for multiple details in one message.  \n\n\nOther notes:\n - You cannot talk with any vendor, you can just share their contact details with the landlord/user you're talking to.\n - If you can use the existing history data for the task/answer, don't make unecessary tool calls.\n - You cannot share any files, and you never ask for the tasks to do by yourself for which you don't have an associated tool.",
+          "returnIntermediateSteps": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -1184,
+        -736
+      ],
+      "id": "c0b2cec5-23bb-4198-a1cf-6932f637f3af",
+      "name": "AI Agent1",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "This tool contains information related to lease. Use this tool whenever a landlord asks you to look for the details of tenant. You have the following columns which you can use if needed to generate the next response\nNOTE: The columns with * cannot be used as filters or searches(but fine for viewing)\n- id\n- landlord_name*\n- tenant_name\n- lease_start_date\n- lease_end_date\n- monthly_rent\n- rent_due_day\n- security_deposit\n- address\n- late_fee\n- late_grace_period\n- pets_allowed\n- utilities_included\n- lease_renewal_terms\n- maintenance_clauses\n- section8\n- parking_rules\n- created_at\n- maintenance_issues_tenant_name\n- maintenance_issues_address\n- rent_reminder\n- rent_reminders_on",
+        "operation": "getAll",
+        "tableId": "Lease_Parse_Output",
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}",
+        "filterType": "string",
+        "filterString": "=landlord_telegram_id=eq.{{ $('When Executed by Another Workflow').item.json.Everything.message?.chat.id || $('When Executed by Another Workflow').item.json.Everything.callback_query.message.chat.id }}&{{ $fromAI('Filters__String_', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        -1456,
+        -240
+      ],
+      "id": "3a3b9d1c-e692-4581-a8bf-0a406f934477",
+      "name": "Lease Database1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 0.5
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1440,
+        -1296
+      ],
+      "id": "919206e7-83d7-4228-81e2-5c9971e7f795",
+      "name": "Wait1",
+      "webhookId": "d21bb077-fc9d-48a7-84ab-39936d672237"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to log/search/update maintenance tickets on behalf of landlord\nmake sure that command description are very specific.",
+        "workflowId": {
+          "__rl": true,
+          "value": "Ga5uAcFVLnzhVU0l",
+          "mode": "list",
+          "cachedResultName": "Landlord Maintenance Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenancy_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('tenancy_id', `Id of the lease/property of landlord that s/he want to create ticket for.\n[use 0 for null, when searching leases]`, 'number') }}",
+            "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('description', `Description of the task related to issue/update.\n\nNOTE:\nDescription works as a command, e.g.\ncreate a new issue for ...\nupdate ... issue to resolved.\nadd a new update to ... ticket; vendor will reach at 2\nhow many/what tickets are there.\nwhat's update on ... ticket\netc.\n\nmake sure the commands are highly detailed.`, 'string') }}",
+            "landlord_id": "={{ $('When Executed by Another Workflow').item.json.Everything.message?.chat.id || $('When Executed by Another Workflow').item.json.Everything.callback_query.message.chat.id }}",
+            "tenant_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('tenant_id', `The id of tenant in the property.\n[use 0 for null, when searching leases]`, 'number') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "landlord_id",
+              "displayName": "landlord_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "tenancy_id",
+              "displayName": "tenancy_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -1344,
+        -240
+      ],
+      "id": "44bf8dd7-1957-49f6-b53d-8ce434e3df8c",
+      "name": "Maintenance manager1"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to find vendors for particular property and issues.\nvendors like: electricians, plumbers etc.",
+        "workflowId": {
+          "__rl": true,
+          "value": "kLENhRKkmBKMuti0",
+          "mode": "list",
+          "cachedResultName": "Vendors"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('chat_id', ``, 'string') }}",
+            "keyword": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('keyword', ``, 'string') }}",
+            "address": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('address', `Address of the property(not exact, just try to mention area + pincode + country).`, 'string') }}",
+            "zip_code": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('zip_code', ``, 'string') }}",
+            "country_code": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('country_code', ``, 'string') }}",
+            "tag": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('tag', `only available options: \\`electrician\\`, \\`plumber\\`, \\`technician\\`, \\`other\\`, \\`carpenter\\`.\nNO OTHER TAGS ALLOWED`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "keyword",
+              "displayName": "keyword",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "address",
+              "displayName": "address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "zip_code",
+              "displayName": "zip_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "country_code",
+              "displayName": "country_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "tag",
+              "displayName": "tag",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -1216,
+        -240
+      ],
+      "id": "65228eb5-83ef-4d51-9883-9816fb9968ce",
+      "name": "Vendors1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.Everything.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "de432568-c5b9-49f0-97c0-f11da8d2c65a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Normal messae"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8bde197b-e9af-49cd-9b6e-bfd7e04e8919",
+                    "leftValue": "={{ $json.Everything.callback_query.data }}",
+                    "rightValue": "Add_renew lease",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Add/Renew lease"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1888,
+        -1296
+      ],
+      "id": "c10b2c95-f21b-4d20-afda-8a616daca154",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "tableId": "chats",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.Everything.callback_query.message.chat.id }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.Everything.callback_query.data }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "user"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1664,
+        -1200
+      ],
+      "id": "ea8df4ec-e3f8-4bf0-b5bd-34f967bedb5e",
+      "name": "Callback query add lease1"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "chats",
+        "limit": 15,
+        "filterType": "string",
+        "filterString": "={{ 'user_id=eq.' + $json.user_id + '&order=id.desc' }}"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        -1296
+      ],
+      "id": "dc12dde0-3585-440d-8872-db503fa2deb4",
+      "name": "Get chats1",
+      "executeOnce": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8244985106:AAEjaJToWtJ3syPIQ7v9Ku8hrvdShl5BGBs/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{  JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        128,
+        -416
+      ],
+      "id": "37a09c01-762e-4c7f-a231-cb2855661f4a",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"message\": {\n      \"type\": \"string\"\n    },\n    \"buttons\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"text\": { \"type\": \"string\" },\n            \"callback_data\": { \"type\": \"string\" }\n          },\n          \"required\": [\"text\", \"callback_data\"],\n          \"additionalProperties\": false\n        }\n      }\n    }\n  },\n  \"required\": [\"message\", \"buttons\"],\n  \"additionalProperties\": false\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -576,
+        -528
+      ],
+      "id": "8a253d7e-bace-42a5-88f4-274a7a5eb84d",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -496,
+        -320
+      ],
+      "id": "e778b4c3-66f8-4ca1-ae48-f07ba79cc9e2",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let data = {\n  \"chat_id\": $('When Executed by Another Workflow').first().json.Everything.message?.chat.id || $('When Executed by Another Workflow').first().json.Everything.callback_query.message.chat.id,\n  \"text\": $input.first().json.output.message,\n  // \"parse_mode\": \"MarkdownV2\"\n}\n\n// if ($json.output.buttons.length > 0) {\n//   data = {...data, reply_markup: {\n//     inline_keyboard: $json.output.buttons\n//   }}\n// }\n\nreturn data"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        -400
+      ],
+      "id": "4a777f3a-1481-45fd-a89d-6a4862077011",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "tableId": "chats",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $json.result.chat.id }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "assistant"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $('AI Agent1').item.json.output }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1968,
+        224
+      ],
+      "id": "0019958d-c6b6-408d-b3c3-7c6716152fda",
+      "name": "Store chat(assistant)1"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to set messages to the tenant directly using property id.",
+        "workflowId": {
+          "__rl": true,
+          "value": "r87wlvIV9qFbMvKX",
+          "mode": "list",
+          "cachedResultName": "Send Message to Tenant"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "remind_text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('remind_text', ``, 'string') }}",
+            "property_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('property_id', ``, 'number') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "property_id",
+              "displayName": "property_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "remind_text",
+              "displayName": "remind_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -1104,
+        -240
+      ],
+      "id": "da22f616-7d0f-4b08-ab0e-61ce15e86c25",
+      "name": "Send Tenant Message1"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to set a 'reminder for later'. The input should be property_id from the 'Lease database' tool and the remind_at date(YYYY-MM-DD). ",
+        "workflowId": {
+          "__rl": true,
+          "value": "Nv4olYIl5jqmcbJz",
+          "mode": "list",
+          "cachedResultName": "Set reminder for later"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat": "={{ $('When Executed by Another Workflow').item }}",
+            "Remind_at ": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Remind_at_', `Input the Date that AI gives to send the reminder to`, 'string') }}",
+            "remind_text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('remind_text', ``, 'string') }}",
+            "property_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('property_id', `property_id is the 'id' column of lease database tool. If no match is found use NULL.`, 'string') }}"
+          },
+          "matchingColumns": [
+            "Everything"
+          ],
+          "schema": [
+            {
+              "id": "chat",
+              "displayName": "chat",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "object",
+              "removed": false
+            },
+            {
+              "id": "property_id",
+              "displayName": "property_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Remind_at ",
+              "displayName": "Remind_at ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "remind_text",
+              "displayName": "remind_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -880,
+        -224
+      ],
+      "id": "c3268ebc-f3cb-491f-84ab-196cf2cac85c",
+      "name": "Reminder for later1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4a690be5-4e8d-476c-84b1-3cde354ad15d",
+              "leftValue": "={{ $('When Executed by Another Workflow').item.json.Everything.callback_query }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1744,
+        224
+      ],
+      "id": "e0ac45e6-5c38-4926-ab73-d2e0106cd117",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=landlord-{{String($('When Executed by Another Workflow').first().json.Everything.message?.chat.id ?? $('When Executed by Another Workflow').first().json.Everything.callback_query?.message?.chat.id)}}",
+        "contextWindowLength": 30
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -1344,
+        -560
+      ],
+      "id": "210c9d11-07fb-4e09-b7c1-14b5f02450c9",
+      "name": "Postgres Chat Memory1",
+      "credentials": {
+        "postgres": {
+          "id": "KQeLHusfuaizRlmh",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Log feedback from user.",
+        "tableId": "user_feedbacks",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_telegram_id",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.Everything.message?.chat.id || $('When Executed by Another Workflow').item.json.Everything.callback_query.message.chat.id }}"
+            },
+            {
+              "fieldId": "user_comment",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues1_Field_Value', `comment/feedback provided by the user.`, 'string') }}"
+            },
+            {
+              "fieldId": "feature_used",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues2_Field_Value', \"Must be one of `create_reminder`, `find_vendors`, `create_ticket`, `add_lease`, `other`.\", 'string') }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{$('When Executed by Another Workflow').item.json.Everything.message.chat.first_name || $('When Executed by Another Workflow').item.json.Everything.callback_query.message.chat.first_name}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        -288
+      ],
+      "id": "63415d85-428b-426f-b0e6-7a4e5736ae2e",
+      "name": "User Feedback1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "If 2 tools are already called and you still need information, write a tiny heads up to landlord telling it's going to take a moment.",
+        "chatId": "={{$('When Executed by Another Workflow').first().json.Everything.message?.chat.id || $('When Executed by Another Workflow').first().json.Everything.callback_query.message.chat.id}}",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Text', `The message sent to user e.g. \"Give me a moment...\"`, 'string') }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegramTool",
+      "typeVersion": 1.2,
+      "position": [
+        -720,
+        -176
+      ],
+      "id": "1dd0f6c4-cebf-4bb8-8738-96be9ea9cc05",
+      "name": "Send progress message1",
+      "webhookId": "1b12f962-8bdb-48bd-adb9-f1e621b59d7b",
+      "credentials": {
+        "telegramApi": {
+          "id": "BK9Q6BAVIG4zhnJV",
+          "name": "Scaleupally_kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendChatAction",
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.Everything.message?.chat.id || $('When Executed by Another Workflow').item.json.Everything.callback_query.message.chat.id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1904,
+        -1040
+      ],
+      "id": "fb371381-1844-486c-a7d9-97fd9de6d61d",
+      "name": "Send a chat action1",
+      "webhookId": "6e097ddd-e602-4f4f-bedc-0774bf78ae5d",
+      "credentials": {
+        "telegramApi": {
+          "id": "BK9Q6BAVIG4zhnJV",
+          "name": "Scaleupally_kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "Everything",
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "id": "665014ed-b440-4d34-9c17-cc1471eaf1ac",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -1888,
+        -768
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.Everything.message.chat.id }}",
+        "text": "={{ $json.output.message }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -16,
+        -736
+      ],
+      "id": "2cb203c8-6084-4825-bf79-2c4ed18fd459",
+      "name": "Send a text message",
+      "webhookId": "d59724d6-824d-4ca1-996a-cfc7dc714fca",
+      "credentials": {
+        "telegramApi": {
+          "id": "BK9Q6BAVIG4zhnJV",
+          "name": "Scaleupally_kove"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add new message1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lease Database1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Get chats1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Maintenance manager1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vendors1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Add new message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Callback query add lease1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Callback query add lease1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        []
+      ]
+    },
+    "Store chat(assistant)1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Tenant Message1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reminder for later1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User Feedback1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send progress message1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a chat action1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "Everything": {
+            "update_id": 147175299,
+            "message": {
+              "message_id": 47,
+              "from": {
+                "id": 979280586,
+                "is_bot": false,
+                "first_name": "Diwakar",
+                "last_name": "Rankawat",
+                "username": "diwakarrankawat",
+                "language_code": "en"
+              },
+              "chat": {
+                "id": 979280586,
+                "first_name": "Diwakar",
+                "last_name": "Rankawat",
+                "username": "diwakarrankawat",
+                "type": "private"
+              },
+              "date": 1763039126,
+              "text": "hi there"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "ae6529d3-ef7b-4288-9997-34a1f78668e1",
+  "activeVersionId": "4f7c6873-fe9e-43fe-add5-03ed7c3f32a6",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-27T06:17:21.019Z",
+      "createdAt": "2025-10-27T06:17:21.019Z",
+      "role": "workflow:owner",
+      "workflowId": "ey9pmv8REdqqoUl8",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-23T06:05:26.474Z",
+    "createdAt": "2025-12-23T06:05:26.474Z",
+    "versionId": "4f7c6873-fe9e-43fe-add5-03ed7c3f32a6",
+    "workflowId": "ey9pmv8REdqqoUl8",
+    "nodes": [
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-4.1",
+            "mode": "list",
+            "cachedResultName": "gpt-4.1"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          -1520,
+          -560
+        ],
+        "id": "fe0c8de9-135e-4bed-8fe9-f88a4493a0c0",
+        "name": "OpenAI Chat Model2",
+        "credentials": {
+          "openAiApi": {
+            "id": "2SN6l7TZaVixYAzM",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "chats",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "user_id",
+                "fieldValue": "={{ $('When Executed by Another Workflow').item.json.Everything.message?.chat?.id }}\n"
+              },
+              {
+                "fieldId": "message",
+                "fieldValue": "={{ $('When Executed by Another Workflow').item.json.Everything.message?.text }}\n"
+              },
+              {
+                "fieldId": "role",
+                "fieldValue": "user"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1664,
+          -1408
+        ],
+        "id": "e73871f5-ed1a-4ee3-afd3-59029b250ed7",
+        "name": "Add new message1",
+        "executeOnce": true
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $json.Everything.message?.text || $json.Everything.callback_query.data }}",
+          "hasOutputParser": true,
+          "options": {
+            "systemMessage": "=Kove – Landlord Assistant Bot\n---------------------------------\nYou are Kove, a friendly and highly energetic Telegram bot that helps landlords manage tenants, rent, and repairs effortlessly.  \nGoal: Deliver fast, trust-building outcomes in <3 messages per flow.  \n\nCOMMUNICATION STYLE\n-------------------\n- Short, human, conversational (≤3 sentences).  \n- Confirm outcome, then show 1–2 next steps as BUTTONS.  \n- Acknowledge immediately even if processing.  \n- NO TECHNICAL DETAILS, IDs, or backend/tool states discussion with user.  \n\nPRINCIPLES\n----------\n- One message = one action. Confirm → Next step → Done.    \n- Never increase cognitive load (no multi-slot lists).  \n- Default to current/most recent lease if duplicates found.  \n- Fail states become trust surfaces: reassure + retry/alternative.  \n- Never ask for tasks that you cannot do.\n\nCORE FLOWS\n----------\n🧰 Repairs/Tickets  \n- User: “Leak in Apt 2A.”  \n- [actions: text search apt 2a(address) in leases and create a log for the property by using property/lease id]\n- Bot: “🛠 Logged: Leak in Apt 2A ✅. Want me to suggest a vendor?”  \n- If tenant not onboarded → “Logged ✅. To keep them updated, invite here: [Invite Link].”  \n- If property/lease not found → “I don’t see any lease agreement for 2A. Log repair anyway?”  \n\n💵 Rent Reminders  \n- User: “Remind Sarah rent $1200 due 1st.”  \n- [actions: search for name sarah in lease details, ]\n- Bot:  \n  📄 Rent Reminder – Sarah (2B)  \n  Rent: $1200 · Due: 1st  \n  Message: “Hi Sarah — rent of $1200 is due on the 1st.”  \n\n📄 Lease Agreement Upload (Property Setup)  \n- Bot: “To set up a property, please upload the lease agreement as a PDF.”  \n- PDF file is read in background and data is handled accordingly.  \n- If parse fail → “Couldn’t read that PDF 🤔. Please upload a valid PDF lease file.” [Retry]  \n\n⚠️ Rule: Property addresses are only available from uploaded lease agreements. No free-text entry accepted.  \n\n📎 Lease Q&A  \n- User: “When does Sarah’s lease end?”  \n- Bot: “Lease for Sarah at 123 Main St (2B) ends Sep 30, 2026. Draft renewal?”  \n  Buttons: ✅ Yes · ⏳ Not now  \n\n🤔 Learn What I Can Help With  \n- Bot: “I can track repairs, send rent reminders, follow lease timelines, answer tenant questions.”  \n- Buttons: 🧰 Track a Repair · 💵 Send Rent Reminder · 📄 Upload Lease · ⏭ Skip  \n\nAGENTIC RULES\n-------------\nConfidence gating:  \n- ≥80%: auto-execute, confirm with buttons.  \n- 60–79%: clarify with binary buttons.  \n- <60%: offer 2–3 button choices.  \n\nError handling:  \n- Long Action/Tool calls >3 → “Give me a moment/This is taking longer than expected”  \n- Never surface “missing Telegram ID” or system state.  \n\nLandlord control toggle (after tenant repair):  \n“Want to handle this or should I take care of it?”  \nButtons: ✅ I’ll handle · 🤖 Suggest vendor · 📬 Message tenant  \n\nFEEDBACK PROMPTS\n----------------\n- After repair logged → “Was this what you expected?” 👍 / 👎  \n- After lease parsed → “Was this helpful?” 👍 / 👎  \n- After rent reminder → “Would you share this tool?” 👍 / 👎 \n**Make sure to ask feedback right after a flow looks completed, e.g. a reminder is created or repair is logged etc.**\n\n\n### NOTES\n- Buttons are predicted messages from user. DO NOT send unnecessary action buttons(e.g. adding submit buttons after a question), and make sure that the buttons sent are meaningful(e.g. if user can say, Send \"Hi\", make sure the button text is set accordingly).\n- When creating buttons, make the **callback data** full, natural sentences and the label/text very short(3 words max) and meaningful\n\n  * Example: For a reminder button → `I want to set up a reminder` (instead of just `reminder`).\n- **Time Reference Guideline**\n\nHOW TO CREATE INVITE LINK\nhttps://t.me/Scaleupally_Tenant_bot?start=[tenant_invite_id (can by find in tenancy/lease details)]\n\nSTRICT DO / DON’T\n-----------------\n✅ DO  \n- Always confirm with short friendly copy + buttons.  \n- Default to action; backfill later.  \n- Reuse memory (tenant/unit) silently.  \n- Ask user feedback on each completed action.\n❌ DON’T/CAN'T  \n- Accept non-PDF lease files.  \n- Share files or contact other peoples.\n- Accept free-text property addresses.  \n- Mention IDs, database states, or system jargon.  \n- Leave user hanging without a buttoned next step.  \n- Ask for multiple details in one message.  \n\n\nOther notes:\n - You cannot talk with any vendor, you can just share their contact details with the landlord/user you're talking to.\n - If you can use the existing history data for the task/answer, don't make unecessary tool calls.\n - You cannot share any files, and you never ask for the tasks to do by yourself for which you don't have an associated tool.",
+            "returnIntermediateSteps": true
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 2,
+        "position": [
+          -1200,
+          -736
+        ],
+        "id": "c0b2cec5-23bb-4198-a1cf-6932f637f3af",
+        "name": "AI Agent1",
+        "executeOnce": true
+      },
+      {
+        "parameters": {
+          "descriptionType": "manual",
+          "toolDescription": "This tool contains information related to lease. Use this tool whenever a landlord asks you to look for the details of tenant. You have the following columns which you can use if needed to generate the next response\nNOTE: The columns with * cannot be used as filters or searches(but fine for viewing)\n- id\n- landlord_name*\n- tenant_name\n- lease_start_date\n- lease_end_date\n- monthly_rent\n- rent_due_day\n- security_deposit\n- address\n- late_fee\n- late_grace_period\n- pets_allowed\n- utilities_included\n- lease_renewal_terms\n- maintenance_clauses\n- section8\n- parking_rules\n- created_at\n- maintenance_issues_tenant_name\n- maintenance_issues_address\n- rent_reminder\n- rent_reminders_on",
+          "operation": "getAll",
+          "tableId": "Lease_Parse_Output",
+          "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}",
+          "filterType": "string",
+          "filterString": "=landlord_telegram_id=eq.{{ $('When Executed by Another Workflow').item.json.Everything.message?.chat.id || $('When Executed by Another Workflow').item.json.Everything.callback_query.message.chat.id }}&{{ $fromAI('Filters__String_', ``, 'string') }}"
+        },
+        "type": "n8n-nodes-base.supabaseTool",
+        "typeVersion": 1,
+        "position": [
+          -1456,
+          -240
+        ],
+        "id": "3a3b9d1c-e692-4581-a8bf-0a406f934477",
+        "name": "Lease Database1",
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "amount": 0.5
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -1440,
+          -1296
+        ],
+        "id": "919206e7-83d7-4228-81e2-5c9971e7f795",
+        "name": "Wait1",
+        "webhookId": "d21bb077-fc9d-48a7-84ab-39936d672237"
+      },
+      {
+        "parameters": {
+          "description": "Call this tool to log/search/update maintenance tickets on behalf of landlord\nmake sure that command description are very specific.",
+          "workflowId": {
+            "__rl": true,
+            "value": "Ga5uAcFVLnzhVU0l",
+            "mode": "list",
+            "cachedResultName": "Landlord Maintenance Agent"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "tenancy_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('tenancy_id', `Id of the lease/property of landlord that s/he want to create ticket for.\n[use 0 for null, when searching leases]`, 'number') }}",
+              "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('description', `Description of the task related to issue/update.\n\nNOTE:\nDescription works as a command, e.g.\ncreate a new issue for ...\nupdate ... issue to resolved.\nadd a new update to ... ticket; vendor will reach at 2\nhow many/what tickets are there.\nwhat's update on ... ticket\netc.\n\nmake sure the commands are highly detailed.`, 'string') }}",
+              "landlord_id": "={{ $('When Executed by Another Workflow').item.json.Everything.message?.chat.id || $('When Executed by Another Workflow').item.json.Everything.callback_query.message.chat.id }}",
+              "tenant_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('tenant_id', `The id of tenant in the property.\n[use 0 for null, when searching leases]`, 'number') }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "landlord_id",
+                "displayName": "landlord_id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "number",
+                "removed": false
+              },
+              {
+                "id": "description",
+                "displayName": "description",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              },
+              {
+                "id": "tenancy_id",
+                "displayName": "tenancy_id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "number",
+                "removed": false
+              },
+              {
+                "id": "tenant_id",
+                "displayName": "tenant_id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "number",
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+        "typeVersion": 2.2,
+        "position": [
+          -1344,
+          -240
+        ],
+        "id": "44bf8dd7-1957-49f6-b53d-8ce434e3df8c",
+        "name": "Maintenance manager1"
+      },
+      {
+        "parameters": {
+          "description": "Call this tool to find vendors for particular property and issues.\nvendors like: electricians, plumbers etc.",
+          "workflowId": {
+            "__rl": true,
+            "value": "kLENhRKkmBKMuti0",
+            "mode": "list",
+            "cachedResultName": "Vendors"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "chat_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('chat_id', ``, 'string') }}",
+              "keyword": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('keyword', ``, 'string') }}",
+              "address": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('address', `Address of the property(not exact, just try to mention area + pincode + country).`, 'string') }}",
+              "zip_code": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('zip_code', ``, 'string') }}",
+              "country_code": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('country_code', ``, 'string') }}",
+              "tag": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('tag', `only available options: \\`electrician\\`, \\`plumber\\`, \\`technician\\`, \\`other\\`, \\`carpenter\\`.\nNO OTHER TAGS ALLOWED`, 'string') }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "chat_id",
+                "displayName": "chat_id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              },
+              {
+                "id": "keyword",
+                "displayName": "keyword",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              },
+              {
+                "id": "address",
+                "displayName": "address",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              },
+              {
+                "id": "zip_code",
+                "displayName": "zip_code",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              },
+              {
+                "id": "country_code",
+                "displayName": "country_code",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              },
+              {
+                "id": "tag",
+                "displayName": "tag",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+        "typeVersion": 2.2,
+        "position": [
+          -1216,
+          -240
+        ],
+        "id": "65228eb5-83ef-4d51-9883-9816fb9968ce",
+        "name": "Vendors1"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.Everything.message.text }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "string",
+                        "operation": "exists",
+                        "singleValue": true
+                      },
+                      "id": "de432568-c5b9-49f0-97c0-f11da8d2c65a"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Normal messae"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "8bde197b-e9af-49cd-9b6e-bfd7e04e8919",
+                      "leftValue": "={{ $json.Everything.callback_query.data }}",
+                      "rightValue": "Add_renew lease",
+                      "operator": {
+                        "type": "string",
+                        "operation": "exists",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Add/Renew lease"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          -1888,
+          -1296
+        ],
+        "id": "c10b2c95-f21b-4d20-afda-8a616daca154",
+        "name": "Switch1"
+      },
+      {
+        "parameters": {
+          "tableId": "chats",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "user_id",
+                "fieldValue": "={{ $('When Executed by Another Workflow').item.json.Everything.callback_query.message.chat.id }}"
+              },
+              {
+                "fieldId": "message",
+                "fieldValue": "={{ $('When Executed by Another Workflow').item.json.Everything.callback_query.data }}"
+              },
+              {
+                "fieldId": "role",
+                "fieldValue": "user"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1664,
+          -1200
+        ],
+        "id": "ea8df4ec-e3f8-4bf0-b5bd-34f967bedb5e",
+        "name": "Callback query add lease1"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "chats",
+          "limit": 15,
+          "filterType": "string",
+          "filterString": "={{ 'user_id=eq.' + $json.user_id + '&order=id.desc' }}"
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1216,
+          -1296
+        ],
+        "id": "dc12dde0-3585-440d-8872-db503fa2deb4",
+        "name": "Get chats1",
+        "executeOnce": true,
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.telegram.org/bot8244985106:AAEjaJToWtJ3syPIQ7v9Ku8hrvdShl5BGBs/sendMessage",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{  JSON.stringify($json) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          128,
+          -416
+        ],
+        "id": "37a09c01-762e-4c7f-a231-cb2855661f4a",
+        "name": "HTTP Request1"
+      },
+      {
+        "parameters": {
+          "schemaType": "manual",
+          "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"message\": {\n      \"type\": \"string\"\n    },\n    \"buttons\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"text\": { \"type\": \"string\" },\n            \"callback_data\": { \"type\": \"string\" }\n          },\n          \"required\": [\"text\", \"callback_data\"],\n          \"additionalProperties\": false\n        }\n      }\n    }\n  },\n  \"required\": [\"message\", \"buttons\"],\n  \"additionalProperties\": false\n}",
+          "autoFix": true
+        },
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.3,
+        "position": [
+          -576,
+          -528
+        ],
+        "id": "8a253d7e-bace-42a5-88f4-274a7a5eb84d",
+        "name": "Structured Output Parser"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-4.1-mini"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          -496,
+          -320
+        ],
+        "id": "e778b4c3-66f8-4ca1-ae48-f07ba79cc9e2",
+        "name": "OpenAI Chat Model3",
+        "credentials": {
+          "openAiApi": {
+            "id": "2SN6l7TZaVixYAzM",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "let data = {\n  \"chat_id\": $('When Executed by Another Workflow').first().json.Everything.message?.chat.id || $('When Executed by Another Workflow').first().json.Everything.callback_query.message.chat.id,\n  \"text\": $input.first().json.output.message,\n  // \"parse_mode\": \"MarkdownV2\"\n}\n\n// if ($json.output.buttons.length > 0) {\n//   data = {...data, reply_markup: {\n//     inline_keyboard: $json.output.buttons\n//   }}\n// }\n\nreturn data"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -112,
+          -400
+        ],
+        "id": "4a777f3a-1481-45fd-a89d-6a4862077011",
+        "name": "Code1"
+      },
+      {
+        "parameters": {
+          "tableId": "chats",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "user_id",
+                "fieldValue": "={{ $json.result.chat.id }}"
+              },
+              {
+                "fieldId": "role",
+                "fieldValue": "assistant"
+              },
+              {
+                "fieldId": "message",
+                "fieldValue": "={{ $('AI Agent1').item.json.output }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1968,
+          224
+        ],
+        "id": "0019958d-c6b6-408d-b3c3-7c6716152fda",
+        "name": "Store chat(assistant)1"
+      },
+      {
+        "parameters": {
+          "description": "Call this tool to set messages to the tenant directly using property id.",
+          "workflowId": {
+            "__rl": true,
+            "value": "r87wlvIV9qFbMvKX",
+            "mode": "list",
+            "cachedResultName": "Send Message to Tenant"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "remind_text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('remind_text', ``, 'string') }}",
+              "property_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('property_id', ``, 'number') }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "property_id",
+                "displayName": "property_id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "number",
+                "removed": false
+              },
+              {
+                "id": "remind_text",
+                "displayName": "remind_text",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+        "typeVersion": 2.2,
+        "position": [
+          -1104,
+          -240
+        ],
+        "id": "da22f616-7d0f-4b08-ab0e-61ce15e86c25",
+        "name": "Send Tenant Message1"
+      },
+      {
+        "parameters": {
+          "description": "Call this tool to set a 'reminder for later'. The input should be property_id from the 'Lease database' tool and the remind_at date(YYYY-MM-DD). ",
+          "workflowId": {
+            "__rl": true,
+            "value": "Nv4olYIl5jqmcbJz",
+            "mode": "list",
+            "cachedResultName": "Set reminder for later"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "chat": "={{ $('When Executed by Another Workflow').item }}",
+              "Remind_at ": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Remind_at_', `Input the Date that AI gives to send the reminder to`, 'string') }}",
+              "remind_text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('remind_text', ``, 'string') }}",
+              "property_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('property_id', `property_id is the 'id' column of lease database tool. If no match is found use NULL.`, 'string') }}"
+            },
+            "matchingColumns": [
+              "Everything"
+            ],
+            "schema": [
+              {
+                "id": "chat",
+                "displayName": "chat",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "object",
+                "removed": false
+              },
+              {
+                "id": "property_id",
+                "displayName": "property_id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              },
+              {
+                "id": "Remind_at ",
+                "displayName": "Remind_at ",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              },
+              {
+                "id": "remind_text",
+                "displayName": "remind_text",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+        "typeVersion": 2.2,
+        "position": [
+          -880,
+          -224
+        ],
+        "id": "c3268ebc-f3cb-491f-84ab-196cf2cac85c",
+        "name": "Reminder for later1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "4a690be5-4e8d-476c-84b1-3cde354ad15d",
+                "leftValue": "={{ $('When Executed by Another Workflow').item.json.Everything.callback_query }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "object",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -1744,
+          224
+        ],
+        "id": "e0ac45e6-5c38-4926-ab73-d2e0106cd117",
+        "name": "If1"
+      },
+      {
+        "parameters": {
+          "sessionIdType": "customKey",
+          "sessionKey": "=landlord-{{String($('When Executed by Another Workflow').first().json.Everything.message?.chat.id ?? $('When Executed by Another Workflow').first().json.Everything.callback_query?.message?.chat.id)}}",
+          "contextWindowLength": 30
+        },
+        "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+        "typeVersion": 1.3,
+        "position": [
+          -1344,
+          -560
+        ],
+        "id": "210c9d11-07fb-4e09-b7c1-14b5f02450c9",
+        "name": "Postgres Chat Memory1",
+        "credentials": {
+          "postgres": {
+            "id": "KQeLHusfuaizRlmh",
+            "name": "Postgres account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "descriptionType": "manual",
+          "toolDescription": "Log feedback from user.",
+          "tableId": "user_feedbacks",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "user_telegram_id",
+                "fieldValue": "={{ $('When Executed by Another Workflow').item.json.Everything.message?.chat.id || $('When Executed by Another Workflow').item.json.Everything.callback_query.message.chat.id }}"
+              },
+              {
+                "fieldId": "user_comment",
+                "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues1_Field_Value', `comment/feedback provided by the user.`, 'string') }}"
+              },
+              {
+                "fieldId": "feature_used",
+                "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues2_Field_Value', \"Must be one of `create_reminder`, `find_vendors`, `create_ticket`, `add_lease`, `other`.\", 'string') }}"
+              },
+              {
+                "fieldId": "name",
+                "fieldValue": "={{$('When Executed by Another Workflow').item.json.Everything.message.chat.first_name || $('When Executed by Another Workflow').item.json.Everything.callback_query.message.chat.first_name}}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabaseTool",
+        "typeVersion": 1,
+        "position": [
+          -688,
+          -288
+        ],
+        "id": "63415d85-428b-426f-b0e6-7a4e5736ae2e",
+        "name": "User Feedback1",
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "descriptionType": "manual",
+          "toolDescription": "If 2 tools are already called and you still need information, write a tiny heads up to landlord telling it's going to take a moment.",
+          "chatId": "={{$('When Executed by Another Workflow').first().json.Everything.message?.chat.id || $('When Executed by Another Workflow').first().json.Everything.callback_query.message.chat.id}}",
+          "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Text', `The message sent to user e.g. \"Give me a moment...\"`, 'string') }}",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegramTool",
+        "typeVersion": 1.2,
+        "position": [
+          -720,
+          -176
+        ],
+        "id": "1dd0f6c4-cebf-4bb8-8738-96be9ea9cc05",
+        "name": "Send progress message1",
+        "webhookId": "1b12f962-8bdb-48bd-adb9-f1e621b59d7b",
+        "credentials": {
+          "telegramApi": {
+            "id": "BK9Q6BAVIG4zhnJV",
+            "name": "Scaleupally_kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "sendChatAction",
+          "chatId": "={{ $('When Executed by Another Workflow').item.json.Everything.message?.chat.id || $('When Executed by Another Workflow').item.json.Everything.callback_query.message.chat.id }}"
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          -1904,
+          -1040
+        ],
+        "id": "fb371381-1844-486c-a7d9-97fd9de6d61d",
+        "name": "Send a chat action1",
+        "webhookId": "6e097ddd-e602-4f4f-bedc-0774bf78ae5d",
+        "credentials": {
+          "telegramApi": {
+            "id": "BK9Q6BAVIG4zhnJV",
+            "name": "Scaleupally_kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "Everything",
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "id": "665014ed-b440-4d34-9c17-cc1471eaf1ac",
+        "typeVersion": 1.1,
+        "name": "When Executed by Another Workflow",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "position": [
+          -1888,
+          -768
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('When Executed by Another Workflow').item.json.Everything.message.chat.id }}",
+          "text": "={{ $json.output.message }}",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          -16,
+          -736
+        ],
+        "id": "2cb203c8-6084-4825-bf79-2c4ed18fd459",
+        "name": "Send a text message",
+        "webhookId": "d59724d6-824d-4ca1-996a-cfc7dc714fca",
+        "credentials": {
+          "telegramApi": {
+            "id": "BK9Q6BAVIG4zhnJV",
+            "name": "Scaleupally_kove"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "OpenAI Chat Model2": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent1",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Add new message1": {
+        "main": [
+          [
+            {
+              "node": "Wait1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Agent1": {
+        "main": [
+          [
+            {
+              "node": "Send a text message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Lease Database1": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent1",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait1": {
+        "main": [
+          [
+            {
+              "node": "Get chats1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Maintenance manager1": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent1",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Vendors1": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent1",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch1": {
+        "main": [
+          [
+            {
+              "node": "Add new message1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Callback query add lease1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Callback query add lease1": {
+        "main": [
+          [
+            {
+              "node": "Wait1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Structured Output Parser": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "AI Agent1",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model3": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Structured Output Parser",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code1": {
+        "main": [
+          []
+        ]
+      },
+      "Store chat(assistant)1": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Tenant Message1": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent1",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reminder for later1": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent1",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Postgres Chat Memory1": {
+        "ai_memory": [
+          [
+            {
+              "node": "AI Agent1",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "User Feedback1": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent1",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send progress message1": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent1",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "AI Agent1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Send a chat action1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

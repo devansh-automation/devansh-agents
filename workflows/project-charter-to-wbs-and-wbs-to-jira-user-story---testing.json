@@ -1,0 +1,2702 @@
+{
+  "updatedAt": "2026-04-08T12:00:03.564Z",
+  "createdAt": "2026-01-08T06:24:16.357Z",
+  "id": "hLp2zbkdlc0TxTTn",
+  "name": "Project Charter to WBS and WBS to Jira user story - testing",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "drive-accepted",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        1920,
+        208
+      ],
+      "id": "13105244-7e4a-4e70-bf06-23a7c8f05c75",
+      "name": "Webhook",
+      "webhookId": "dec08c9f-5d9d-464f-8262-fe4a71e4598b"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6b8cca3f-d43e-474c-87be-d0bb7cab36d0",
+              "leftValue": "={{\n  $json.body.event === \"accepted\" &&\n  $json.body.fileName.endsWith(\"_accepted\")\n}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2112,
+        208
+      ],
+      "id": "1a2b7dca-49da-4dba-9e6b-599ecda8fb48",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fileName = $json.body.fileName;\n// Example: Project Charter Comparometer_accepted\n\nconst projectName = fileName\n  .replace(/Project Charter/i, \"\")\n  .replace(/_accepted/i, \"\")\n  .trim()\n  .toLowerCase()\n  .replace(/\\b\\w/g, char => char.toUpperCase());\n\nreturn [{\n  fileId: $json.body.fileId,\n  fileName,\n  projectName,\n  projectFolderId: $json.body.projectFolderId\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2336,
+        208
+      ],
+      "id": "9a1b7c5c-7763-4ac8-924f-7aa3f9a7462c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "={{$json.fileId}}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        2512,
+        208
+      ],
+      "id": "cead7e74-5bc8-48ba-ba56-d565fd477f8f",
+      "name": "Get a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "I13QzRVumWGzkAV2",
+          "name": "Google Docs dev account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "id"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a Senior Business Analyst.\nFrom the given project scope:\n1. Generate a Work Breakdown Structure (WBS) grouped strictly by User Story.\n2. Create EXACTLY ONE JSON object per User Story.\n3. Do NOT mix or reuse Acceptance Criteria or Sub-tasks across different User Stories.\n\n🔒 Mandatory Rules (VERY IMPORTANT)\nBefore generating project-specific items, you MUST ALWAYS include the following standard modules and epics for every project, even if they are not explicitly mentioned in the scope.\n\nModule/Subject: Technical Planning & Setup\nEpic/Module: High-level – Technical Planning\nYou MUST generate the following User Stories. Each User Story MUST start with “As a …” and MUST NOT include numbering like “User Story 1.1”.\n* As a project stakeholder, I want to decide the development team structure and technology stack so that the project is scalable, maintainable, and aligned with business goals.\n* As a technical architect, I want to create a high-level application architecture diagram so that all stakeholders understand system components and integrations.\n* As a technical lead, I want to identify challenging areas and define a POC/R&D plan so that technical risks are addressed early.\n* As a project manager, I want to define an internal and client communication plan so that coordination and reporting are clear and consistent.\n\nEpic/Module: Project Setup\nUser Stories must follow the “As a … I want … so that …” format.\n* As a development team, I want to define routing and branch naming conventions so that code management remains consistent and traceable.\n* As a DevOps engineer, I want to define a deployment plan so that releases across environments are predictable and controlled. Sub-tasks:\n    * Plan around the need for different environments (dev, staging, live)\n* As a developer, I want to set up the development environment so that coding can begin smoothly. Sub-tasks:\n    * Create required Bitbucket repositories\n* As a QA lead, I want to define a testing strategy so that quality is ensured throughout development. Sub-tasks:\n    * Create a module-level development and testing plan with timelines\n\nEpic/Module: Database Design\n* As a database architect, I want to plan the database structure so that data integrity, performance, and scalability are ensured. Sub-tasks:\n    * Create ER diagram\n    * Define master tables\n    * Define indexes, unique keys, and foreign keys\n* As a backend developer, I want to manage database migrations in the project so that schema changes are versioned and traceable. Sub-tasks:\n    * Create database migrations/schema in the project\n\nLast Module/Subject: Deployment(last module show after end module)\nEpic/Module: Deployment\n* As a DevOps engineer, I want to configure deployment so that the system is securely and reliably accessible in production. Sub-tasks:(detect from project tracker that its webapp or mobile app or both, also based on front-end and backend deployment)\n\n📌 Project-Specific Scope Handling\nAfter adding the mandatory modules above:\n* Generate additional User Stories strictly based on the provided project scope.\n* Ensure every User Story starts with “As a …”\n* Ensure each User Story has its own Acceptance Criteria and Sub-tasks.\n* Do NOT merge Sub-tasks between User Stories.\n\n📋 For EACH User Story:\n* Generate 5–7 clear Acceptance Criteria\n* List ONLY the Sub-tasks that belong to that specific User Story\n* Create subtasks based on roles like frontend, backend...\n\n📦 Output Format (STRICT)\nReturn STRICT JSON in the following format ONLY:\n\n[\n  {\n    \"Module/Subject\": \"\",\n    \"Epic/Module\": \"\",\n    \"User Story/Task\": \"\",\n    \"Acceptance Criteria\": [\n      \"AC 1\",\n      \"AC 2\"\n    ],\n    \"Sub-tasks\": [\n      \"Subtask 1\",\n      \"Subtask 2\"\n    ]\n  }\n]\n\n🚫 Output Rules (STRICT)\n* - No markdown\n* - No explanations\n* - No additional keys\n* * - No merging of subtasks between User Stories\n"
+            },
+            {
+              "content": "=Project Name: {{$json.projectName}}\n\nScope Document:\n{{$json.documentText}}\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        2976,
+        208
+      ],
+      "id": "ed8c1c64-7371-4dfd-9ca1-94d7e59423a9",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "Project Charter to WBS OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  projectName: $node[\"Code in JavaScript\"].json.projectName,\n  documentText: $json.content\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2784,
+        208
+      ],
+      "id": "45f75a76-06f3-4c78-92a6-b85d88bd33fd",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "=WBS - {{$node[\"Code in JavaScript\"].json.projectName}}",
+        "sheetsUi": {
+          "sheetValues": [
+            {
+              "title": "WBS"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3328,
+        208
+      ],
+      "id": "5fdcaa38-0908-4008-b78e-a688339091f7",
+      "name": "Create spreadsheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gIaKwdWqmi3Hd8h5",
+          "name": "Google Sheets account with dev"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      \"Module/Subject\": \"\",\n      \"Epic/Module\": \"\",\n      \"User Story/Task\": \"\",\n      \"Acceptance Criteria\": \"\",\n      \"Sub-tasks\": \"\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3552,
+        208
+      ],
+      "id": "cb2bc370-ecb0-41f4-b61f-3f60195155bf",
+      "name": "Create Headers"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{$node[\"Create spreadsheet\"].json.spreadsheetId}}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Create spreadsheet').item.json.sheets[0].properties.title }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Module/Subject",
+              "displayName": "Module/Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Epic/Module",
+              "displayName": "Epic/Module",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "User Story/Task",
+              "displayName": "User Story/Task",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Sub-tasks",
+              "displayName": "Sub-tasks",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3760,
+        208
+      ],
+      "id": "04e8993b-e98d-4f84-8c79-85ab27655772",
+      "name": "Append Row (Headers)",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gIaKwdWqmi3Hd8h5",
+          "name": "Google Sheets account with dev"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const msg = $('Message a model').first().json;\n\n// 1. Extract OpenAI response safely\nlet raw =\n  msg.output?.content?.[0]?.text ||\n  msg.output?.[0]?.content?.[0]?.text ||\n  msg.content?.[0]?.text;\n\nif (!raw) {\n  throw new Error('OpenAI response text not found');\n}\n\n// 2. Remove markdown fences\nraw = raw\n  .replace(/```json/gi, '')\n  .replace(/```/g, '')\n  .trim();\n\n// 3. Parse JSON\nconst data = JSON.parse(raw);\n\n// 4. Build rows — ONE ROW = ONE SUBTASK (REPEAT STORY DATA)\nconst rows = [];\n\ndata.forEach(item => {\n  const acceptanceCriteria = Array.isArray(item[\"Acceptance Criteria\"])\n    ? item[\"Acceptance Criteria\"].map(ac => `• ${ac}`).join('\\n')\n    : \"\";\n\n  const subtasks = Array.isArray(item[\"Sub-tasks\"])\n    ? item[\"Sub-tasks\"]\n    : [];\n\n  // If no subtasks, still create ONE row\n  if (subtasks.length === 0) {\n    rows.push({\n      \"Module/Subject\": item[\"Module/Subject\"] || \"\",\n      \"Epic/Module\": item[\"Epic/Module\"] || \"\",\n      \"User Story/Task\": item[\"User Story/Task\"] || \"\",\n      \"Acceptance Criteria\": acceptanceCriteria,\n      \"Sub-tasks\": \"\"\n    });\n    return;\n  }\n\n  // One row PER subtask — REPEAT ALL PARENT FIELDS\n  for (const subtask of subtasks) {\n    rows.push({\n      \"Module/Subject\": item[\"Module/Subject\"] || \"\",\n      \"Epic/Module\": item[\"Epic/Module\"] || \"\",\n      \"User Story/Task\": item[\"User Story/Task\"] || \"\",\n      \"Acceptance Criteria\": acceptanceCriteria,\n      \"Sub-tasks\": subtask\n    });\n  }\n});\n\nreturn rows;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3984,
+        208
+      ],
+      "id": "2e774a2f-bbfd-417f-b714-fcbdb2878879",
+      "name": "Parse WBS JSON"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{$node[\"Create spreadsheet\"].json.spreadsheetId}}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Create spreadsheet').item.json.sheets[0].properties.sheetId }}",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Module/Subject": "={{ $json['Module/Subject'] }}",
+            "Epic/Module": "={{ $json['Epic/Module'] }}",
+            "User Story/Task": "={{ $json['User Story/Task'] }}",
+            "Acceptance Criteria": "={{ $json['Acceptance Criteria'] }}",
+            "Sub-tasks": "={{ $json['Sub-tasks'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Module/Subject",
+              "displayName": "Module/Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Epic/Module",
+              "displayName": "Epic/Module",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "User Story/Task",
+              "displayName": "User Story/Task",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Acceptance Criteria",
+              "displayName": "Acceptance Criteria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Sub-tasks",
+              "displayName": "Sub-tasks",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4176,
+        208
+      ],
+      "id": "a354ba64-74ab-4776-9df1-ef21ffafc821",
+      "name": "Append Row (Data)",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gIaKwdWqmi3Hd8h5",
+          "name": "Google Sheets account with dev"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://scaleupally.atlassian.net/rest/api/3/project",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Accept\": \"application/json\",\n  \"Content-Type\": \"application/json\"\n}\n",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"key\": \"{{ $('Prepare Jira Project Data').item.json.projectKey }}\",\n  \"name\": \"{{ $('Prepare Jira Project Data').item.json.projectName }}\",\n  \"projectTypeKey\": \"software\",\n  \"projectTemplateKey\": \"com.pyxis.greenhopper.jira:gh-scrum-template\",\n  \"leadAccountId\": \"{{ $('Prepare Jira Project Data').item.json.leadAccountId }}\",\n  \"assigneeType\": \"UNASSIGNED\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        5104,
+        240
+      ],
+      "id": "d144ef41-5a7b-4809-807e-60e52c462e13",
+      "name": "Create Jira Project",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "PvnAHimvT91GA9s7",
+          "name": "Sapna HTTP credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Derive project name & key\nconst projectName = $node[\"Code in JavaScript\"].json.projectName;  \n\n// Generate Jira-safe project key (max 10 chars, uppercase)\nconst letters = projectName\n  .replace(/[^A-Za-z ]/g, \" \")   // keep letters & spaces\n  .split(\" \")                    // split into words\n  .filter(Boolean)\n  .map(word => word[0])          // first letter of each word\n  .join(\"\")\n  .toUpperCase();\n\n// Enforce Jira rules: min 2, max 10\nlet projectKey = letters.substring(0, 10);\n\nif (projectKey.length < 2) {\n  // fallback: take first 2 letters of cleaned name\n  projectKey = projectName\n    .replace(/[^A-Za-z]/g, \"\")\n    .substring(0, 2)\n    .toUpperCase();\n}\n\nreturn [{\n  projectName,\n  projectKey,\n  leadAccountId: \"63281be03ac41ebde7680374\" // 👈 replace with your real accountId\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4480,
+        208
+      ],
+      "id": "34ef3190-8ec6-4e41-bce3-76075c0bc03e",
+      "name": "Prepare Jira Project Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  projectKey: $json.key,\n  projectId: $json.id\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5328,
+        160
+      ],
+      "id": "70fb3495-1ad4-4568-9881-42151966d549",
+      "name": "Save Project Key for Later Use"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\nconst stories = {};\n\nfor (const { json } of rows) {\n  const story = json[\"User Story/Task\"];\n  if (!story) continue;\n\n  if (!stories[story]) {\n    stories[story] = {\n      projectKey: json.projectKey,\n      epicKey: json.epicKey,\n      summary: story,\n      description: json[\"Acceptance Criteria\"] || \"\",\n      subtasks: []\n    };\n  }\n\n  if (json[\"Sub-tasks\"]) {\n    stories[story].subtasks.push(json[\"Sub-tasks\"]);\n  }\n}\n\nreturn Object.values(stories).map(s => ({ json: s }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8624,
+        -112
+      ],
+      "id": "2d92b329-f6f4-472f-bac3-db76a2f0b999",
+      "name": "Group by User Story"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Create spreadsheet').first().json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Create spreadsheet').first().json.sheets[0].properties.sheetId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        5600,
+        -16
+      ],
+      "id": "d80105f2-925a-4859-9342-40f359554279",
+      "name": "Read Sheet (All Rows)",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gIaKwdWqmi3Hd8h5",
+          "name": "Google Sheets account with dev"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        9104,
+        224
+      ],
+      "id": "85072b86-22ef-4e31-92c5-22f9c6ca9994"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        8880,
+        -16
+      ],
+      "id": "14442eb0-434b-4dc8-a130-77b7fffbfa6a",
+      "name": "Split In Batches (Stories)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://scaleupally.atlassian.net/rest/api/3/issue",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        10192,
+        -64
+      ],
+      "id": "519cca5d-80d2-4c95-a67c-104c0d10da6c",
+      "name": "Create Jira Sub-task",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "PvnAHimvT91GA9s7",
+          "name": "Sapna HTTP credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://scaleupally.atlassian.net/rest/api/3/project/search?query={{$json.projectKey}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4704,
+        144
+      ],
+      "id": "f8942f28-f857-4133-bd95-60b1c7dbd8fa",
+      "name": "Check Jira Project Exists",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "PvnAHimvT91GA9s7",
+          "name": "Sapna HTTP credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e1334eef-dc8e-4912-8622-d4960052ba62",
+              "leftValue": "={{$json.values.length > 0}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4896,
+        112
+      ],
+      "id": "b38395de-53b8-49e4-b2a1-10a2671b1d12",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = [];\n\nfor (const item of $input.all()) {\n  const parentKey = item.json.key;\n  const subtasks = Array.isArray(item.json.subtasks)\n    ? item.json.subtasks\n    : [];\n\n  for (const task of subtasks) {\n    if (!task || !task.trim()) continue;\n\n    const cleanTask = task.replace(/^\\d+\\.\\s*/, '').trim();\n\n    output.push({\n      json: {\n        fields: {\n          project: { key: parentKey.split('-')[0] },\n          parent: { key: parentKey },\n          summary: cleanTask,\n          issuetype: { name: \"Sub-task\" }\n        }\n      }\n    });\n  }\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        9888,
+        -64
+      ],
+      "id": "7d4f06f4-eb0f-4765-a68d-2d07bf9a45ca",
+      "name": "Prepare Subtasks"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n    fields: {\n      project: { key: $json.projectKey },\n      summary: $json.summary,\n      description: {\n        type: \"doc\",\n        version: 1,\n        content: [{\n          type: \"paragraph\",\n          content: [{ type: \"text\", text: $json.description }]\n        }]\n      },\n      issuetype: { name: \"Story\" },\n      parent: { key: $json.epicKey }  // Epic Link\n    },\n    subtasks: $json.subtasks || []\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        9200,
+        -32
+      ],
+      "id": "70919c51-9cf3-4719-a1ce-9ee5bb21c449",
+      "name": "Prepare Jira Story Payload"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://scaleupally.atlassian.net/rest/api/3/issue",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "={{ $json.fields }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        9424,
+        0
+      ],
+      "id": "e4e619c4-8b17-4517-9552-530b13334016",
+      "name": "Create Jira Story",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "PvnAHimvT91GA9s7",
+          "name": "Sapna HTTP credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7e060426-a63b-4521-9205-b0cec00f7269",
+              "leftValue": "={{ $json.jiraStoryKey }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        7824,
+        -2800
+      ],
+      "id": "c39f34e0-664c-4ea7-8ff0-eedb638ab988",
+      "name": "Jira Story Exists?"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        9648,
+        -128
+      ],
+      "id": "46230d6e-5f8e-4c38-91c9-b0f544ca2081",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://scaleupally.atlassian.net/rest/api/3/issue",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Accept\": \"application/json\",\n  \"Content-Type\": \"application/json\"\n}\n",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"project\": {\n      \"key\": \"{{ $json.projectKey }}\"\n    },\n    \"summary\": \"{{ $json.epicSummary }}\",\n    \"description\": {\n      \"type\": \"doc\",\n      \"version\": 1,\n      \"content\": [\n        {\n          \"type\": \"paragraph\",\n          \"content\": [\n            {\n              \"type\": \"text\",\n              \"text\": \"{{ $json.epicDescription }}\"\n            }\n          ]\n        }\n      ]\n    },\n    \"issuetype\": {\n      \"name\": \"Epic\"\n    }\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        5344,
+        3232
+      ],
+      "id": "11243583-2dbb-4a6c-b8b7-520ce687134e",
+      "name": "Create Epic - HTTP Request",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "PvnAHimvT91GA9s7",
+          "name": "Sapna HTTP credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\nconst epics = {};\n\nfor (const { json } of rows) {\n  const epicName = json[\"Epic/Module\"];\n  if (!epicName) continue;\n\n  if (!epics[epicName]) {\n    epics[epicName] = {\n      epicName,\n      projectKey:$('Prepare Jira Project Data').first().json.projectKey ,\n      rows: []\n    };\n  }\n\n  epics[epicName].rows.push(json);\n}\n\nreturn Object.values(epics).map(e => ({ json: e }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5824,
+        96
+      ],
+      "id": "8c4ab793-c940-48d1-bd1a-e3c3d282b137",
+      "name": "Group by Epic"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me2",
+      "typeVersion": 1,
+      "position": [
+        6432,
+        288
+      ],
+      "id": "e873cb02-91f8-4311-a3ab-29345096031a"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        6240,
+        96
+      ],
+      "id": "a3d5034b-8279-448c-97c0-3fbc6f217ef4",
+      "name": "Split in Batches (Epic)"
+    },
+    {
+      "parameters": {
+        "url": "https://scaleupally.atlassian.net/rest/api/3/search/jql",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "jql",
+              "value": "=project = {{$json.projectKey}} AND issuetype = Epic AND summary ~ \"{{$json.epicName}}\""
+            },
+            {
+              "name": "maxResults",
+              "value": "1"
+            },
+            {
+              "name": "fields",
+              "value": "key"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6400,
+        -112
+      ],
+      "id": "14072396-3136-47d9-ac4e-1db81fcf5fcc",
+      "name": "Check Epic Exists",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "PvnAHimvT91GA9s7",
+          "name": "Sapna HTTP credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "07ef261f-f59b-4eac-ac87-f0801c3001fd",
+              "leftValue": "={{$json.issues.length}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        6960,
+        -80
+      ],
+      "id": "6a2bad16-13ec-4963-8b2b-a3b1af1f8f76",
+      "name": "IF (Epic Exists?)"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: {\n    epicKey:$input.first().json.epicKey,\n    projectKey:$input.first().json.projectKey ,\n    rows: $input.first().json.rows\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7792,
+        -112
+      ],
+      "id": "c6c21e5d-9fe4-4d41-af19-8342b12ca9b9",
+      "name": "Epic Already Exist",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://scaleupally.atlassian.net/rest/api/3/issue",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"project\": {\n      \"key\": \"{{ $json.projectKey }}\"\n    },\n    \"summary\": \"{{ $json.epicName }}\",\n    \"issuetype\": {\n      \"name\": \"Epic\"\n    }  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        7776,
+        80
+      ],
+      "id": "65ff923c-0d5f-4ced-96c9-378a9c0feed8",
+      "name": "Create Epic",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "PvnAHimvT91GA9s7",
+          "name": "Sapna HTTP credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n    epicKey: $json.issues[0].key,\n    projectKey: $json.projectKey,\n    rows: $json.rows\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7552,
+        -144
+      ],
+      "id": "6d4e9c92-b69d-4c33-89e6-86a76d41efa6",
+      "name": "Save Epic Key"
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = [];\nconst items = $input.all();\n\nfor (const item of items) {\n  const { epicKey, projectKey, rows } = item.json;\n\n  if (!Array.isArray(rows)) continue;\n\n  for (const row of rows) {\n    output.push({\n      json: {\n        ...row,\n        epicKey,\n        projectKey,\n      }\n    });\n  }\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8336,
+        -64
+      ],
+      "id": "e24ac50b-5d89-428b-897a-3d6f8cffa442",
+      "name": "Explode Rows for Epic"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n      projectKey: $json.projectKey,\n      epicName: $json.epicName,\n      rows: $json.rows\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7440,
+        80
+      ],
+      "id": "6188e641-16f9-432e-a117-2ebc19ee56c4",
+      "name": "Prepare Epic Payload"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5039d45a-7966-4f13-b5d8-44241161c55a",
+              "name": "projectKey",
+              "value": "={{$json.projectKey}}",
+              "type": "string"
+            },
+            {
+              "id": "b134c423-f90f-44fc-bf1a-2290f7fb56ee",
+              "name": "epicName",
+              "value": "={{$json.epicName}}",
+              "type": "string"
+            },
+            {
+              "id": "1cabb256-ddaa-4490-9c2a-03302374e1fa",
+              "name": "rows",
+              "value": "={{ $json.rows }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6032,
+        16
+      ],
+      "id": "b34aef70-89d0-48ff-802e-012d2bbdd2f1",
+      "name": "Save Epic Context"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3ccdd07c-8054-4a16-b7ee-f3efca6f861f",
+              "name": "projectKey",
+              "value": "={{$node[\"Split in Batches (Epic)\"].json.projectKey}}",
+              "type": "string"
+            },
+            {
+              "id": "74e67b99-045b-4aaf-b09a-6d0a45274b4b",
+              "name": "epicName",
+              "value": "={{$node[\"Split in Batches (Epic)\"].json.epicName}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7168,
+        64
+      ],
+      "id": "e911b536-e5e1-41f7-b5d7-dd67b4deb183",
+      "name": "Restore Epic Context",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n    epicKey: $json.key,\n    projectKey:$('Prepare Epic Payload').item.json.projectKey,\n    rows: $('Prepare Epic Payload').item.json.rows\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7952,
+        112
+      ],
+      "id": "72ccef22-d43f-48ab-9d11-a20ee3f35b9d",
+      "name": "Save Epic Key (After Create Epic)"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        8112,
+        -96
+      ],
+      "id": "21a5fc09-f674-4c4d-ae6e-c87f1cfbe9d1",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        6752,
+        64
+      ],
+      "id": "adb1c01f-98bf-4819-b5a2-7175362268ee",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{$json.fileId}}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "={{$json.fileName.replace(/_accepted/i, \"_processed\") }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2528,
+        608
+      ],
+      "id": "afe6eb2f-5856-4f9a-8f60-a06b3ed15ef1",
+      "name": "Update file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "sEKThFpKl7A5YyRp",
+          "name": "Google Drive with dev"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const mermaid = $json.output[0].content[0].text;\n\n// // Base64 encode\n// const encoded = Buffer.from(mermaid).toString('base64');\n\n// return [{\n//   json: {\n//     mermaid: mermaid,\n//     encoded: encoded\n//   }\n// }];\n\n// If you already have encoded SVG, use that instead\nconst xml = `\n<mxfile host=\"app.diagrams.net\">\n  <diagram name=\"Database\">\n    ${mermaid}\n  </diagram>\n</mxfile>\n`;\n\nreturn [{\n  json: {\n    drawio: xml\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3376,
+        864
+      ],
+      "id": "6cd2d918-64cf-4d21-ad11-a449c2296b1f",
+      "name": "Encode Mermaid",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "name": "={{$node[\"Code in JavaScript\"].json.projectName}}.drawio",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Code in JavaScript').item.json.projectFolderId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3872,
+        816
+      ],
+      "id": "31d71cd1-5acc-4361-8fbf-321baac48a87",
+      "name": "Upload draw.io file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "sEKThFpKl7A5YyRp",
+          "name": "Google Drive with dev"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "xml_content",
+        "options": {
+          "fileName": "={{$node[\"Code in JavaScript\"].json.projectName}}.drawio"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        3632,
+        832
+      ],
+      "id": "e85510b1-2780-4f1d-9026-34a373e564d6",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=You are an expert diagrams.net (draw.io) architect specializing in Database ERD Design.\n\nFrom the provided document, generate a VALID draw.io mxfile XML.\n\nERD Architecture Rules:\n1. Use ONLY the \"Entity Relation\" table shape (style=\"shape=table;childLayout=tableLayout;\").\n2. Create a distinct Header Row for each Table Name.\n3. Organize fields into separate rows. Clearly label Primary Keys (PK) and Foreign Keys (FK).\n4. Use \"Orthogonal\" connectors for relationships (style=orthogonalEdgeStyle) so lines don't cross through tables.\n5. Manually assign (x, y) coordinates to ensure tables are spread apart by at least 200px.\n\nSafety & Encoding (CRITICAL):\n1. Do NOT use raw '<' or '>' symbols inside attribute values. Use HTML entities if needed (e.g., &lt; instead of <).\n2. For enum types or descriptions, use curly braces { } instead of angle brackets < >.\n3. Ensure every <mxCell> has a unique numeric ID.\n\nOutput Constraints:\n1. Output ONLY raw XML starting with <mxfile and ending with </mxfile>.\n2. No markdown, no code blocks, and no preamble.\n\nDocument:\n{{ $json.content }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        2896,
+        544
+      ],
+      "id": "774b51cb-bce9-4af2-8bba-ae708b8bc3d0",
+      "name": "Message a model to generate database",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "Project Charter to WBS OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c7e397d3-ba2a-4c8e-a4ab-ed07edd27a28",
+              "name": "xml_content",
+              "value": "={{$json[\"output\"][0][\"content\"][0][\"text\"]}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3248,
+        544
+      ],
+      "id": "0763d2e5-4f1c-477a-9515-527ece3127c2",
+      "name": "Edit Fields"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Get a document",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a document": {
+      "main": [
+        [
+          {
+            "node": "Message a model to generate database",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Create spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "Create Headers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Headers": {
+      "main": [
+        [
+          {
+            "node": "Append Row (Headers)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Row (Headers)": {
+      "main": [
+        [
+          {
+            "node": "Parse WBS JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse WBS JSON": {
+      "main": [
+        [
+          {
+            "node": "Append Row (Data)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Row (Data)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Jira Project Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Jira Project Data": {
+      "main": [
+        [
+          {
+            "node": "Check Jira Project Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Jira Project": {
+      "main": [
+        [
+          {
+            "node": "Save Project Key for Later Use",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Project Key for Later Use": {
+      "main": [
+        [
+          {
+            "node": "Read Sheet (All Rows)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Sheet (All Rows)": {
+      "main": [
+        [
+          {
+            "node": "Group by Epic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Group by User Story": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches (Stories)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches (Stories)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches (Stories)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Jira Story Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Jira Project Exists": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Read Sheet (All Rows)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Jira Project",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Subtasks": {
+      "main": [
+        [
+          {
+            "node": "Create Jira Sub-task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Jira Story Payload": {
+      "main": [
+        [
+          {
+            "node": "Create Jira Story",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Jira Story": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Jira Story Exists?": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Prepare Subtasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Epic - HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "Group by Epic": {
+      "main": [
+        [
+          {
+            "node": "Save Epic Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me2": {
+      "main": [
+        [
+          {
+            "node": "Split in Batches (Epic)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split in Batches (Epic)": {
+      "main": [
+        [
+          {
+            "node": "Check Epic Exists",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Replace Me2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Epic Exists": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF (Epic Exists?)": {
+      "main": [
+        [
+          {
+            "node": "Save Epic Key",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Restore Epic Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Epic": {
+      "main": [
+        [
+          {
+            "node": "Save Epic Key (After Create Epic)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Epic Key": {
+      "main": [
+        [
+          {
+            "node": "Epic Already Exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Epic Already Exist": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Explode Rows for Epic": {
+      "main": [
+        [
+          {
+            "node": "Group by User Story",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Epic Payload": {
+      "main": [
+        [
+          {
+            "node": "Create Epic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Epic Context": {
+      "main": [
+        [
+          {
+            "node": "Split in Batches (Epic)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore Epic Context": {
+      "main": [
+        [
+          {
+            "node": "Prepare Epic Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Explode Rows for Epic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Epic Key (After Create Epic)": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "IF (Epic Exists?)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Jira Sub-task": {
+      "main": [
+        []
+      ]
+    },
+    "Encode Mermaid": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Upload draw.io file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model to generate database": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Encode Mermaid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Create spreadsheet": [
+      {
+        "json": {
+          "spreadsheetId": "1-7fWXEVQoMLS4N2BFAmIzu1xRtrxXohMWLhBAat4zFE",
+          "properties": {
+            "title": "WBS - wireless2way_Test",
+            "locale": "en_US",
+            "autoRecalc": "ON_CHANGE",
+            "timeZone": "Etc/GMT",
+            "defaultFormat": {
+              "backgroundColor": {
+                "red": 1,
+                "green": 1,
+                "blue": 1
+              },
+              "padding": {
+                "top": 2,
+                "right": 3,
+                "bottom": 2,
+                "left": 3
+              },
+              "verticalAlignment": "BOTTOM",
+              "wrapStrategy": "OVERFLOW_CELL",
+              "textFormat": {
+                "foregroundColor": {},
+                "fontFamily": "arial,sans,sans-serif",
+                "fontSize": 10,
+                "bold": false,
+                "italic": false,
+                "strikethrough": false,
+                "underline": false,
+                "foregroundColorStyle": {
+                  "rgbColor": {}
+                }
+              },
+              "backgroundColorStyle": {
+                "rgbColor": {
+                  "red": 1,
+                  "green": 1,
+                  "blue": 1
+                }
+              }
+            },
+            "spreadsheetTheme": {
+              "primaryFontFamily": "Arial",
+              "themeColors": [
+                {
+                  "colorType": "TEXT",
+                  "color": {
+                    "rgbColor": {}
+                  }
+                },
+                {
+                  "colorType": "BACKGROUND",
+                  "color": {
+                    "rgbColor": {
+                      "red": 1,
+                      "green": 1,
+                      "blue": 1
+                    }
+                  }
+                },
+                {
+                  "colorType": "ACCENT1",
+                  "color": {
+                    "rgbColor": {
+                      "red": 0.25882354,
+                      "green": 0.52156866,
+                      "blue": 0.95686275
+                    }
+                  }
+                },
+                {
+                  "colorType": "ACCENT2",
+                  "color": {
+                    "rgbColor": {
+                      "red": 0.91764706,
+                      "green": 0.2627451,
+                      "blue": 0.20784314
+                    }
+                  }
+                },
+                {
+                  "colorType": "ACCENT3",
+                  "color": {
+                    "rgbColor": {
+                      "red": 0.9843137,
+                      "green": 0.7372549,
+                      "blue": 0.015686275
+                    }
+                  }
+                },
+                {
+                  "colorType": "ACCENT4",
+                  "color": {
+                    "rgbColor": {
+                      "red": 0.20392157,
+                      "green": 0.65882355,
+                      "blue": 0.3254902
+                    }
+                  }
+                },
+                {
+                  "colorType": "ACCENT5",
+                  "color": {
+                    "rgbColor": {
+                      "red": 1,
+                      "green": 0.42745098,
+                      "blue": 0.003921569
+                    }
+                  }
+                },
+                {
+                  "colorType": "ACCENT6",
+                  "color": {
+                    "rgbColor": {
+                      "red": 0.27450982,
+                      "green": 0.7411765,
+                      "blue": 0.7764706
+                    }
+                  }
+                },
+                {
+                  "colorType": "LINK",
+                  "color": {
+                    "rgbColor": {
+                      "red": 0.06666667,
+                      "green": 0.33333334,
+                      "blue": 0.8
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "sheets": [
+            {
+              "properties": {
+                "sheetId": 1261507552,
+                "title": "Sheet1",
+                "index": 0,
+                "sheetType": "GRID",
+                "gridProperties": {
+                  "rowCount": 1000,
+                  "columnCount": 26
+                }
+              }
+            }
+          ],
+          "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1-7fWXEVQoMLS4N2BFAmIzu1xRtrxXohMWLhBAat4zFE/edit"
+        }
+      }
+    ],
+    "Append Row (Headers)": [
+      {
+        "json": {
+          "Module/Subject": "Module/Subject",
+          "Epic/Module": "Epic/Module",
+          "User Story/Task": "User Story/Task",
+          "Acceptance Criteria": "Acceptance Criteria",
+          "Sub-tasks": "Sub-tasks"
+        }
+      }
+    ],
+    "Parse WBS JSON": [
+      {
+        "json": {
+          "Module/Subject": "Email Management",
+          "Epic/Module": "Reading new Email",
+          "User Story/Task": "As an AI agent, I want to automatically process and respond to email-based rental enquiries so that we can streamline the client inquiry workflow.",
+          "Acceptance Criteria": "• System can receive forwarded emails to a designated email address.\n• Emails are scanned for defined keywords in both subject and body.\n• Relevant enquiries are identified and processed automatically.\n• System supports both direct email and website-generated enquiries.\n• A summary of the matched criteria is generated for each incoming enquiry.\n• Incorrectly formatted or irrelevant emails are identified and flagged.\n• Enquiries for 5 days or more are flagged for manual handover to client.",
+          "Sub-tasks": "Integrate with SMTP and designated client email inbox."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Define and configure enquiry keywords list."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Develop email parsing and summary logic."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Implement email-to-lead recognition flow."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Set up workflow for automated vs. handover pathway."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Create logging for processed and skipped emails."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Database & Reference Data",
+          "Epic/Module": "Master Data",
+          "User Story/Task": "As a system, I need to maintain master data for products, inventory, and delivery so the AI can generate accurate proposals.",
+          "Acceptance Criteria": "• All primary products and priced accessories are stored in a master list.\n• Inventory management assumes unlimited stock of radios and accessories.\n• Accessory prompts are configured for earpieces, surveillance kits, and microphones only.\n• Metal detector upsell logic is set up in the master.\n• Delivery master is created for NSW, Queensland, and VIC locations.\n• Batteries and chargers are excluded from AI proposals.\n• Accessory quantities match the radio count.",
+          "Sub-tasks": "Input product and accessory data into the master database."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Configure master accessory prompt logic."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Develop metal detector upsell integration."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Set up delivery charge matrix for key states."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Exclude batteries/chargers from proposal generator."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Requirement Gathering",
+          "Epic/Module": "Product Add-ons Requirement",
+          "User Story/Task": "As an AI agent, I need to gather required details (dates, accessories, product counts) from new leads so I can determine package requirements.",
+          "Acceptance Criteria": "• AI prompts for number of radios and accessories as required.\n• AI asks for start date, end date, pickup date, and drop date if not specified.\n• AI confirms accessory types and quantities directly with the client.\n• Accessory quantity defaults to radio quantity if not specified.\n• Metal detector upsell occurs during requirement gathering.\n• Missing information is detected and re-prompted.\n• Weekend units and event packages are excluded by default.",
+          "Sub-tasks": "Design interactive prompt flows for gathering requirement details."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Develop conditional logic for missing information prompts."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Configure auto-defaults for accessory and radio quantities."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Add logic for metal detector upsell trigger."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Document requirements collection for logging and audit."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Proposal & Quotation",
+          "Epic/Module": "Proposal Finalization",
+          "User Story/Task": "As an AI agent, I need to generate accurate price proposals for new and returning customers as per defined business rules.",
+          "Acceptance Criteria": "• System checks company name to identify returning customers via HirePOS.\n• Previous order details are retrieved for returning clients.\n• ±10% unit variance is calculated and last negotiated price is offered if within threshold.\n• Base price negotiation starts for new clients or out-of-threshold orders.\n• Only consumable/rental days are considered for price calculation.\n• Quote format conforms to provided template/sample.\n• No information is written back to HirePOS.",
+          "Sub-tasks": "Integrate with HirePOS to fetch order history (read-only)."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Implement business logic for price comparison and thresholds."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Develop pricing calculation module (including days logic)."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Establish format for proposal email (body and attachment logic)."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Enforce out-of-scope item exclusion."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Negotiation Engine",
+          "Epic/Module": "Negotiation",
+          "User Story/Task": "As an AI agent, I want to negotiate prices within predefined boundaries, escalating or declining as appropriate.",
+          "Acceptance Criteria": "• AI can handle price negotiation with lower price requests.\n• Negotiation is capped at last allowed price (handover threshold).\n• AI politely declines requests below handover price.\n• Leads exceeding boundaries are flagged for client handover.\n• Negotiation history is logged for each enquiry.\n• Customer handover occurs smoothly when triggered.",
+          "Sub-tasks": "Develop negotiation dialogue flows."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Implement last price and handover price checks."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Log negotiation iterations and outcomes."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Integrate client notification for handovers."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Document decline messaging templates."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Delivery & Lead Details Capture",
+          "Epic/Module": "Delivery Charges",
+          "User Story/Task": "As an AI agent, I need to request and process delivery details and charges based on the customer’s location as part of proposal generation.",
+          "Acceptance Criteria": "• For NSW customers, no delivery fee unless requested.\n• For all other eligible states, delivery/pickup charges are added as line items.\n• AI collects basic customer details for new leads only.\n• Customer details include company name, address, postal code, first and last name, and phone.\n• Delivery costs are shown as separate from pickup, if both apply.\n• Estimate is provided for all expected charges.\n• Delivery for unlisted states is deferred to client input.",
+          "Sub-tasks": "Prompt new clients for required details."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Auto-calculate delivery and pickup charges based on location."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Add logic to insert line items in proposal."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Exclude delivery charges for NSW self-pickup unless requested."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Validate state eligibility and handle exceptions."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Workflow & Handover",
+          "Epic/Module": "Handover Process",
+          "User Story/Task": "As an AI agent, I want to confirm and handover leads to the client under certain conditions to ensure proper escalation.",
+          "Acceptance Criteria": "• Lead is handed over if duration exceeds 5 days.\n• Lead is handed over if requested price is below last negotiated price.\n• Client receives full context via email or notification.\n• AI seeks final confirmation from the lead before handover.\n• All handovers are logged for traceability.\n• No further actions are automated post-handover.",
+          "Sub-tasks": "Define escalation and handover triggers."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Configure notification/email for client with lead context."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Add logging for all handovers."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Implement confirmation prompt with the lead."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Disable further AI workflow for handed over leads."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Data Management",
+          "Epic/Module": "Data Storage",
+          "User Story/Task": "As a system, I need to log all enquiry, lead, and sales discussion data in Google Sheets for auditing and tracking.",
+          "Acceptance Criteria": "• All enquiry interactions are captured in a structured Google Sheet.\n• Each row maintains lead email, name, date/time, company, inquiry details, event name (optional), quantity, estimated value, and sales stage.\n• Sales status is updated on each relevant workflow stage.\n• No confidential or excessive personal data is logged.\n• Google Sheet matches the agreed format and fields with client.\n• All status changes and negotiations are appended.",
+          "Sub-tasks": "Integrate Google Sheets API for data logging."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Configure mapped fields based on workflow outputs."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Establish data update triggers at each workflow milestone."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Validate data structure adheres to client template."
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "",
+          "Epic/Module": "",
+          "User Story/Task": "",
+          "Acceptance Criteria": "",
+          "Sub-tasks": "Test sheet permissions and access."
+        }
+      }
+    ],
+    "Prepare Epic Payload": [
+      {
+        "json": {
+          "projectKey": "WWDCE",
+          "epicName": "Master Data",
+          "rows": [
+            {
+              "row_number": 5,
+              "Module/Subject": "Product Catalog",
+              "Epic/Module": "Master Data",
+              "User Story/Task": "As an AI agent, I want to maintain and utilize a master data set of products and delivery charges, so that accurate options and pricing are referenced during each inquiry.",
+              "Acceptance Criteria": "• Product master includes two-way radios and all priced accessories (earpieces, surveillance kits, speaker microphones, metal detectors).\n• Accessory quantities are auto-matched to the number of radios requested.\n• AI prompts only for priced accessories, not batteries or chargers.\n• Metal detectors are recommended as upsell.\n• Delivery master stores delivery charges for NSW, Queensland, and VIC.\n• Products and accessories data are kept up-to-date in the master set.\n• Master data can be referenced by other system modules (e.g., pricing, proposal generation).",
+              "Sub-tasks": "1. Compile complete list of products and add-ons.",
+              "Jira Story Key": ""
+            }
+          ]
+        }
+      }
+    ],
+    "Merge": [
+      {
+        "json": {
+          "fields": {
+            "project": {
+              "key": "WWDCE"
+            },
+            "summary": "As an AI agent, I want to automatically receive and identify rental inquiry emails from a dedicated forwarded account, so inquiries can be processed without manual intervention.",
+            "description": {
+              "type": "doc",
+              "version": 1,
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "• AI receives forwarded inquiry emails on a dedicated email address.\n• AI scans email summary and body for defined keywords associated with rental inquiries.\n• AI routes or flags relevant inquiries for automated processing.\n• AI workflow is set up to analyze the email content and trigger appropriate actions.\n• Sample and reference inquiries are used to validate filtering logic.\n• Emails from both website and email-based forms are successfully detected.\n• Email identifier, locator and handover details are configured as per client’s specification."
+                    }
+                  ]
+                }
+              ]
+            },
+            "issuetype": {
+              "name": "Story"
+            },
+            "assignee": null,
+            "parent": {
+              "key": "WWDCE-154"
+            }
+          },
+          "subtasks": [
+            "1. Configure SMTP and access credentials for new email account.",
+            "1. Validate detection of web form and manual inquiries.",
+            "1. Configure SMTP and access credentials for new email account.",
+            "1. Validate detection of web form and manual inquiries."
+          ],
+          "id": "53340",
+          "key": "WWDCE-157",
+          "self": "https://scaleupally.atlassian.net/rest/api/3/issue/53340"
+        }
+      },
+      {
+        "json": {
+          "fields": {
+            "project": {
+              "key": "WWDCE"
+            },
+            "summary": "another user story",
+            "description": {
+              "type": "doc",
+              "version": 1,
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "• another userstory acceptance criteria"
+                    }
+                  ]
+                }
+              ]
+            },
+            "issuetype": {
+              "name": "Story"
+            },
+            "assignee": null,
+            "parent": {
+              "key": "WWDCE-154"
+            }
+          },
+          "subtasks": [
+            "another subtask",
+            "another subtask"
+          ],
+          "id": "53339",
+          "key": "WWDCE-156",
+          "self": "https://scaleupally.atlassian.net/rest/api/3/issue/53339"
+        }
+      }
+    ],
+    "Append Row (Data)": [
+      {
+        "json": {
+          "Module/Subject": "Technical Planning & Setup",
+          "Epic/Module": "High-level – Technical Planning",
+          "User Story/Task": "As a project stakeholder, I want to decide the development team structure and technology stack so that the project is scalable, maintainable, and aligned with business goals.",
+          "Acceptance Criteria": "• Development roles and responsibilities are defined\n• A suitable technology stack is proposed and justified\n• Stakeholders formally approve the proposed stack\n• Technology stack aligns with scalability and maintainability requirements\n• Tech stack is compatible with secure web-access",
+          "Sub-tasks": "Define key team roles for project delivery"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Technical Planning & Setup",
+          "Epic/Module": "High-level – Technical Planning",
+          "User Story/Task": "As a project stakeholder, I want to decide the development team structure and technology stack so that the project is scalable, maintainable, and aligned with business goals.",
+          "Acceptance Criteria": "• Development roles and responsibilities are defined\n• A suitable technology stack is proposed and justified\n• Stakeholders formally approve the proposed stack\n• Technology stack aligns with scalability and maintainability requirements\n• Tech stack is compatible with secure web-access",
+          "Sub-tasks": "List potential technology stacks"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Technical Planning & Setup",
+          "Epic/Module": "High-level – Technical Planning",
+          "User Story/Task": "As a project stakeholder, I want to decide the development team structure and technology stack so that the project is scalable, maintainable, and aligned with business goals.",
+          "Acceptance Criteria": "• Development roles and responsibilities are defined\n• A suitable technology stack is proposed and justified\n• Stakeholders formally approve the proposed stack\n• Technology stack aligns with scalability and maintainability requirements\n• Tech stack is compatible with secure web-access",
+          "Sub-tasks": "Document advantages and risks for each stack"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Technical Planning & Setup",
+          "Epic/Module": "High-level – Technical Planning",
+          "User Story/Task": "As a project stakeholder, I want to decide the development team structure and technology stack so that the project is scalable, maintainable, and aligned with business goals.",
+          "Acceptance Criteria": "• Development roles and responsibilities are defined\n• A suitable technology stack is proposed and justified\n• Stakeholders formally approve the proposed stack\n• Technology stack aligns with scalability and maintainability requirements\n• Tech stack is compatible with secure web-access",
+          "Sub-tasks": "Seek stakeholder approval"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Technical Planning & Setup",
+          "Epic/Module": "High-level – Technical Planning",
+          "User Story/Task": "As a technical architect, I want to create a high-level application architecture diagram so that all stakeholders understand system components and integrations.",
+          "Acceptance Criteria": "• Architecture diagram includes all major system components\n• Authentication method (email OTP) is clearly represented\n• Data flows between modules are illustrated\n• External and internal integrations are depicted\n• Diagram is reviewed and approved by stakeholders",
+          "Sub-tasks": "Draft initial architecture diagram"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Technical Planning & Setup",
+          "Epic/Module": "High-level – Technical Planning",
+          "User Story/Task": "As a technical architect, I want to create a high-level application architecture diagram so that all stakeholders understand system components and integrations.",
+          "Acceptance Criteria": "• Architecture diagram includes all major system components\n• Authentication method (email OTP) is clearly represented\n• Data flows between modules are illustrated\n• External and internal integrations are depicted\n• Diagram is reviewed and approved by stakeholders",
+          "Sub-tasks": "Iterate diagram with core technical team"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Technical Planning & Setup",
+          "Epic/Module": "High-level – Technical Planning",
+          "User Story/Task": "As a technical architect, I want to create a high-level application architecture diagram so that all stakeholders understand system components and integrations.",
+          "Acceptance Criteria": "• Architecture diagram includes all major system components\n• Authentication method (email OTP) is clearly represented\n• Data flows between modules are illustrated\n• External and internal integrations are depicted\n• Diagram is reviewed and approved by stakeholders",
+          "Sub-tasks": "Review with stakeholders"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Technical Planning & Setup",
+          "Epic/Module": "High-level – Technical Planning",
+          "User Story/Task": "As a technical architect, I want to create a high-level application architecture diagram so that all stakeholders understand system components and integrations.",
+          "Acceptance Criteria": "• Architecture diagram includes all major system components\n• Authentication method (email OTP) is clearly represented\n• Data flows between modules are illustrated\n• External and internal integrations are depicted\n• Diagram is reviewed and approved by stakeholders",
+          "Sub-tasks": "Finalize and share official architecture diagram"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Technical Planning & Setup",
+          "Epic/Module": "High-level – Technical Planning",
+          "User Story/Task": "As a technical lead, I want to identify challenging areas and define a POC/R&D plan so that technical risks are addressed early.",
+          "Acceptance Criteria": "• All major technical risks are identified\n• A clear POC agenda is created for challenging items\n• POC success criteria is defined\n• R&D outcomes are documented\n• Recommendations are shared with the team",
+          "Sub-tasks": "Identify challenging technical areas"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Technical Planning & Setup",
+          "Epic/Module": "High-level – Technical Planning",
+          "User Story/Task": "As a project manager, I want to define an internal and client communication plan so that coordination and reporting are clear and consistent.",
+          "Acceptance Criteria": "• Communication plan includes both internal and client-facing processes\n• Reporting frequency and ownership are clear\n• Communication channels are specified\n• Stakeholders acknowledge the plan\n• Plan includes escalation matrix",
+          "Sub-tasks": "Finalize communication document"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Project Setup",
+          "Epic/Module": "Project Setup",
+          "User Story/Task": "As a development team, I want to define routing and branch naming conventions so that code management remains consistent and traceable.",
+          "Acceptance Criteria": "• Routing conventions are documented\n• Branch naming conventions are defined\n• Team is trained on conventions\n• Conventions are accessible in shared documentation\n• All repos adopt new conventions",
+          "Sub-tasks": "Define routing conventions"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Project Setup",
+          "Epic/Module": "Project Setup",
+          "User Story/Task": "As a development team, I want to define routing and branch naming conventions so that code management remains consistent and traceable.",
+          "Acceptance Criteria": "• Routing conventions are documented\n• Branch naming conventions are defined\n• Team is trained on conventions\n• Conventions are accessible in shared documentation\n• All repos adopt new conventions",
+          "Sub-tasks": "Update developer onboarding docs"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Project Setup",
+          "Epic/Module": "Project Setup",
+          "User Story/Task": "As a DevOps engineer, I want to define a deployment plan so that releases across environments are predictable and controlled.",
+          "Acceptance Criteria": "• Environments for dev, staging, and production are specified\n• Deployment steps are clearly outlined\n• Rollback strategy is included\n• Access management for each environment is defined\n• Deployment plan is reviewed by lead developer",
+          "Sub-tasks": "Document deployment processes for each environment"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Project Setup",
+          "Epic/Module": "Project Setup",
+          "User Story/Task": "As a DevOps engineer, I want to define a deployment plan so that releases across environments are predictable and controlled.",
+          "Acceptance Criteria": "• Environments for dev, staging, and production are specified\n• Deployment steps are clearly outlined\n• Rollback strategy is included\n• Access management for each environment is defined\n• Deployment plan is reviewed by lead developer",
+          "Sub-tasks": "Specify environment access and controls"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Project Setup",
+          "Epic/Module": "Project Setup",
+          "User Story/Task": "As a DevOps engineer, I want to define a deployment plan so that releases across environments are predictable and controlled.",
+          "Acceptance Criteria": "• Environments for dev, staging, and production are specified\n• Deployment steps are clearly outlined\n• Rollback strategy is included\n• Access management for each environment is defined\n• Deployment plan is reviewed by lead developer",
+          "Sub-tasks": "Include rollback procedures"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Project Setup",
+          "Epic/Module": "Project Setup",
+          "User Story/Task": "As a QA lead, I want to define a testing strategy so that quality is ensured throughout development.",
+          "Acceptance Criteria": "• Testing types and scopes are defined\n• Module-level development and testing plan is created\n• Test schedule/timelines are attached\n• Clear entry/exit criteria for testing stages\n• Strategy is communicated to all team members",
+          "Sub-tasks": "Document overall testing strategy"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Database Design",
+          "Epic/Module": "Database Design",
+          "User Story/Task": "As a database architect, I want to plan the database structure so that data integrity, performance, and scalability are ensured.",
+          "Acceptance Criteria": "• ER diagram covers all relevant data entities\n• Master tables for users, clients, reports, payments, etc. are defined\n• Indexes and keys are implemented for critical queries\n• Structure reviewed for scalability and performance\n• Documentation reviewed by technical lead",
+          "Sub-tasks": "Create ER diagram"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Database Design",
+          "Epic/Module": "Database Design",
+          "User Story/Task": "As a database architect, I want to plan the database structure so that data integrity, performance, and scalability are ensured.",
+          "Acceptance Criteria": "• ER diagram covers all relevant data entities\n• Master tables for users, clients, reports, payments, etc. are defined\n• Indexes and keys are implemented for critical queries\n• Structure reviewed for scalability and performance\n• Documentation reviewed by technical lead",
+          "Sub-tasks": "Define master tables"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Database Design",
+          "Epic/Module": "Database Design",
+          "User Story/Task": "As a database architect, I want to plan the database structure so that data integrity, performance, and scalability are ensured.",
+          "Acceptance Criteria": "• ER diagram covers all relevant data entities\n• Master tables for users, clients, reports, payments, etc. are defined\n• Indexes and keys are implemented for critical queries\n• Structure reviewed for scalability and performance\n• Documentation reviewed by technical lead",
+          "Sub-tasks": "Define indexes, unique keys, and foreign keys"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Database Design",
+          "Epic/Module": "Database Design",
+          "User Story/Task": "As a backend developer, I want to manage database migrations in the project so that schema changes are versioned and traceable.",
+          "Acceptance Criteria": "• Migration scripts are created and versioned\n• Initial schema covers all defined entities\n• Scripts tested against dev and staging environments\n• Documentation on migration process is complete\n• Rollback migrations are available",
+          "Sub-tasks": "Create database migrations/schema in the project"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Authentication & User Access",
+          "Epic/Module": "Login & Secure Access",
+          "User Story/Task": "As a user (CEO or team member), I want to log in using an email-based OTP system so that my access is secure and I can use the app anywhere.",
+          "Acceptance Criteria": "• Only CEO and specified team member have login access\n• Login uses OTP sent to email address\n• OTP validity is time-limited and secure\n• Login works on web and mobile browsers\n• Login session expiry is implemented\n• Failed attempts are properly managed\n• All login attempts are auditable",
+          "Sub-tasks": "Implement email OTP generation and delivery"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Authentication & User Access",
+          "Epic/Module": "Login & Secure Access",
+          "User Story/Task": "As a user (CEO or team member), I want to log in using an email-based OTP system so that my access is secure and I can use the app anywhere.",
+          "Acceptance Criteria": "• Only CEO and specified team member have login access\n• Login uses OTP sent to email address\n• OTP validity is time-limited and secure\n• Login works on web and mobile browsers\n• Login session expiry is implemented\n• Failed attempts are properly managed\n• All login attempts are auditable",
+          "Sub-tasks": "Build login screen for web and mobile browsers"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Authentication & User Access",
+          "Epic/Module": "Login & Secure Access",
+          "User Story/Task": "As a user (CEO or team member), I want to log in using an email-based OTP system so that my access is secure and I can use the app anywhere.",
+          "Acceptance Criteria": "• Only CEO and specified team member have login access\n• Login uses OTP sent to email address\n• OTP validity is time-limited and secure\n• Login works on web and mobile browsers\n• Login session expiry is implemented\n• Failed attempts are properly managed\n• All login attempts are auditable",
+          "Sub-tasks": "Create user session management"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Authentication & User Access",
+          "Epic/Module": "Login & Secure Access",
+          "User Story/Task": "As a user (CEO or team member), I want to log in using an email-based OTP system so that my access is secure and I can use the app anywhere.",
+          "Acceptance Criteria": "• Only CEO and specified team member have login access\n• Login uses OTP sent to email address\n• OTP validity is time-limited and secure\n• Login works on web and mobile browsers\n• Login session expiry is implemented\n• Failed attempts are properly managed\n• All login attempts are auditable",
+          "Sub-tasks": "Audit login attempts"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "User Management",
+          "Epic/Module": "Client Setup",
+          "User Story/Task": "As the CEO, I want to add or edit client details so that new clients can be onboarded and managed from the system.",
+          "Acceptance Criteria": "• Add/edit functionality visible only to CEO after login\n• Client details include name, email, location, and project name\n• Client entry and edit forms validate all mandatory fields\n• Successfully added/edited clients appear in client list\n• Each client is uniquely identified\n• No duplicate clients allowed\n• Audit log is updated for client changes",
+          "Sub-tasks": "Build client add/edit form"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "User Management",
+          "Epic/Module": "Client Setup",
+          "User Story/Task": "As the CEO, I want to add or edit client details so that new clients can be onboarded and managed from the system.",
+          "Acceptance Criteria": "• Add/edit functionality visible only to CEO after login\n• Client details include name, email, location, and project name\n• Client entry and edit forms validate all mandatory fields\n• Successfully added/edited clients appear in client list\n• Each client is uniquely identified\n• No duplicate clients allowed\n• Audit log is updated for client changes",
+          "Sub-tasks": "Implement client list view"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "User Management",
+          "Epic/Module": "Client Setup",
+          "User Story/Task": "As the CEO, I want to add or edit client details so that new clients can be onboarded and managed from the system.",
+          "Acceptance Criteria": "• Add/edit functionality visible only to CEO after login\n• Client details include name, email, location, and project name\n• Client entry and edit forms validate all mandatory fields\n• Successfully added/edited clients appear in client list\n• Each client is uniquely identified\n• No duplicate clients allowed\n• Audit log is updated for client changes",
+          "Sub-tasks": "Develop unique identifier logic"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Reports Management",
+          "Epic/Module": "Approval Process",
+          "User Story/Task": "As the CEO, I want to receive email notifications for monthly reports and approve or reject them in the system so that only reviewed reports are sent to the client.",
+          "Acceptance Criteria": "• CEO receives email notification for each report submission\n• CEO can view, approve, or reject in the web panel\n• Approval sends report to client via email\n• Rejection allows CEO to enter reason and notifies user\n• Rejection enables user to upload a revised report\n• Report status updates correctly after action\n• System tracks audit log for all approval actions",
+          "Sub-tasks": "Build admin (CEO) review/approval panel"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Payment Management",
+          "Epic/Module": "Payment Alerts",
+          "User Story/Task": "As the system, I want to automatically notify the CEO and user when a payment receipt is not uploaded by the due date so that pending payments have visibility and prompt action.",
+          "Acceptance Criteria": "• System tracks due date for each payment receipt\n• Automatic email sent to CEO and user if receipt is pending\n• Pending payment status visible in dashboard\n• Notification email content includes client/project details\n• Notifications are logged\n• Due dates are configurable at project start",
+          "Sub-tasks": "Configure pending payment dashboard panel"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Payment Management",
+          "Epic/Module": "Payment Alerts",
+          "User Story/Task": "As the system, I want to automatically notify the CEO and user when a payment receipt is not uploaded by the due date so that pending payments have visibility and prompt action.",
+          "Acceptance Criteria": "• System tracks due date for each payment receipt\n• Automatic email sent to CEO and user if receipt is pending\n• Pending payment status visible in dashboard\n• Notification email content includes client/project details\n• Notifications are logged\n• Due dates are configurable at project start",
+          "Sub-tasks": "Allow due date configuration"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Dashboard",
+          "Epic/Module": "Realtime Dashboard",
+          "User Story/Task": "As the CEO, I want to view a dashboard showing the status of reports and payments so that I have clear and immediate visibility on project and payment status.",
+          "Acceptance Criteria": "• Dashboard shows pending, approved, and sent reports\n• Dashboard displays payments received and pending\n• Data is real-time or near real-time\n• Filter by client/project and time period is available\n• Mobile and desktop access supported\n• Statuses are visually distinct\n• Dashboard does not require manual refresh for updates",
+          "Sub-tasks": "Develop filter functionality"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Dashboard",
+          "Epic/Module": "Realtime Dashboard",
+          "User Story/Task": "As the CEO, I want to view a dashboard showing the status of reports and payments so that I have clear and immediate visibility on project and payment status.",
+          "Acceptance Criteria": "• Dashboard shows pending, approved, and sent reports\n• Dashboard displays payments received and pending\n• Data is real-time or near real-time\n• Filter by client/project and time period is available\n• Mobile and desktop access supported\n• Statuses are visually distinct\n• Dashboard does not require manual refresh for updates",
+          "Sub-tasks": "Ensure visual accessibility and clarity"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Deployment",
+          "Epic/Module": "Deployment",
+          "User Story/Task": "As a DevOps engineer, I want to configure deployment so that the system is securely and reliably accessible in production.",
+          "Acceptance Criteria": "• Production deployment is stable and accessible via web and mobile browsers\n• Deployment uses HTTPS for security\n• Environment variables and secrets are managed\n• Availability monitoring is in place\n• Rollback/restore procedures are documented",
+          "Sub-tasks": "Set up production server/environment with HTTPS"
+        }
+      },
+      {
+        "json": {
+          "Module/Subject": "Deployment",
+          "Epic/Module": "Deployment",
+          "User Story/Task": "As a DevOps engineer, I want to configure deployment so that the system is securely and reliably accessible in production.",
+          "Acceptance Criteria": "• Production deployment is stable and accessible via web and mobile browsers\n• Deployment uses HTTPS for security\n• Environment variables and secrets are managed\n• Availability monitoring is in place\n• Rollback/restore procedures are documented",
+          "Sub-tasks": "Implement monitoring tools"
+        }
+      }
+    ],
+    "Code in JavaScript": [
+      {
+        "json": {
+          "fileId": "1dNqdnF1rt4eOnjXLEsX9jK0St_OE5gQ_7m01xzY9RfM",
+          "fileName": "Project Charter EC Consulting Software_accepted",
+          "projectName": "Ec Consulting Software",
+          "projectFolderId": "32433"
+        }
+      }
+    ],
+    "Prepare Jira Project Data": [
+      {
+        "json": {
+          "projectName": "Demo N8n",
+          "projectKey": "DNN",
+          "leadAccountId": "63281be03ac41ebde7680374"
+        }
+      }
+    ]
+  },
+  "versionId": "97d50694-5d49-4baa-9ec2-65b8fd0c7e1d",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-08T06:24:16.360Z",
+      "createdAt": "2026-01-08T06:24:16.360Z",
+      "role": "workflow:owner",
+      "workflowId": "hLp2zbkdlc0TxTTn",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

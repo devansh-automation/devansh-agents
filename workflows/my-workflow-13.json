@@ -1,0 +1,1109 @@
+{
+  "updatedAt": "2025-12-08T06:23:01.000Z",
+  "createdAt": "2025-12-02T10:02:12.033Z",
+  "id": "QZTHSob8Rsl2gha9",
+  "name": "My workflow 13",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 11
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "04a9a057-bcb6-454f-8dbe-be720f7d0cb6",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "email_thread",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "last_replied",
+              "condition": "lt",
+              "keyValue": "=  {{ DateTime.now().minus({days : 2}).format('yyyy-MM-dd') }}"
+            },
+            {
+              "keyName": "human_handover",
+              "condition": "eq",
+              "keyValue": "FALSE"
+            },
+            {
+              "keyName": "status",
+              "condition": "=neq",
+              "keyValue": "closed"
+            },
+            {
+              "keyName": "status",
+              "condition": "neq",
+              "keyValue": "not_closed"
+            },
+            {
+              "keyName": "status",
+              "condition": "neq",
+              "keyValue": "spam"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "275a1192-99f5-4c85-95db-70ef939cb314",
+      "name": "filter_two_days_old_thread",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        400,
+        -16
+      ],
+      "id": "a86f9889-24af-4410-a432-fd140fae018b",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        3456,
+        0
+      ],
+      "id": "418aeb53-a884-4913-ba16-127f430d9431"
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "get",
+        "threadId": "={{ $json.thread_id }}",
+        "simple": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        624,
+        16
+      ],
+      "id": "711e04ba-9fd8-4e54-9f1a-e4df9db91c85",
+      "name": "Get a thread",
+      "webhookId": "512ad315-8b22-4c4e-a883-d6913e6ea65d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b931c3ee-26a7-4389-9384-6e7ad86f82b4",
+              "leftValue": "={{ $json.followUpDue }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1216,
+        16
+      ],
+      "id": "941efddf-e06f-4244-a734-51c85fad0cfd",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Function node code\n// Input: items[] containing either:\n//  - a single item where item.json is the thread object { id, historyId, messages: [...] }\n//  - or items where each item.json is a message object\n//\n// Output: items[] where each output item corresponds to an input \"thread\" and contains:\n//  { threadId, consecutiveSentCount, lastClientReplyDate, sentMessageIdsAfterLastClientReply, totalMessages }\n\nfunction getFromField(msg) {\n  // Try common locations for 'From'\n  if (msg.From) return msg.From;\n  if (msg.payload && msg.payload.headers) {\n    const hdr = msg.payload.headers.find(h => h.name && h.name.toLowerCase() === 'from');\n    if (hdr) return hdr.value;\n  }\n  return null;\n}\n\nfunction normalizeSender(fromValue) {\n  if (!fromValue) return '';\n  return fromValue.toString().toLowerCase();\n}\n\n// helper to test whether sender is our account\nconst OUR_ADDRESS = 'mis.scaleupally'; // partial match; we'll use includes\n\nconst results = [];\n\nif (items.length === 0) {\n  return [];\n}\n\n// If first item has messages array, treat each such item as a thread\nfor (let rootItem of items) {\n  const root = rootItem.json || {};\n  let messages = [];\n\n  if (Array.isArray(root.messages)) {\n    messages = root.messages.slice(); // copy\n  } else {\n    // maybe each incoming n8n item is a message; gather them all into messages\n    // fallback: if rootItem looks like a single message, treat items array as messages\n    if (items.every(it => it.json && (it.json.id || it.json.internalDate))) {\n      messages = items.map(it => it.json);\n      // Ensure we only run once in this fallback\n      // clear items so outer loop doesn't duplicate\n      items = [];\n    } else {\n      // nothing to do\n      messages = [];\n    }\n  }\n\n  if (messages.length === 0) {\n    // produce a minimal output\n    results.push({\n      json: {\n        threadId: root.id || null,\n        consecutiveSentCount: 0,\n        lastClientReplyDate: null,\n        sentMessageIdsAfterLastClientReply: [],\n        totalMessages: 0\n      }\n    });\n    continue;\n  }\n\n  // Normalize messages and ensure internalDate exists as number\n  messages = messages.map(m => {\n    const d = Number(m.internalDate) || (m.internalDate && Date.parse(m.internalDate)) || 0;\n    return Object.assign({}, m, { _internalDateNum: d });\n  });\n\n  // Sort ascending by date (oldest first)\n  messages.sort((a,b) => a._internalDateNum - b._internalDateNum);\n\n  // Find index of last message that is NOT from our sender\n  let lastClientIndex = -1;\n  for (let i = messages.length - 1; i >= 0; i--) {\n    const from = normalizeSender(getFromField(messages[i]));\n    // consider it 'ours' if it contains our short address or full address; adjust as needed\n    const isOurs = from.includes(OUR_ADDRESS) || from.includes('mis.scaleupally@') || from.includes('mis.scaleupally.gmail'); // relax matching\n    if (!isOurs) {\n      lastClientIndex = i;\n      break;\n    }\n  }\n\n  // If lastClientIndex == -1 => there is NO client message at all\n  // We'll treat lastClientIndex = -1 and count from start the trailing 'ours' messages\n  let consecutiveSentCount = 0;\n  const sentMessageIdsAfter = [];\n\n  // Count messages after lastClientIndex that are from us until a non-us appears (there won't be non-us after because lastClientIndex is the last non-us)\n  for (let i = lastClientIndex + 1; i < messages.length; i++) {\n    const from = normalizeSender(getFromField(messages[i]));\n    const isOurs = from.includes(OUR_ADDRESS) || from.includes('mis.scaleupally@') || from.includes('mis.scaleupally.gmail');\n    if (isOurs) {\n      consecutiveSentCount++;\n      sentMessageIdsAfter.push(messages[i].id || messages[i].messageId || null);\n    } else {\n      // If a non-our message appears after lastClientIndex (rare by definition), stop counting\n      break;\n    }\n  }\n\n  const lastClientDate = lastClientIndex >= 0 ? new Date(messages[lastClientIndex]._internalDateNum).toISOString() : null;\n\n  results.push({\n    json: {\n      threadId: root.id || (messages[0] && messages[0].threadId) || null,\n      historyId: root.historyId || null,\n      consecutiveSentCount: consecutiveSentCount,\n      lastClientReplyDate: lastClientDate,\n      lastClientReplyMessageId: lastClientIndex >= 0 ? (messages[lastClientIndex].id || null) : null,\n      sentMessageIdsAfterLastClientReply: sentMessageIdsAfter,\n      totalMessages: messages.length\n    }\n  });\n}\n\n// Return results to n8n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        16
+      ],
+      "id": "fdb57303-baa4-4ced-bb35-e1f117246726",
+      "name": "calculate_follow-up_message_number"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Function node\n// Input: items[] where each item.json contains at least:\n//  - lastClientReplyDate  (ISO string or null)\n//  - consecutiveSentCount (integer)  <-- your \"follow_up counts\"\n// Output: items[] with json.followUpDue = true/false\n\n// Configure thresholds (days) per follow_up count here:\nconst thresholds = {\n  1: 2,   // last reply > 2 days  & follow_up == 1\n  2: 3,   // last reply > 3 days  & follow_up == 2\n  3: 3,   // last reply > 3 days  & follow_up == 3\n  4: 3,   // (example) edit as needed\n  5: 3,   // (example) edit as needed\n  6: 3\n};\n\n// helper: compute age in days between now and a date string\nfunction daysSince(isoDateString) {\n  if (!isoDateString) return Infinity; // treat missing date as infinite age (or change to large number)\n  const then = new Date(isoDateString).getTime();\n  if (isNaN(then)) return Infinity;\n  const now = Date.now();\n  const ms = now - then;\n  return ms / (1000 * 60 * 60 * 24);\n}\n\nconst out = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const data = items[i].json || {};\n  const lastClientReplyDate = data.lastClientReplyDate || null;\n  const followUpCount = Number(data.consecutiveSentCount || 0);\n\n  // default false\n  let followUpDue = false;\n\n  // Only evaluate if there is a rule for this followUpCount\n  if (followUpCount > 0 && Object.prototype.hasOwnProperty.call(thresholds, followUpCount)) {\n    const thresholdDays = Number(thresholds[followUpCount]);\n    const ageDays = daysSince(lastClientReplyDate);\n\n    // followUpDue if last reply is older than threshold and threshold > 0\n    if (!isNaN(thresholdDays) && thresholdDays > 0 && ageDays > thresholdDays) {\n      followUpDue = true;\n    }\n  } else {\n    // optional: handle followUpCount == 0 or unmatched counts\n    // keep followUpDue = false\n  }\n\n  out.push({\n    json: {\n      ...data,\n      followUpDue,\n      _followUpRuleApplied: followUpCount > 0 ? thresholds[followUpCount] ?? null : null,\n      _daysSinceLastClientReply: lastClientReplyDate ? daysSince(lastClientReplyDate) : null\n    }\n  });\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        16
+      ],
+      "id": "eda6308b-f308-4854-a739-a74524b6f12f",
+      "name": "filter_logic"
+    },
+    {
+      "parameters": {
+        "jsCode": "let text = \"\"\nlet messages = $('Get a thread').first().json.messages\n\nfor (let message of messages) {\n  text += \"from: \" + message.From\n  text += \"content:\\n\"\n  let body = message.payload.body.data || message.payload.parts[0].body.data\n  text += body ? Buffer.from(body,\n    'base64url'\n  ).toString('utf8') : \"non--non\"\n}\nreturn [{thradSummary: text}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        -80
+      ],
+      "id": "e9d231ae-1be8-4929-9882-669e4b0663a6",
+      "name": "create_thread_for_AI"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=thread summary - {{ $json.thradSummary }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a skilled sales assistant for ScaleupAlly.io, responsible for sending a follow up mail to client, since he/she has not replied to our mail for a while. Just remind them  again regarding our conversation.  Please don't repeat anything mentioned previously. Return the message in plain text and since we are replying to the same thread we don't need a subject line."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1632,
+        -80
+      ],
+      "id": "4d0dab18-688c-4ce8-8bf9-63bcb8f85e34",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "text"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1520,
+        128
+      ],
+      "id": "d2399e0d-8469-44b8-915d-3c2d3633546d",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "reply",
+        "threadId": "={{ $('Get a thread').item.json.id }}",
+        "messageId": "={{ $json.replyMessageId }}",
+        "message": "={{ $('Basic LLM Chain').item.json.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2272,
+        -80
+      ],
+      "id": "04b3d7ff-c97d-4bc2-9376-7815f9fc5911",
+      "name": "Reply to a message",
+      "webhookId": "adf80f9d-b09b-4b8f-8495-09f60dd9f998",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function: choose last external message id (reply target)\n// Paste into n8n Function node. Edit ownEmails if you send from other aliases.\n\nconst ownEmails = [\n  'mis.scaleupally@gmail.com', // change / add other aliases you send from (lowercase)\n];\n\nfunction extractEmail(fromField) {\n  if (!fromField) return '';\n  const s = String(fromField);\n  const m = s.match(/<([^>]+)>/);\n  if (m) return m[1].toLowerCase();\n  const maybe = s.trim().toLowerCase();\n  return (/\\S+@\\S+\\.\\S+/.test(maybe)) ? maybe : '';\n}\n\nconst debug = { steps: [] };\nlet msgs = [];\n\n// 1) Try to read thread from \"Get a thread\" node (use $node, not $())\ntry {\n  debug.steps.push('trying $node[\"Get a thread\"]');\n  const getThreadNode = $node[\"Get a thread\"];\n  if (getThreadNode && getThreadNode.json && Array.isArray(getThreadNode.json.messages)) {\n    msgs = getThreadNode.json.messages.slice();\n    debug.steps.push('got messages from $node[\"Get a thread\"] count=' + msgs.length);\n  } else {\n    debug.steps.push('$node[\"Get a thread\"] present but no messages array');\n  }\n} catch (e) {\n  debug.steps.push('error reading $node[\"Get a thread\"]: ' + e.message);\n}\n\n// 2) Fallback to current input (if this Function receives the thread item)\nif (!msgs.length) {\n  try {\n    debug.steps.push('falling back to $input.all()');\n    const input = $input.all();\n    if (input.length && input[0].json && Array.isArray(input[0].json.messages)) {\n      msgs = input[0].json.messages.slice();\n      debug.steps.push('took messages from input[0].json.messages count=' + msgs.length);\n    } else if (input.length && input.every(it => it.json && (it.json.id || it.json.messageId))) {\n      // maybe each item is already a message\n      msgs = input.map(i => i.json).filter(Boolean);\n      debug.steps.push('took messages from separate input items count=' + msgs.length);\n    } else {\n      debug.steps.push('no messages found in $input.all()');\n    }\n  } catch (e) {\n    debug.steps.push('error accessing $input: ' + e.message);\n  }\n}\n\n// If still no messages, return early with debug\nif (!msgs || !msgs.length) {\n  return [\n    { json: { replyMessageId: null, replyToEmail: '', threadId: null, debug } }\n  ];\n}\n\n// Normalize and sort (oldest -> newest)\nmsgs = msgs.map(m => {\n  const internal = Number(m.internalDate || m.internal_date || m._dateNum || 0);\n  return Object.assign({}, m, { _internalDateNum: internal });\n});\nmsgs.sort((a,b) => (a._internalDateNum || 0) - (b._internalDateNum || 0));\ndebug.steps.push('sorted messages count=' + msgs.length);\n\n// Walk from newest -> oldest and pick first message not from ownEmails\nlet chosen = null;\nlet chosenEmail = '';\nfor (let i = msgs.length - 1; i >= 0; i--) {\n  const m = msgs[i];\n  // try common \"from\" fields\n  let fromField = m.from || m.From || m.originalSenderEmail || '';\n  if (!fromField && m.payload && Array.isArray(m.payload.headers)) {\n    const h = m.payload.headers.find(h => /from/i.test(h.name));\n    if (h) fromField = h.value || '';\n  }\n  const email = extractEmail(fromField);\n  debug.steps.push(`msg[${i}].id=${m.id||m.messageId||''} from=\"${fromField}\" parsed=\"${email}\"`);\n  if (!email) continue;\n  if (!ownEmails.includes(email)) { // external found\n    chosen = m;\n    chosenEmail = email;\n    debug.steps.push('chosen external message id=' + (m.id||m.messageId));\n    break;\n  }\n}\n\n// fallback to last message if no external found\nif (!chosen) {\n  chosen = msgs[msgs.length - 1];\n  let fromField = chosen.from || chosen.From || chosen.originalSenderEmail || '';\n  if (!fromField && chosen.payload && Array.isArray(chosen.payload.headers)) {\n    const h = chosen.payload.headers.find(h => /from/i.test(h.name));\n    if (h) fromField = h.value || '';\n  }\n  chosenEmail = extractEmail(fromField);\n  debug.steps.push('no external found - fallback chosen id=' + (chosen.id||chosen.messageId) + ' from=' + fromField);\n}\n\nconst replyMessageId = chosen ? (chosen.id || chosen.messageId || null) : null;\nconst threadId = chosen ? (chosen.threadId || msgs[0].threadId || null) : (msgs[0].threadId || null);\n\nreturn [\n  {\n    json: {\n      replyMessageId,\n      replyToEmail: chosenEmail || '',\n      threadId,\n      debug\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1984,
+        -80
+      ],
+      "id": "1b39b0c2-4c7c-4a2b-82b3-202fa62ce735",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "email_thread",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Loop Over Items').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "last_message_id",
+              "fieldValue": "={{ $json.id }}"
+            },
+            {
+              "fieldId": "last_replied",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2480,
+        -80
+      ],
+      "id": "3b6ded01-fad9-4632-9279-a61a132dc2f7",
+      "name": "update_last_replied",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "thread_messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "message_id",
+              "fieldValue": "={{ $('Reply to a message').item.json.id }}"
+            },
+            {
+              "fieldId": "email_thread",
+              "fieldValue": "={{ $('Reply to a message').item.json.threadId }}"
+            },
+            {
+              "fieldId": "is_reminder",
+              "fieldValue": "TRUE"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "conversation_going_on"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2688,
+        -80
+      ],
+      "id": "36db577a-1207-48d8-b0f6-652396cc405d",
+      "name": "create_row_in_thread_messages",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "filter_two_days_old_thread",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter_two_days_old_thread": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get a thread",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a thread": {
+      "main": [
+        [
+          {
+            "node": "calculate_follow-up_message_number",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "create_thread_for_AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "calculate_follow-up_message_number": {
+      "main": [
+        [
+          {
+            "node": "filter_logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter_logic": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_thread_for_AI": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply to a message": {
+      "main": [
+        [
+          {
+            "node": "update_last_replied",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Reply to a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_last_replied": {
+      "main": [
+        [
+          {
+            "node": "create_row_in_thread_messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_row_in_thread_messages": {
+      "main": [
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "cd5a325d-a1a3-47eb-9200-31e34994e3c1",
+  "activeVersionId": "cd5a325d-a1a3-47eb-9200-31e34994e3c1",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-12-02T10:02:12.038Z",
+      "createdAt": "2025-12-02T10:02:12.038Z",
+      "role": "workflow:owner",
+      "workflowId": "QZTHSob8Rsl2gha9",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-23T06:05:26.474Z",
+    "createdAt": "2025-12-23T06:05:26.474Z",
+    "versionId": "cd5a325d-a1a3-47eb-9200-31e34994e3c1",
+    "workflowId": "QZTHSob8Rsl2gha9",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 11
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "id": "04a9a057-bcb6-454f-8dbe-be720f7d0cb6",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "email_thread",
+          "returnAll": true,
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "last_replied",
+                "condition": "lt",
+                "keyValue": "=  {{ DateTime.now().minus({days : 2}).format('yyyy-MM-dd') }}"
+              },
+              {
+                "keyName": "human_handover",
+                "condition": "eq",
+                "keyValue": "FALSE"
+              },
+              {
+                "keyName": "status",
+                "condition": "=neq",
+                "keyValue": "closed"
+              },
+              {
+                "keyName": "status",
+                "condition": "neq",
+                "keyValue": "not_closed"
+              },
+              {
+                "keyName": "status",
+                "condition": "neq",
+                "keyValue": "spam"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          208,
+          0
+        ],
+        "id": "275a1192-99f5-4c85-95db-70ef939cb314",
+        "name": "filter_two_days_old_thread",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          400,
+          -16
+        ],
+        "id": "a86f9889-24af-4410-a432-fd140fae018b",
+        "name": "Loop Over Items"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "name": "Replace Me",
+        "typeVersion": 1,
+        "position": [
+          3456,
+          0
+        ],
+        "id": "418aeb53-a884-4913-ba16-127f430d9431"
+      },
+      {
+        "parameters": {
+          "resource": "thread",
+          "operation": "get",
+          "threadId": "={{ $json.thread_id }}",
+          "simple": false,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          624,
+          16
+        ],
+        "id": "711e04ba-9fd8-4e54-9f1a-e4df9db91c85",
+        "name": "Get a thread",
+        "webhookId": "512ad315-8b22-4c4e-a883-d6913e6ea65d",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "b931c3ee-26a7-4389-9384-6e7ad86f82b4",
+                "leftValue": "={{ $json.followUpDue }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1216,
+          16
+        ],
+        "id": "941efddf-e06f-4244-a734-51c85fad0cfd",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "jsCode": "// n8n Function node code\n// Input: items[] containing either:\n//  - a single item where item.json is the thread object { id, historyId, messages: [...] }\n//  - or items where each item.json is a message object\n//\n// Output: items[] where each output item corresponds to an input \"thread\" and contains:\n//  { threadId, consecutiveSentCount, lastClientReplyDate, sentMessageIdsAfterLastClientReply, totalMessages }\n\nfunction getFromField(msg) {\n  // Try common locations for 'From'\n  if (msg.From) return msg.From;\n  if (msg.payload && msg.payload.headers) {\n    const hdr = msg.payload.headers.find(h => h.name && h.name.toLowerCase() === 'from');\n    if (hdr) return hdr.value;\n  }\n  return null;\n}\n\nfunction normalizeSender(fromValue) {\n  if (!fromValue) return '';\n  return fromValue.toString().toLowerCase();\n}\n\n// helper to test whether sender is our account\nconst OUR_ADDRESS = 'mis.scaleupally'; // partial match; we'll use includes\n\nconst results = [];\n\nif (items.length === 0) {\n  return [];\n}\n\n// If first item has messages array, treat each such item as a thread\nfor (let rootItem of items) {\n  const root = rootItem.json || {};\n  let messages = [];\n\n  if (Array.isArray(root.messages)) {\n    messages = root.messages.slice(); // copy\n  } else {\n    // maybe each incoming n8n item is a message; gather them all into messages\n    // fallback: if rootItem looks like a single message, treat items array as messages\n    if (items.every(it => it.json && (it.json.id || it.json.internalDate))) {\n      messages = items.map(it => it.json);\n      // Ensure we only run once in this fallback\n      // clear items so outer loop doesn't duplicate\n      items = [];\n    } else {\n      // nothing to do\n      messages = [];\n    }\n  }\n\n  if (messages.length === 0) {\n    // produce a minimal output\n    results.push({\n      json: {\n        threadId: root.id || null,\n        consecutiveSentCount: 0,\n        lastClientReplyDate: null,\n        sentMessageIdsAfterLastClientReply: [],\n        totalMessages: 0\n      }\n    });\n    continue;\n  }\n\n  // Normalize messages and ensure internalDate exists as number\n  messages = messages.map(m => {\n    const d = Number(m.internalDate) || (m.internalDate && Date.parse(m.internalDate)) || 0;\n    return Object.assign({}, m, { _internalDateNum: d });\n  });\n\n  // Sort ascending by date (oldest first)\n  messages.sort((a,b) => a._internalDateNum - b._internalDateNum);\n\n  // Find index of last message that is NOT from our sender\n  let lastClientIndex = -1;\n  for (let i = messages.length - 1; i >= 0; i--) {\n    const from = normalizeSender(getFromField(messages[i]));\n    // consider it 'ours' if it contains our short address or full address; adjust as needed\n    const isOurs = from.includes(OUR_ADDRESS) || from.includes('mis.scaleupally@') || from.includes('mis.scaleupally.gmail'); // relax matching\n    if (!isOurs) {\n      lastClientIndex = i;\n      break;\n    }\n  }\n\n  // If lastClientIndex == -1 => there is NO client message at all\n  // We'll treat lastClientIndex = -1 and count from start the trailing 'ours' messages\n  let consecutiveSentCount = 0;\n  const sentMessageIdsAfter = [];\n\n  // Count messages after lastClientIndex that are from us until a non-us appears (there won't be non-us after because lastClientIndex is the last non-us)\n  for (let i = lastClientIndex + 1; i < messages.length; i++) {\n    const from = normalizeSender(getFromField(messages[i]));\n    const isOurs = from.includes(OUR_ADDRESS) || from.includes('mis.scaleupally@') || from.includes('mis.scaleupally.gmail');\n    if (isOurs) {\n      consecutiveSentCount++;\n      sentMessageIdsAfter.push(messages[i].id || messages[i].messageId || null);\n    } else {\n      // If a non-our message appears after lastClientIndex (rare by definition), stop counting\n      break;\n    }\n  }\n\n  const lastClientDate = lastClientIndex >= 0 ? new Date(messages[lastClientIndex]._internalDateNum).toISOString() : null;\n\n  results.push({\n    json: {\n      threadId: root.id || (messages[0] && messages[0].threadId) || null,\n      historyId: root.historyId || null,\n      consecutiveSentCount: consecutiveSentCount,\n      lastClientReplyDate: lastClientDate,\n      lastClientReplyMessageId: lastClientIndex >= 0 ? (messages[lastClientIndex].id || null) : null,\n      sentMessageIdsAfterLastClientReply: sentMessageIdsAfter,\n      totalMessages: messages.length\n    }\n  });\n}\n\n// Return results to n8n\nreturn results;\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          800,
+          16
+        ],
+        "id": "fdb57303-baa4-4ced-bb35-e1f117246726",
+        "name": "calculate_follow-up_message_number"
+      },
+      {
+        "parameters": {
+          "jsCode": "// n8n Function node\n// Input: items[] where each item.json contains at least:\n//  - lastClientReplyDate  (ISO string or null)\n//  - consecutiveSentCount (integer)  <-- your \"follow_up counts\"\n// Output: items[] with json.followUpDue = true/false\n\n// Configure thresholds (days) per follow_up count here:\nconst thresholds = {\n  1: 2,   // last reply > 2 days  & follow_up == 1\n  2: 3,   // last reply > 3 days  & follow_up == 2\n  3: 3,   // last reply > 3 days  & follow_up == 3\n  4: 3,   // (example) edit as needed\n  5: 3,   // (example) edit as needed\n  6: 3\n};\n\n// helper: compute age in days between now and a date string\nfunction daysSince(isoDateString) {\n  if (!isoDateString) return Infinity; // treat missing date as infinite age (or change to large number)\n  const then = new Date(isoDateString).getTime();\n  if (isNaN(then)) return Infinity;\n  const now = Date.now();\n  const ms = now - then;\n  return ms / (1000 * 60 * 60 * 24);\n}\n\nconst out = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const data = items[i].json || {};\n  const lastClientReplyDate = data.lastClientReplyDate || null;\n  const followUpCount = Number(data.consecutiveSentCount || 0);\n\n  // default false\n  let followUpDue = false;\n\n  // Only evaluate if there is a rule for this followUpCount\n  if (followUpCount > 0 && Object.prototype.hasOwnProperty.call(thresholds, followUpCount)) {\n    const thresholdDays = Number(thresholds[followUpCount]);\n    const ageDays = daysSince(lastClientReplyDate);\n\n    // followUpDue if last reply is older than threshold and threshold > 0\n    if (!isNaN(thresholdDays) && thresholdDays > 0 && ageDays > thresholdDays) {\n      followUpDue = true;\n    }\n  } else {\n    // optional: handle followUpCount == 0 or unmatched counts\n    // keep followUpDue = false\n  }\n\n  out.push({\n    json: {\n      ...data,\n      followUpDue,\n      _followUpRuleApplied: followUpCount > 0 ? thresholds[followUpCount] ?? null : null,\n      _daysSinceLastClientReply: lastClientReplyDate ? daysSince(lastClientReplyDate) : null\n    }\n  });\n}\n\nreturn out;\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1008,
+          16
+        ],
+        "id": "eda6308b-f308-4854-a739-a74524b6f12f",
+        "name": "filter_logic"
+      },
+      {
+        "parameters": {
+          "jsCode": "let text = \"\"\nlet messages = $('Get a thread').first().json.messages\n\nfor (let message of messages) {\n  text += \"from: \" + message.From\n  text += \"content:\\n\"\n  let body = message.payload.body.data || message.payload.parts[0].body.data\n  text += body ? Buffer.from(body,\n    'base64url'\n  ).toString('utf8') : \"non--non\"\n}\nreturn [{thradSummary: text}]"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1424,
+          -80
+        ],
+        "id": "e9d231ae-1be8-4929-9882-669e4b0663a6",
+        "name": "create_thread_for_AI"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=thread summary - {{ $json.thradSummary }}",
+          "messages": {
+            "messageValues": [
+              {
+                "message": "You are a skilled sales assistant for ScaleupAlly.io, responsible for sending a follow up mail to client, since he/she has not replied to our mail for a while. Just remind them  again regarding our conversation.  Please don't repeat anything mentioned previously. Return the message in plain text and since we are replying to the same thread we don't need a subject line."
+              }
+            ]
+          },
+          "batching": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.chainLlm",
+        "typeVersion": 1.7,
+        "position": [
+          1632,
+          -80
+        ],
+        "id": "4d0dab18-688c-4ce8-8bf9-63bcb8f85e34",
+        "name": "Basic LLM Chain"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-5-nano",
+            "mode": "list",
+            "cachedResultName": "gpt-5-nano"
+          },
+          "builtInTools": {},
+          "options": {
+            "textFormat": {
+              "textOptions": {
+                "type": "text"
+              }
+            }
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          1520,
+          128
+        ],
+        "id": "d2399e0d-8469-44b8-915d-3c2d3633546d",
+        "name": "OpenAI Chat Model",
+        "credentials": {
+          "openAiApi": {
+            "id": "2SN6l7TZaVixYAzM",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "thread",
+          "operation": "reply",
+          "threadId": "={{ $('Get a thread').item.json.id }}",
+          "messageId": "={{ $json.replyMessageId }}",
+          "message": "={{ $('Basic LLM Chain').item.json.text }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          2272,
+          -80
+        ],
+        "id": "04b3d7ff-c97d-4bc2-9376-7815f9fc5911",
+        "name": "Reply to a message",
+        "webhookId": "adf80f9d-b09b-4b8f-8495-09f60dd9f998",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Function: choose last external message id (reply target)\n// Paste into n8n Function node. Edit ownEmails if you send from other aliases.\n\nconst ownEmails = [\n  'mis.scaleupally@gmail.com', // change / add other aliases you send from (lowercase)\n];\n\nfunction extractEmail(fromField) {\n  if (!fromField) return '';\n  const s = String(fromField);\n  const m = s.match(/<([^>]+)>/);\n  if (m) return m[1].toLowerCase();\n  const maybe = s.trim().toLowerCase();\n  return (/\\S+@\\S+\\.\\S+/.test(maybe)) ? maybe : '';\n}\n\nconst debug = { steps: [] };\nlet msgs = [];\n\n// 1) Try to read thread from \"Get a thread\" node (use $node, not $())\ntry {\n  debug.steps.push('trying $node[\"Get a thread\"]');\n  const getThreadNode = $node[\"Get a thread\"];\n  if (getThreadNode && getThreadNode.json && Array.isArray(getThreadNode.json.messages)) {\n    msgs = getThreadNode.json.messages.slice();\n    debug.steps.push('got messages from $node[\"Get a thread\"] count=' + msgs.length);\n  } else {\n    debug.steps.push('$node[\"Get a thread\"] present but no messages array');\n  }\n} catch (e) {\n  debug.steps.push('error reading $node[\"Get a thread\"]: ' + e.message);\n}\n\n// 2) Fallback to current input (if this Function receives the thread item)\nif (!msgs.length) {\n  try {\n    debug.steps.push('falling back to $input.all()');\n    const input = $input.all();\n    if (input.length && input[0].json && Array.isArray(input[0].json.messages)) {\n      msgs = input[0].json.messages.slice();\n      debug.steps.push('took messages from input[0].json.messages count=' + msgs.length);\n    } else if (input.length && input.every(it => it.json && (it.json.id || it.json.messageId))) {\n      // maybe each item is already a message\n      msgs = input.map(i => i.json).filter(Boolean);\n      debug.steps.push('took messages from separate input items count=' + msgs.length);\n    } else {\n      debug.steps.push('no messages found in $input.all()');\n    }\n  } catch (e) {\n    debug.steps.push('error accessing $input: ' + e.message);\n  }\n}\n\n// If still no messages, return early with debug\nif (!msgs || !msgs.length) {\n  return [\n    { json: { replyMessageId: null, replyToEmail: '', threadId: null, debug } }\n  ];\n}\n\n// Normalize and sort (oldest -> newest)\nmsgs = msgs.map(m => {\n  const internal = Number(m.internalDate || m.internal_date || m._dateNum || 0);\n  return Object.assign({}, m, { _internalDateNum: internal });\n});\nmsgs.sort((a,b) => (a._internalDateNum || 0) - (b._internalDateNum || 0));\ndebug.steps.push('sorted messages count=' + msgs.length);\n\n// Walk from newest -> oldest and pick first message not from ownEmails\nlet chosen = null;\nlet chosenEmail = '';\nfor (let i = msgs.length - 1; i >= 0; i--) {\n  const m = msgs[i];\n  // try common \"from\" fields\n  let fromField = m.from || m.From || m.originalSenderEmail || '';\n  if (!fromField && m.payload && Array.isArray(m.payload.headers)) {\n    const h = m.payload.headers.find(h => /from/i.test(h.name));\n    if (h) fromField = h.value || '';\n  }\n  const email = extractEmail(fromField);\n  debug.steps.push(`msg[${i}].id=${m.id||m.messageId||''} from=\"${fromField}\" parsed=\"${email}\"`);\n  if (!email) continue;\n  if (!ownEmails.includes(email)) { // external found\n    chosen = m;\n    chosenEmail = email;\n    debug.steps.push('chosen external message id=' + (m.id||m.messageId));\n    break;\n  }\n}\n\n// fallback to last message if no external found\nif (!chosen) {\n  chosen = msgs[msgs.length - 1];\n  let fromField = chosen.from || chosen.From || chosen.originalSenderEmail || '';\n  if (!fromField && chosen.payload && Array.isArray(chosen.payload.headers)) {\n    const h = chosen.payload.headers.find(h => /from/i.test(h.name));\n    if (h) fromField = h.value || '';\n  }\n  chosenEmail = extractEmail(fromField);\n  debug.steps.push('no external found - fallback chosen id=' + (chosen.id||chosen.messageId) + ' from=' + fromField);\n}\n\nconst replyMessageId = chosen ? (chosen.id || chosen.messageId || null) : null;\nconst threadId = chosen ? (chosen.threadId || msgs[0].threadId || null) : (msgs[0].threadId || null);\n\nreturn [\n  {\n    json: {\n      replyMessageId,\n      replyToEmail: chosenEmail || '',\n      threadId,\n      debug\n    }\n  }\n];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1984,
+          -80
+        ],
+        "id": "1b39b0c2-4c7c-4a2b-82b3-202fa62ce735",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "email_thread",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Loop Over Items').item.json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "last_message_id",
+                "fieldValue": "={{ $json.id }}"
+              },
+              {
+                "fieldId": "last_replied",
+                "fieldValue": "={{ $now }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          2480,
+          -80
+        ],
+        "id": "3b6ded01-fad9-4632-9279-a61a132dc2f7",
+        "name": "update_last_replied",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "thread_messages",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "message_id",
+                "fieldValue": "={{ $('Reply to a message').item.json.id }}"
+              },
+              {
+                "fieldId": "email_thread",
+                "fieldValue": "={{ $('Reply to a message').item.json.threadId }}"
+              },
+              {
+                "fieldId": "is_reminder",
+                "fieldValue": "TRUE"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "conversation_going_on"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          2688,
+          -80
+        ],
+        "id": "36db577a-1207-48d8-b0f6-652396cc405d",
+        "name": "create_row_in_thread_messages",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "filter_two_days_old_thread",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "filter_two_days_old_thread": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [],
+          [
+            {
+              "node": "Get a thread",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Replace Me": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get a thread": {
+        "main": [
+          [
+            {
+              "node": "calculate_follow-up_message_number",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "create_thread_for_AI",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "calculate_follow-up_message_number": {
+        "main": [
+          [
+            {
+              "node": "filter_logic",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "filter_logic": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "create_thread_for_AI": {
+        "main": [
+          [
+            {
+              "node": "Basic LLM Chain",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Basic LLM Chain": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Basic LLM Chain",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reply to a message": {
+        "main": [
+          [
+            {
+              "node": "update_last_replied",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Reply to a message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "update_last_replied": {
+        "main": [
+          [
+            {
+              "node": "create_row_in_thread_messages",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "create_row_in_thread_messages": {
+        "main": [
+          [
+            {
+              "node": "Replace Me",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

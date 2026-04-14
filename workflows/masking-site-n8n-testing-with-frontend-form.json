@@ -1,0 +1,3348 @@
+{
+  "updatedAt": "2026-04-14T11:46:56.409Z",
+  "createdAt": "2026-04-06T06:35:51.069Z",
+  "id": "iqytijpO36bnkdZl",
+  "name": "Masking site n8n testing with frontend form",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a product researcher. Return ONLY valid JSON, no markdown, no explanation."
+            },
+            {
+              "content": "=Find {{ $json.batchCount }} unique generic non-branded products \nfor type: \"{{ $json.productType }}\"\n\nThis is batch {{ $json.batchNumber }} of {{ $json.totalBatches }} \nso make sure products are DIFFERENT from other batches.\n\nReturn a JSON array with exactly {{ $json.batchCount }} objects.\n\nEach object must have:\n- name (string , unique product name)\n- image_search_query: (6–8 words for finding a GENERIC final material/product-only photo)\n\nSTRICT RULES:\n1. NO brand names, NO packaging, NO labels\n2. NO humans, NO body parts, NO application or usage (e.g., no \"on face\", \"applying\", \"hands\", etc.)\n3. Focus ONLY on the product's physical appearance (texture, color, consistency, form)\n4. Prefer close-up, macro, or top-view descriptions\n5. The image should look like raw product material or plain product mass (e.g., cream texture, gel blob, powder, liquid)\n6. Avoid contextual words like: \"application\", \"routine\", \"spa\", \"bathroom\", \"model\"\n7. If the product is typically used on body (e.g., face mask), show ONLY the substance (e.g., clay texture, cream spread)\n8. Keep it generic and non-branded\n\nGOOD EXAMPLES:\n- \"smooth white cream texture swirl macro\"\n- \"green clay paste texture closeup top view\"\n\nBAD EXAMPLES:\n- \"face mask applied on woman face\"\n- \"person using lotion on hands\"\n- \"cosmetic product bottle on table\"\n\n- short_description: Write exactly 7 full sentences. Each sentence must be 25 words long.\n- long_description: Write exactly 10 full sentences. Each sentence must be 20 words long.\n- Length (string in inches)\n- Width (string in inches)\n- Height (string in inches)\n- Weight (string in lbs)\n- Categories (separated by comma)\n- Regular price in {{ $json.body.currency }}(integer, no currency symbol, no decimals)\n- color (string or \"various\")\n- material (string)\n- industry_notes (string, 1 sentence about industry use)\n- usage\n\nAdditionally, dynamically generate product attributes based on the product type and name.\n\nInclude the following fields:\n- Attribute 2 name\n- Attribute 2 value(s)\n- Attribute 3 name\n- Attribute 3 value(s)\n...\n- Attribute 8 name\n- Attribute 8 value(s)\n\nRules for attributes:\n- Attributes must be relevant to the product (e.g., tools include \"Set Includes\", \"Tool Types\", \"Compatibility\", etc.)\n- Do not leave attributes empty — generate meaningful values\n- Attribute names should be clear and commonly used in eCommerce\n- Attribute values can include multiple items separated by commas\n- Avoid repeating the same information already covered in other fields\n- Keep naming consistent across products where applicable\n\nExample:\nIf product is a sculpting tool kit:\n- Attribute 2 name: Set Includes\n- Attribute 2 value(s): 8 tools\n- Attribute 3 name: Tool Types\n- Attribute 3 value(s): loop tools, ribbon tools, needle tool, scraper\n\nEnsure all attributes are realistic and useful for catalog or Shopify-style product listings."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 16000,
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -1376,
+        1008
+      ],
+      "id": "003d7485-be2d-4018-9dd2-11197f7f4604",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "g1CXBLzZrr3yFE19",
+          "name": "OpenAi for Masking Site"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let raw = $('Message a model').first().json.output[0].content[0].text;\n\n// Clean markdown if present\nraw = raw.replace(/```json/g, '').replace(/```/g, '').trim();\n\n// Check if response was cut off\nconst status = $('Message a model').first().json.output[0].status;\nif (status === 'incomplete') {\n  console.log('Warning: Response was cut off — attempting JSON repair');\n}\n\n// ─── Repair truncated JSON ────────────────────────────────────\nfunction repairJSON(str) {\n  str = str.trim();\n\n  // Try parsing as-is first\n  try {\n    return JSON.parse(str);\n  } catch(e) {}\n\n  // Make sure starts with [\n  if (!str.startsWith('[')) {\n    str = '[' + str;\n  }\n\n  // Find last COMPLETE product object — ends with }, or }]\n  const lastCompleteComma = str.lastIndexOf('},');\n  const lastCompleteEnd = str.lastIndexOf('}]');\n\n  let repaired = str;\n\n  if (lastCompleteEnd > -1) {\n    // Already has a closing — try trimming after it\n    repaired = str.substring(0, lastCompleteEnd + 2);\n  } else if (lastCompleteComma > -1) {\n    // Cut at last complete object and close array\n    repaired = str.substring(0, lastCompleteComma + 1) + ']';\n  } else {\n    // Last resort — just close array\n    repaired = str + ']';\n  }\n\n  try {\n    return JSON.parse(repaired);\n  } catch(e) {\n    throw new Error('JSON repair failed: ' + e.message + '\\nPreview: ' + str.substring(0, 300));\n  }\n}\n\nconst products = repairJSON(raw);\n\nif (!Array.isArray(products)) {\n  throw new Error('Expected array, got: ' + typeof products);\n}\n\n// ─── Return products keeping EXACT OpenAI field names ─────────\nreturn products.map((p, i) => ({\n  json: {\n    // ── Exact same fields OpenAI returned ──────────────────────\n    \"name\":                   p.name || `Product ${i+1}`,\n    \"image_search_query\":     p.image_search_query || p.name,\n    \"short_description\":      p.short_description || '',\n    \"long_description\":       p.long_description || '',\n    \"Length\":                 p.Length || '',\n    \"Width\":                  p.Width || '',\n    \"Height\":                 p.Height || '',\n    \"Weight\":                 p.Weight || '',\n    \"Categories\":             p.Categories || '',\n    \"Regular price\":          p['Regular price'] || '',\n    \"color\":                  p.color || '',\n    \"material\":               p.material || '',\n    \"industry_notes\":         p.industry_notes || '',\n    \"usage\":                  p.usage || '',\n\n    // ── Attributes — exact key names from OpenAI ──────────────\n    \"Attribute 2 name\":       p['Attribute 2 name'] || '',\n    \"Attribute 2 value(s)\":   p['Attribute 2 value(s)'] || '',\n    \"Attribute 3 name\":       p['Attribute 3 name'] || '',\n    \"Attribute 3 value(s)\":   p['Attribute 3 value(s)'] || '',\n    \"Attribute 4 name\":       p['Attribute 4 name'] || '',\n    \"Attribute 4 value(s)\":   p['Attribute 4 value(s)'] || '',\n    \"Attribute 5 name\":       p['Attribute 5 name'] || '',\n    \"Attribute 5 value(s)\":   p['Attribute 5 value(s)'] || '',\n    \"Attribute 6 name\":       p['Attribute 6 name'] || '',\n    \"Attribute 6 value(s)\":   p['Attribute 6 value(s)'] || '',\n    \"Attribute 7 name\":       p['Attribute 7 name'] || '',\n    \"Attribute 7 value(s)\":   p['Attribute 7 value(s)'] || '',\n    \"Attribute 8 name\":       p['Attribute 8 name'] || '',\n    \"Attribute 8 value(s)\":   p['Attribute 8 value(s)'] || ''\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -992,
+        1008
+      ],
+      "id": "9e0818db-a169-4b1b-97f8-9c0c54048d4b",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Create spreadsheet').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bQx80q33UU5rEdz9jErgst7Y11_ctMngJEdjKIF_XK0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Type": "=simple",
+            "Name": "={{ $('Loop Over Items').item.json.name }}",
+            "Short description": "={{ $('Loop Over Items').item.json.short_description }}",
+            "Description": "={{ $('Loop Over Items').item.json.long_description }}",
+            "Weight (lbs)": "={{ $('Loop Over Items').item.json.Weight }}",
+            "Length (in)": "={{ $('Loop Over Items').item.json.Length }}",
+            "Width (in)": "={{ $('Loop Over Items').item.json.Width }}",
+            "Height (in)": "={{ $('Loop Over Items').item.json.Height }}",
+            "Regular price": "={{ $('Loop Over Items').item.json['Regular price'] }}",
+            "Categories": "={{ $('Loop Over Items').item.json.Categories }}",
+            "Images": "={{$json.image_url}}",
+            "Attribute 1 name": "Material",
+            "Attribute 1 value(s)": "={{ $json.material }}",
+            "Attribute 2 name": "={{ $('Loop Over Items').item.json['Attribute 2 name'] }}",
+            "Attribute 2 value(s)": "={{ $('Loop Over Items').item.json['Attribute 2 value(s)'] }}",
+            "Attribute 3 name": "={{ $('Loop Over Items').item.json['Attribute 3 name'] }}",
+            "Attribute 3 value(s)": "={{ $('Loop Over Items').item.json['Attribute 3 value(s)'] }}",
+            "Attribute 4 name": "={{ $('Loop Over Items').item.json['Attribute 4 name'] }}",
+            "Attribute 4 value(s)": "={{ $('Loop Over Items').item.json['Attribute 4 value(s)'] }}",
+            "Attribute 5 name": "={{ $('Loop Over Items').item.json['Attribute 5 name'] }}",
+            "Attribute 5 value(s)": "={{ $('Loop Over Items').item.json['Attribute 5 value(s)'] }}",
+            "Attribute 6 name": "={{ $('Loop Over Items').item.json['Attribute 6 name'] }}",
+            "Attribute 6 value(s)": "={{ $('Loop Over Items').item.json['Attribute 6 value(s)'] }}",
+            "Attribute 7 name": "={{ $('Loop Over Items').item.json['Attribute 7 name'] }}",
+            "Attribute 7 value(s)": "={{ $('Loop Over Items').item.json['Attribute 7 value(s)'] }}",
+            "Attribute 8 name": "={{ $('Loop Over Items').item.json['Attribute 8 name'] }}",
+            "Attribute 8 value(s)": "={{ $('Loop Over Items').item.json['Attribute 8 value(s)'] }}",
+            "Attribute 9 name": "Usage",
+            "Attribute 9 value(s)": "={{ $json.usage }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "SKU",
+              "displayName": "SKU",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "GTIN, UPC, EAN, or ISBN",
+              "displayName": "GTIN, UPC, EAN, or ISBN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Published",
+              "displayName": "Published",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Is featured?",
+              "displayName": "Is featured?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Visibility in catalog",
+              "displayName": "Visibility in catalog",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Short description",
+              "displayName": "Short description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date sale price starts",
+              "displayName": "Date sale price starts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date sale price ends",
+              "displayName": "Date sale price ends",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tax status",
+              "displayName": "Tax status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tax class",
+              "displayName": "Tax class",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "In stock?",
+              "displayName": "In stock?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Stock",
+              "displayName": "Stock",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Low stock amount",
+              "displayName": "Low stock amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Backorders allowed?",
+              "displayName": "Backorders allowed?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Sold individually?",
+              "displayName": "Sold individually?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Weight (lbs)",
+              "displayName": "Weight (lbs)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Length (in)",
+              "displayName": "Length (in)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Width (in)",
+              "displayName": "Width (in)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Height (in)",
+              "displayName": "Height (in)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Allow customer reviews?",
+              "displayName": "Allow customer reviews?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Purchase note",
+              "displayName": "Purchase note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Sale price",
+              "displayName": "Sale price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Regular price",
+              "displayName": "Regular price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Categories",
+              "displayName": "Categories",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tags",
+              "displayName": "Tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Shipping class",
+              "displayName": "Shipping class",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Images",
+              "displayName": "Images",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Download limit",
+              "displayName": "Download limit",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Download expiry days",
+              "displayName": "Download expiry days",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Parent",
+              "displayName": "Parent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Grouped products",
+              "displayName": "Grouped products",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Upsells",
+              "displayName": "Upsells",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Cross-sells",
+              "displayName": "Cross-sells",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "External URL",
+              "displayName": "External URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Button text",
+              "displayName": "Button text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Position",
+              "displayName": "Position",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Brands",
+              "displayName": "Brands",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 1 name",
+              "displayName": "Attribute 1 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 1 value(s)",
+              "displayName": "Attribute 1 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 1 visible",
+              "displayName": "Attribute 1 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 1 global",
+              "displayName": "Attribute 1 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 2 name",
+              "displayName": "Attribute 2 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 2 value(s)",
+              "displayName": "Attribute 2 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 2 visible",
+              "displayName": "Attribute 2 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 2 global",
+              "displayName": "Attribute 2 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 3 name",
+              "displayName": "Attribute 3 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 3 value(s)",
+              "displayName": "Attribute 3 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 3 visible",
+              "displayName": "Attribute 3 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 3 global",
+              "displayName": "Attribute 3 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 4 name",
+              "displayName": "Attribute 4 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 4 value(s)",
+              "displayName": "Attribute 4 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 4 visible",
+              "displayName": "Attribute 4 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 4 global",
+              "displayName": "Attribute 4 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 5 name",
+              "displayName": "Attribute 5 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 5 value(s)",
+              "displayName": "Attribute 5 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 5 visible",
+              "displayName": "Attribute 5 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 5 global",
+              "displayName": "Attribute 5 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 6 name",
+              "displayName": "Attribute 6 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 6 value(s)",
+              "displayName": "Attribute 6 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 6 visible",
+              "displayName": "Attribute 6 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 6 global",
+              "displayName": "Attribute 6 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 7 name",
+              "displayName": "Attribute 7 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 7 value(s)",
+              "displayName": "Attribute 7 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 7 visible",
+              "displayName": "Attribute 7 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 7 global",
+              "displayName": "Attribute 7 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 8 name",
+              "displayName": "Attribute 8 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 8 value(s)",
+              "displayName": "Attribute 8 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 8 visible",
+              "displayName": "Attribute 8 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 8 global",
+              "displayName": "Attribute 8 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 9 name",
+              "displayName": "Attribute 9 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 9 value(s)",
+              "displayName": "Attribute 9 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 9 visible",
+              "displayName": "Attribute 9 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 9 global",
+              "displayName": "Attribute 9 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2272,
+        1728
+      ],
+      "id": "c434be6b-2d2f-4464-9f82-7c1c6c442c21",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dPuWQry0B9RX5YTL",
+          "name": "dev1_google_sheet"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search?tbs=isz:l&imgar=s&imgsz=70mp&num=1&image_type=photo&no_cache=true",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "api_key",
+              "value": "1fc9172f1a9ea22a3a7b6b91d87e6f62969bd1c43eeadf049a021df56331eb0e"
+            },
+            {
+              "name": "engine",
+              "value": "google_images"
+            },
+            {
+              "name": "q",
+              "value": "={{ $('Loop Over Items').item.json.image_search_query + ' no watermark no branding stock photo' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -256,
+        1024
+      ],
+      "id": "497d1712-ee13-4b1d-ab90-7f8517719f78",
+      "name": "SerpAPI node",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst product = $('Loop Over Items').item.json;\nconst results = input.images_results || [];\n\n// ─── Empty results ───────────────────────────────────────────\nif (results.length === 0) {\n  return [{\n    json: {\n      totalHits: 0,\n      download_url: '',\n      fallback_url_1: '',\n      fallback_url_2: '',\n      image_source_site: 'none',\n      image_title: '',\n      name: product.name,\n      safe_name: product.safe_name,\n      image_search_query: product.image_search_query,\n      category: product.category || product.Categories,\n      price: product.price || product['Regular price'],\n      short_description: product.short_description,\n      long_description: product.long_description,\n      size: product.size,\n      color: product.color,\n      material: product.material,\n      weight: product.weight,\n      dimensions: product.dimensions,\n      features: product.features,\n      industry_use: product.industry_use || product.industry_notes,\n      attribute_2_name: product.attribute_2_name || '',\n      attribute_2_values: product.attribute_2_values || '',\n      attribute_3_name: product.attribute_3_name || '',\n      attribute_3_values: product.attribute_3_values || '',\n      attribute_4_name: product.attribute_4_name || '',\n      attribute_4_values: product.attribute_4_values || '',\n      attribute_5_name: product.attribute_5_name || '',\n      attribute_5_values: product.attribute_5_values || '',\n      attribute_6_name: product.attribute_6_name || '',\n      attribute_6_values: product.attribute_6_values || '',\n      attribute_7_name: product.attribute_7_name || '',\n      attribute_7_values: product.attribute_7_values || '',\n      attribute_8_name: product.attribute_8_name || '',\n      attribute_8_values: product.attribute_8_values || ''\n    }\n  }];\n}\n\n// ─── Blacklisted sources ──────────────────────────────────────\nconst blacklistSources = [\n  // Paid watermark stock sites\n  'shutterstock', 'getty', 'alamy', 'istockphoto',\n  'dreamstime', 'depositphotos', '123rf', 'adobe.com',\n  // Watermark free sites\n  'pngtree', 'freepik', 'vecteezy', 'canstockphoto',\n  'clipartmax', 'cleanpng', 'pngwing', 'kindpng',\n  // eCommerce / Cloudflare blocked\n  'brambleberry', 'demandware', 'myshopify',\n  'bigcommerce', 'squarespace', 'wixstatic',\n  'shopify', 'walmart', 'amazon', 'ebay',\n  'etsy', 'alibaba', 'flipkart', 'target',\n  // Social media auth-required CDNs\n  'fbsbx.com', 'facebook.com', 'instagram.com',\n  'cdninstagram.com', 'pinimg.com', 'twimg.com',\n  'tiktokcdn.com', 'snapchat.com', 'linkedin.com',\n  'lnkd.in'\n];\n\n// ─── Blacklisted URL patterns ─────────────────────────────────\nconst blacklistUrlPatterns = [\n  // Watermark sites\n  'pngtree.com', 'freepik.com', 'vecteezy.com',\n  'pngwing.com', 'kindpng.com', 'cleanpng.com',\n  // Watermark indicators\n  'watermark', '_preview.', '-preview.', 'comp_',\n  // Social media auth patterns\n  'lookaside.fbsbx', 'media_id=', 'fbcdn',\n  'scontent.', 'cdninstagram', 'pinimg',\n  'auth_token=', 'access_token=', '?media_id',\n  // Broken/unreliable CDN patterns\n  'nitrocdn.com',       // Nitro CDN - often 404\n  'optimized/rev-',     // Nitro optimized - often broken\n  // Non-image page patterns\n  '.html', '.php', '.asp', '.jsp',\n  // Private/restricted\n  'private', 'restricted', 'protected',\n   'lemon8-app.com',     // ← add\n  'lemon8.com',         // ← add\n  'tiktok.com',         // ← add\n  'bytedance.com'\n];\n\n// ─── Preferred clean royalty-free sources ─────────────────────\nconst preferredSources = [\n  'unsplash.com', 'pexels.com', 'pixabay.com',\n  'stocksnap.io', 'rawpixel.com', 'reshot.com',\n  'lifeofpix.com', 'picjumbo.com', 'kaboompics.com',\n  'burst.shopify', 'negativespace.co', 'gratisography.com'\n];\n\n// ─── URL validator ────────────────────────────────────────────\nfunction isValidImageUrl(url) {\n  if (!url || typeof url !== 'string') return false;\n  const lower = url.toLowerCase();\n\n  // Must start with http\n  if (!lower.startsWith('http')) return false;\n\n  // Reject auth/social CDN patterns\n  const authPatterns = [\n    'lookaside.fbsbx', 'media_id=', 'fbcdn',\n    'scontent.', 'cdninstagram', 'pinimg',\n    'auth_token=', 'access_token=', '?media_id',\n    'nitrocdn.com', 'optimized/rev-'\n  ];\n  if (authPatterns.some(p => lower.includes(p))) return false;\n\n  // Reject HTML pages\n  const urlWithoutParams = lower.split('?')[0];\n  const badExtensions = ['.html', '.htm', '.php', '.asp', '.jsp'];\n  if (badExtensions.some(ext => urlWithoutParams.endsWith(ext))) return false;\n\n  return true;\n}\n\n// ─── Filter clean images ──────────────────────────────────────\nconst clean = results.filter(img => {\n  const source = (img.source || '').toLowerCase();\n  const original = (img.original || '').toLowerCase();\n  const thumbnail = (img.thumbnail || '').toLowerCase();\n  const title = (img.title || '').toLowerCase();\n\n  // Reject blacklisted sources\n  if (blacklistSources.some(bad =>\n    source.includes(bad) || original.includes(bad)\n  )) return false;\n\n  // Reject blacklisted URL patterns\n  if (blacklistUrlPatterns.some(pattern =>\n    original.includes(pattern) || thumbnail.includes(pattern)\n  )) return false;\n\n  // Reject branded/copyright titles\n  if (\n    title.includes('™') || title.includes('®') ||\n    title.includes('©') || title.includes('watermark')\n  ) return false;\n\n  // Must have at least one valid downloadable URL\n  if (!isValidImageUrl(img.thumbnail) && !isValidImageUrl(img.original)) return false;\n\n  return true;\n});\n\n// ─── Prioritize preferred clean sources ───────────────────────\nconst preferred = clean.filter(img => {\n  const source = (img.source || '').toLowerCase();\n  const link = (img.original || '').toLowerCase();\n  return preferredSources.some(good =>\n    source.includes(good) || link.includes(good)\n  );\n});\n\n// ─── Final pool — priority order ─────────────────────────────\nconst pool = preferred.length > 0 ? preferred\n           : clean.length > 0 ? clean\n           : results;\n\n// ─── Pick best valid URL per image ───────────────────────────\nfunction getBestUrl(img) {\n  \n  // Original sometime Cloudflare blocked\n  if (isValidImageUrl(img.original)) return img.original;\n  // Thumbnail as fallback\n    if (isValidImageUrl(img.thumbnail)) return img.thumbnail;\n\n  return '';\n}\n\n// ─── Get top 3 valid images as fallbacks ─────────────────────\nconst top3 = pool\n  .map(img => ({\n    url: getBestUrl(img),\n    source: img.source || '',\n    title: img.title || ''\n  }))\n  .filter(item => item.url !== '')\n  .slice(0, 3);\n\nconst best = top3[0] || { url: '', source: '', title: '' };\n\n// ─── Final output ─────────────────────────────────────────────\nreturn [{\n  json: {\n    totalHits: pool.length,\n\n    // Primary + 2 fallback URLs\n    download_url: best.url,\n    fallback_url_1: top3[1]?.url || '',\n    fallback_url_2: top3[2]?.url || '',\n\n    image_source_site: best.source,\n    image_title: best.title,\n\n    // Product fields\n    name: product.name,\n    image_search_query: product.image_search_query,\n    category: product.category || product.Categories,\n    price: product.price || product['Regular price'],\n    short_description: product.short_description,\n    long_description: product.long_description,\n    size: product.size,\n    color: product.color,\n    material: product.material,\n    weight: product.weight,\n    dimensions: product.dimensions,\n    features: product.features,\n    industry_use: product.industry_use || product.industry_notes,\n\n    // Dynamic attributes\n    attribute_2_name: product.attribute_2_name || '',\n    attribute_2_values: product.attribute_2_values || '',\n    attribute_3_name: product.attribute_3_name || '',\n    attribute_3_values: product.attribute_3_values || '',\n    attribute_4_name: product.attribute_4_name || '',\n    attribute_4_values: product.attribute_4_values || '',\n    attribute_5_name: product.attribute_5_name || '',\n    attribute_5_values: product.attribute_5_values || '',\n    attribute_6_name: product.attribute_6_name || '',\n    attribute_6_values: product.attribute_6_values || '',\n    attribute_7_name: product.attribute_7_name || '',\n    attribute_7_values: product.attribute_7_values || '',\n    attribute_8_name: product.attribute_8_name || '',\n    attribute_8_values: product.attribute_8_values || ''\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        1024
+      ],
+      "id": "7e541d25-8da4-4316-8424-1f65726e75b8",
+      "name": "Code - Pick Best Image"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ac3cba8f-0a4e-4a75-a326-4895e7625fe6",
+              "leftValue": "={{ $json.download_url }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        144,
+        1024
+      ],
+      "id": "ababc126-6ae7-49c8-a7ca-723dc4bd72ec",
+      "name": "If node (check image found)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8b4c81dc-fdad-492f-97a0-f0c5259d8269",
+              "name": "drive_url",
+              "value": "NO_IMAGE_FOUND",
+              "type": "string"
+            },
+            {
+              "id": "b82ed203-5fc1-4478-99ac-61ab96f819b5",
+              "name": "image_source",
+              "value": "none",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        1664
+      ],
+      "id": "30b55bb1-dc7b-4f6d-8b91-734bd78b7b5a",
+      "name": "Set - No Image (false branch)"
+    },
+    {
+      "parameters": {
+        "name": "={{ \n  $('Code - Pick Best Image').item.json.name\n    .toLowerCase()\n    .replace(/[^a-z0-9]+/g, '-') \n    .replace(/^-|-$/g, '') \n  + '-' + $now.format('dd-MM-yy') + '.jpg' \n}}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Create folder for images').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1904,
+        992
+      ],
+      "id": "7049ccec-4a33-47d2-858c-9baa806855ed",
+      "name": "Google Drive Upload",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "7E5OE1b7EWf2HhfZ",
+          "name": "dev1_drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst product = $('Loop Over Items').item.json;\n\n// Get current date parts\nconst now = new Date();\nconst year = now.getFullYear();\nconst month = String(now.getMonth() + 1).padStart(2, '0');\n\n//https://truela-arts.shop/wp-content/uploads/2026/04/prod-3.jpg\n\nconst domainName = $('Webhook').first().json.body.domainName.toLowerCase();\nconst productImageName = $('Code - Pick Best Image').first().json.name\n    .toLowerCase()\n    .replace(/[^a-z0-9]+/g, '-') \n    .replace(/^-|-$/g, '') \n  + '-' + $now.toFormat('dd-MM-yy') + '.jpg';\n\n\n// Build WordPress-style URL\nconst wordpressUrl = `https://${domainName}/wp-content/uploads/${year}/${month}/${productImageName}`;\n\n\nconst fileId = input.id || null;\nconst driveUrl = fileId\n  ? `https://drive.google.com/file/d/${fileId}/view`\n  : 'UPLOAD_FAILED';\n\nreturn [{\n  json: {\n    ...product,\n    drive_url: driveUrl,\n    image_url: wordpressUrl,   \n    image_source: 'serpapi'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2144,
+        992
+      ],
+      "id": "71d6b417-e359-49d5-99b2-ad12a27ff9f9",
+      "name": "Code - Build Drive URL"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        1168
+      ],
+      "id": "1dc19d88-c6e8-48e8-9ec0-055a51e376c6",
+      "placeholder": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Code - Pick Best Image').item.json.download_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "image/webp,image/apng,image/*,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.9"
+            },
+            {
+              "name": "Referer",
+              "value": "https://www.google.com/"
+            },
+            {
+              "name": "sec-fetch-dest",
+              "value": "image"
+            },
+            {
+              "name": "sec-fetch-mode",
+              "value": "no-cors"
+            },
+            {
+              "name": "sec-fetch-site",
+              "value": "cross-site"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        1008
+      ],
+      "id": "4a6e5412-7c22-49d0-8c65-75e4ef695f26",
+      "name": "HTTP Download Image url 1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fa48ed15-8e95-4086-b7b1-818ce9523e11",
+              "leftValue": "={{ $binary?.data?.mimeType }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        624,
+        1008
+      ],
+      "id": "c668d270-2250-4a1f-beed-1177fcb22a3b",
+      "name": "If - URL 1 Success?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const binary = $input.first().binary;\nconst product = $('Code - Pick Best Image').item.json;\n\nreturn [{\n  json: {\n    name: product.name,\n    safe_name: product.safe_name,\n    category: product.category || product.Categories,\n    price: product.price || product['Regular price'],\n    short_description: product.short_description,\n    long_description: product.long_description,\n    size: product.size,\n    color: product.color,\n    material: product.material,\n    weight: product.weight,\n    dimensions: product.dimensions,\n    features: product.features,\n    industry_use: product.industry_use || product.industry_notes,\n    attribute_2_name: product.attribute_2_name || '',\n    attribute_2_values: product.attribute_2_values || '',\n    attribute_3_name: product.attribute_3_name || '',\n    attribute_3_values: product.attribute_3_values || '',\n    attribute_4_name: product.attribute_4_name || '',\n    attribute_4_values: product.attribute_4_values || '',\n    attribute_5_name: product.attribute_5_name || '',\n    attribute_5_values: product.attribute_5_values || '',\n    attribute_6_name: product.attribute_6_name || '',\n    attribute_6_values: product.attribute_6_values || '',\n    attribute_7_name: product.attribute_7_name || '',\n    attribute_7_values: product.attribute_7_values || '',\n    attribute_8_name: product.attribute_8_name || '',\n    attribute_8_values: product.attribute_8_values || '',\n    image_source: product.image_source_site || 'serpapi',\n    download_success: true,\n    used_url: 'url1'\n  },\n  binary: binary\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        992
+      ],
+      "id": "825dbace-8c44-49d3-ae61-06fa45e55c6c",
+      "name": "Code - Merge Data 1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Code - Pick Best Image').item.json.fallback_url_1 }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "image/webp,image/apng,image/*,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.9"
+            },
+            {
+              "name": "Referer",
+              "value": "https://www.google.com/"
+            },
+            {
+              "name": "sec-fetch-dest",
+              "value": "image"
+            },
+            {
+              "name": "sec-fetch-mode",
+              "value": "no-cors"
+            },
+            {
+              "name": "sec-fetch-site",
+              "value": "cross-site"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        800,
+        1200
+      ],
+      "id": "61cb258a-5631-44e7-afc5-bb4f0276d8b1",
+      "name": "HTTP Request - Try URL 2",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ae64312a-fa68-4d71-8a96-e018da651fde",
+              "leftValue": "={{ $binary?.data?.mimeType }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1008,
+        1200
+      ],
+      "id": "56b687ea-7907-4d7c-a255-e9dd7cae657d",
+      "name": "If - URL 2 Success?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const binary = $input.first().binary;\nconst product = $('Code - Pick Best Image').item.json;\n\nreturn [{\n  json: {\n    name: product.name,\n    safe_name: product.safe_name,\n    category: product.category || product.Categories,\n    price: product.price || product['Regular price'],\n    short_description: product.short_description,\n    long_description: product.long_description,\n    size: product.size,\n    color: product.color,\n    material: product.material,\n    weight: product.weight,\n    dimensions: product.dimensions,\n    features: product.features,\n    industry_use: product.industry_use || product.industry_notes,\n    attribute_2_name: product.attribute_2_name || '',\n    attribute_2_values: product.attribute_2_values || '',\n    attribute_3_name: product.attribute_3_name || '',\n    attribute_3_values: product.attribute_3_values || '',\n    attribute_4_name: product.attribute_4_name || '',\n    attribute_4_values: product.attribute_4_values || '',\n    attribute_5_name: product.attribute_5_name || '',\n    attribute_5_values: product.attribute_5_values || '',\n    attribute_6_name: product.attribute_6_name || '',\n    attribute_6_values: product.attribute_6_values || '',\n    attribute_7_name: product.attribute_7_name || '',\n    attribute_7_values: product.attribute_7_values || '',\n    attribute_8_name: product.attribute_8_name || '',\n    attribute_8_values: product.attribute_8_values || '',\n    image_source: product.image_source_site || 'serpapi',\n    download_success: true,\n    used_url: 'url2'\n  },\n  binary: binary\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        1184
+      ],
+      "id": "dc081e53-8892-453b-bd9a-0d8e178a5c7a",
+      "name": "Code - Merge Data 2"
+    },
+    {
+      "parameters": {
+        "url": "=  {{ $('Code - Pick Best Image').item.json.fallback_url_2  }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "image/webp,image/apng,image/*,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.9"
+            },
+            {
+              "name": "Referer",
+              "value": "https://www.google.com/"
+            },
+            {
+              "name": "sec-fetch-dest",
+              "value": "image"
+            },
+            {
+              "name": "sec-fetch-mode",
+              "value": "no-cors"
+            },
+            {
+              "name": "sec-fetch-site",
+              "value": "cross-site"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1184,
+        1360
+      ],
+      "id": "eb02cc4d-571d-4e7d-b602-89fdeb329765",
+      "name": "HTTP Request - Try URL 3",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ae64312a-fa68-4d71-8a96-e018da651fde",
+              "leftValue": "={{ $binary?.data?.mimeType }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1376,
+        1360
+      ],
+      "id": "47ebc44d-970c-4187-adae-bd6ee92fec75",
+      "name": "If - URL 3 Success?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const binary = $input.first().binary;\nconst product = $('Code - Pick Best Image').item.json;\n\nreturn [{\n  json: {\n    name: product.name,\n    safe_name: product.safe_name,\n    category: product.category || product.Categories,\n    price: product.price || product['Regular price'],\n    short_description: product.short_description,\n    long_description: product.long_description,\n    size: product.size,\n    color: product.color,\n    material: product.material,\n    weight: product.weight,\n    dimensions: product.dimensions,\n    features: product.features,\n    industry_use: product.industry_use || product.industry_notes,\n    attribute_2_name: product.attribute_2_name || '',\n    attribute_2_values: product.attribute_2_values || '',\n    attribute_3_name: product.attribute_3_name || '',\n    attribute_3_values: product.attribute_3_values || '',\n    attribute_4_name: product.attribute_4_name || '',\n    attribute_4_values: product.attribute_4_values || '',\n    attribute_5_name: product.attribute_5_name || '',\n    attribute_5_values: product.attribute_5_values || '',\n    attribute_6_name: product.attribute_6_name || '',\n    attribute_6_values: product.attribute_6_values || '',\n    attribute_7_name: product.attribute_7_name || '',\n    attribute_7_values: product.attribute_7_values || '',\n    attribute_8_name: product.attribute_8_name || '',\n    attribute_8_values: product.attribute_8_values || '',\n    image_source: product.image_source_site || 'serpapi',\n    download_success: true,\n    used_url: 'url3'\n  },\n  binary: binary\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        1344
+      ],
+      "id": "832184ec-cc43-4d81-913d-2ebf06e810c9",
+      "name": "Code - Merge Data 3"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dd618a4e-eaa6-4f75-9fe1-9ff23207a245",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3600,
+        992
+      ],
+      "id": "79b8deed-eb8d-4c1d-89cd-a8d6a4801717",
+      "name": "Webhook",
+      "webhookId": "dd618a4e-eaa6-4f75-9fe1-9ff23207a245"
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "={{ $('Webhook').item.json.body.domainName }} - Product List",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2848,
+        992
+      ],
+      "id": "efc3b762-9a49-4d22-92cb-ee07804ca330",
+      "name": "Create spreadsheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dPuWQry0B9RX5YTL",
+          "name": "dev1_google_sheet"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Create folder with domain name').item.json.id }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -2624,
+        992
+      ],
+      "id": "6184a8d8-5fba-4d00-a6cd-eaa7d8ce0de1",
+      "name": "Move file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "7E5OE1b7EWf2HhfZ",
+          "name": "dev1_drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{$node[\"Create spreadsheet\"].json.spreadsheetId}}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "=Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "SKU",
+              "displayName": "SKU",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "GTIN, UPC, EAN, or ISBN",
+              "displayName": "GTIN, UPC, EAN, or ISBN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Published",
+              "displayName": "Published",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Is featured?",
+              "displayName": "Is featured?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Visibility in catalog",
+              "displayName": "Visibility in catalog",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Short description",
+              "displayName": "Short description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date sale price starts",
+              "displayName": "Date sale price starts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date sale price ends",
+              "displayName": "Date sale price ends",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tax status",
+              "displayName": "Tax status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tax class",
+              "displayName": "Tax class",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "In stock?",
+              "displayName": "In stock?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Stock",
+              "displayName": "Stock",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Low stock amount",
+              "displayName": "Low stock amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Backorders allowed?",
+              "displayName": "Backorders allowed?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Sold individually?",
+              "displayName": "Sold individually?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Weight (lbs)",
+              "displayName": "Weight (lbs)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Length (in)",
+              "displayName": "Length (in)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Width (in)",
+              "displayName": "Width (in)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Height (in)",
+              "displayName": "Height (in)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Allow customer reviews?",
+              "displayName": "Allow customer reviews?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Purchase note",
+              "displayName": "Purchase note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Sale price",
+              "displayName": "Sale price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Regular price",
+              "displayName": "Regular price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Categories",
+              "displayName": "Categories",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tags",
+              "displayName": "Tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Shipping class",
+              "displayName": "Shipping class",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Images",
+              "displayName": "Images",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Download limit",
+              "displayName": "Download limit",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Download expiry days",
+              "displayName": "Download expiry days",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Parent",
+              "displayName": "Parent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Grouped products",
+              "displayName": "Grouped products",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Upsells",
+              "displayName": "Upsells",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Cross-sells",
+              "displayName": "Cross-sells",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "External URL",
+              "displayName": "External URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Button text",
+              "displayName": "Button text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Position",
+              "displayName": "Position",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Brands",
+              "displayName": "Brands",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 1 name",
+              "displayName": "Attribute 1 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 1 value(s)",
+              "displayName": "Attribute 1 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 1 visible",
+              "displayName": "Attribute 1 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 1 global",
+              "displayName": "Attribute 1 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 2 name",
+              "displayName": "Attribute 2 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 2 value(s)",
+              "displayName": "Attribute 2 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 2 visible",
+              "displayName": "Attribute 2 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 2 global",
+              "displayName": "Attribute 2 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 3 name",
+              "displayName": "Attribute 3 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 3 value(s)",
+              "displayName": "Attribute 3 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 3 visible",
+              "displayName": "Attribute 3 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 3 global",
+              "displayName": "Attribute 3 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 4 name",
+              "displayName": "Attribute 4 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 4 value(s)",
+              "displayName": "Attribute 4 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 4 visible",
+              "displayName": "Attribute 4 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 4 global",
+              "displayName": "Attribute 4 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 5 name",
+              "displayName": "Attribute 5 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 5 value(s)",
+              "displayName": "Attribute 5 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 5 visible",
+              "displayName": "Attribute 5 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 5 global",
+              "displayName": "Attribute 5 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 6 name",
+              "displayName": "Attribute 6 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 6 value(s)",
+              "displayName": "Attribute 6 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 6 visible",
+              "displayName": "Attribute 6 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 6 global",
+              "displayName": "Attribute 6 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 7 name",
+              "displayName": "Attribute 7 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 7 value(s)",
+              "displayName": "Attribute 7 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 7 visible",
+              "displayName": "Attribute 7 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 7 global",
+              "displayName": "Attribute 7 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 8 name",
+              "displayName": "Attribute 8 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 8 value(s)",
+              "displayName": "Attribute 8 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 8 visible",
+              "displayName": "Attribute 8 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 8 global",
+              "displayName": "Attribute 8 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 9 name",
+              "displayName": "Attribute 9 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 9 value(s)",
+              "displayName": "Attribute 9 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 9 visible",
+              "displayName": "Attribute 9 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Attribute 9 global",
+              "displayName": "Attribute 9 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "image_search_query",
+              "displayName": "image_search_query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "short_description",
+              "displayName": "short_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "long_description",
+              "displayName": "long_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Length",
+              "displayName": "Length",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Width",
+              "displayName": "Width",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Height",
+              "displayName": "Height",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Weight",
+              "displayName": "Weight",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "color",
+              "displayName": "color",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "material",
+              "displayName": "material",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "industry_notes",
+              "displayName": "industry_notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "usage",
+              "displayName": "usage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "drive_url",
+              "displayName": "drive_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "image_source",
+              "displayName": "image_source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2160,
+        992
+      ],
+      "id": "f248fa67-c625-481e-a4d2-1ea9e31180fb",
+      "name": "Append headers in sheet",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dPuWQry0B9RX5YTL",
+          "name": "dev1_google_sheet"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      \"ID\": \"\",\n      \"Type\": \"\",\n      \"SKU\": \"\",\n      \"GTIN, UPC, EAN, or ISBN\": \"\",\n      \"Name\": \"\",\n      \"Published\": \"\",\n      \"Is featured?\": \"\",\n      \"Visibility in catalog\": \"\",\n      \"Short description\": \"\",\n      \"Description\": \"\",\n      \"Date sale price starts\": \"\",\n      \"Date sale price ends\": \"\",\n      \"Tax status\": \"\",\n      \"Tax class\": \"\",\n      \"In stock?\": \"\",\n      \"Stock\": \"\",\n      \"Low stock amount\": \"\",\n      \"Backorders allowed?\": \"\",\n      \"Sold individually?\": \"\",\n      \"Weight (lbs)\": \"\",\n      \"Length (in)\": \"\",\n      \"Width (in)\": \"\",\n      \"Height (in)\": \"\",\n      \"Allow customer reviews?\": \"\",\n      \"Purchase note\": \"\",\n      \"Sale price\": \"\",\n      \"Regular price\": \"\",\n      \"Categories\": \"\",\n      \"Tags\": \"\",\n      \"Shipping class\": \"\",\n      \"Images\": \"\",\n      \"Download limit\": \"\",\n      \"Download expiry days\": \"\",\n      \"Parent\": \"\",\n      \"Grouped products\": \"\",\n      \"Upsells\": \"\",\n      \"Cross-sells\": \"\",\n      \"External URL\": \"\",\n      \"Button text\": \"\",\n      \"Position\": \"\",\n      \"Brands\": \"\",\n      \"Attribute 1 name\": \"\",\n      \"Attribute 1 value(s)\": \"\",\n      \"Attribute 1 visible\": \"\",\n      \"Attribute 1 global\": \"\",\n      \"Attribute 2 name\": \"\",\n      \"Attribute 2 value(s)\": \"\",\n      \"Attribute 2 visible\": \"\",\n      \"Attribute 2 global\": \"\",\n      \"Attribute 3 name\": \"\",\n      \"Attribute 3 value(s)\": \"\",\n      \"Attribute 3 visible\": \"\",\n      \"Attribute 3 global\": \"\",\n      \"Attribute 4 name\": \"\",\n      \"Attribute 4 value(s)\": \"\",\n      \"Attribute 4 visible\": \"\",\n      \"Attribute 4 global\": \"\",\n      \"Attribute 5 name\": \"\",\n      \"Attribute 5 value(s)\": \"\",\n      \"Attribute 5 visible\": \"\",\n      \"Attribute 5 global\": \"\",\n      \"Attribute 6 name\": \"\",\n      \"Attribute 6 value(s)\": \"\",\n      \"Attribute 6 visible\": \"\",\n      \"Attribute 6 global\": \"\",\n      \"Attribute 7 name\": \"\",\n      \"Attribute 7 value(s)\": \"\",\n      \"Attribute 7 visible\": \"\",\n      \"Attribute 7 global\": \"\",\n      \"Attribute 8 name\": \"\",\n      \"Attribute 8 value(s)\": \"\",\n      \"Attribute 8 visible\": \"\",\n      \"Attribute 8 global\": \"\",\n      \"Attribute 9 name\": \"\",\n      \"Attribute 9 value(s)\": \"\",\n      \"Attribute 9 visible\": \"\",\n      \"Attribute 9 global\": \"\"\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2416,
+        992
+      ],
+      "id": "88144b64-d130-4e17-b6b4-e07466f1eae8",
+      "name": "Generate headers"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Webhook').item.json.body.domainName }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "19NuLRfRSvxZ7dAJEuGNfC66WsA9ysTOs",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -3360,
+        992
+      ],
+      "id": "1bdcb036-3719-4abc-9f13-2261b31e47cd",
+      "name": "Create folder with domain name",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "7E5OE1b7EWf2HhfZ",
+          "name": "dev1_drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $json.name }} - images",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -3072,
+        992
+      ],
+      "id": "1058a901-f98c-4767-baf2-4d13473fed15",
+      "name": "Create folder for images",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "7E5OE1b7EWf2HhfZ",
+          "name": "dev1_drive account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me1",
+      "typeVersion": 1,
+      "position": [
+        -1456,
+        1200
+      ],
+      "id": "262f25da-ec64-44df-b109-9b6af89c57cf",
+      "placeholder": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Webhook').first().json.body;\nconst totalProducts = parseInt(input.productCount) || 10;\nconst batchSize = 10;\nconst batches = Math.ceil(totalProducts / batchSize);\nconst productType = input.productType;\n\nconst result = [];\nfor (let i = 0; i < batches; i++) {\n  const count = Math.min(batchSize, totalProducts - (i * batchSize));\n  result.push({\n    json: {\n      totalProducts: totalProducts,\n      batchNumber: i + 1,\n      batchCount: count,\n      totalBatches: batches,\n      productType:productType\n    }\n  });\n}\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1872,
+        992
+      ],
+      "id": "d10b4ceb-d603-48c5-a5c2-f35da489d81a",
+      "name": "Code - Create Batches"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1664,
+        992
+      ],
+      "id": "7e8daca9-5f28-4469-80de-08f4ee55b845",
+      "name": "Loop Batches"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all items that passed through the loop\nconst allItems = $input.all();\n\nconsole.log(`Total products from all batches: ${allItems.length}`);\n\n// Re-index all products globally\nreturn allItems.map((item, i) => ({\n  json: {\n    ...item.json,\n    index: i + 1\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1168,
+        752
+      ],
+      "id": "e5af620e-2cf3-4590-a5ff-ad1279683960",
+      "name": "Code - Combine All Products"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -448,
+        880
+      ],
+      "id": "9d032a34-8305-48b9-8af2-5b855079c8a0",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -640,
+        1008
+      ],
+      "id": "c8c92b23-4f52-4519-9b71-a7c19404011b",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me2",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        256
+      ],
+      "id": "a0a3778c-287a-4249-9354-0aead031d10d",
+      "placeholder": true,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://production-sfo.browserless.io/chromium/function",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 2UKgnxuC3eZlG2q311f81eb3fa22bca8ff16bf471f888cc27"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.browserlessBody }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        32
+      ],
+      "id": "e4be1959-bbc3-4745-896b-be6ed8b39ddf",
+      "name": "HTTP Browserless",
+      "disabled": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c0c8d16c-761c-4f63-8b73-c820c1df1090",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -880,
+        32
+      ],
+      "id": "27dd3af5-6bb8-4efa-95e0-bdf9c43eba85",
+      "name": "If - Test Passed?",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b134c96a-000a-434c-824d-7a14e398d8d7",
+              "name": "site",
+              "value": "={{ $('Code - Build Body').item.json.siteUrl }}",
+              "type": "string"
+            },
+            {
+              "id": "47d19e8a-5ac3-4594-aab3-bd3dadbdfc51",
+              "name": "status",
+              "value": "PASSED",
+              "type": "string"
+            },
+            {
+              "id": "baf736aa-9019-451e-b107-c91b6c632ff3",
+              "name": "steps",
+              "value": "={{ $json.steps }}",
+              "type": "string"
+            },
+            {
+              "id": "b306f858-a803-4c6e-a7f4-b145e65afa8b",
+              "name": "error",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -672,
+        16
+      ],
+      "id": "321a70b3-b1b8-4b48-a75f-fa6754bc3c01",
+      "name": "Set - PASSED",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7505b7d5-80db-4b08-8050-a23ac34e385b",
+              "name": "site",
+              "value": "={{ $('Code - Build Body').item.json.siteUrl }}",
+              "type": "string"
+            },
+            {
+              "id": "66f7f14f-abc6-49b9-b3b8-20b35ff04c8f",
+              "name": "status",
+              "value": "FAILED",
+              "type": "string"
+            },
+            {
+              "id": "18f90531-7d1d-4ce4-9507-45f92c534138",
+              "name": "steps",
+              "value": "={{ $json.steps }}",
+              "type": "string"
+            },
+            {
+              "id": "99f9d657-dfc8-4012-ae7e-42206e9de8ce",
+              "name": "error",
+              "value": "={{ $json.error }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -672,
+        256
+      ],
+      "id": "a59c248f-9829-4821-9d38-12b50ea01ef2",
+      "name": "Set - FAILED",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const all = $input.all();\nconst passed = all.filter(i => i.json.status === 'PASSED');\nconst failed = all.filter(i => i.json.status === 'FAILED');\n\nconst summary = all.map(i => {\n  const icon = i.json.status === 'PASSED' ? 'PASSED' : 'FAILED';\n  const steps = (i.json.steps || []).join(' > ');\n  const err = i.json.error ? `\\nError: ${i.json.error}` : '';\n  return `[${icon}] ${i.json.site}\\nSteps: ${steps}${err}`;\n}).join('\\n\\n');\n\nreturn [{\n  json: {\n    total: all.length,\n    passed: passed.length,\n    failed: failed.length,\n    hasFailures: failed.length > 0,\n    summary,\n    results: all.map(i => i.json)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        96
+      ],
+      "id": "f7cc5f10-bd2c-4855-b8af-94300330a7dc",
+      "name": "Code - Build Results",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sendTo": "sapna.jain@scaleupally.io",
+        "subject": "={{ $json.hasFailures ? 'FAILED' : 'PASSED' }} — Checkout Test {{ $now.toFormat('dd MMM') }}",
+        "message": "=Total: {{ $json.total }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -96,
+        80
+      ],
+      "id": "b96f1332-13cc-43dc-8611-3c35d2498857",
+      "name": "Send a message",
+      "webhookId": "0cdbaaae-1313-4862-bb0c-cf0fd378f1fc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ti2a33QzoufeTVRS",
+          "name": "dev1 Gmail account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { results: $('Code - Build Results').first().json.results } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        64,
+        96
+      ],
+      "id": "f3c7a35e-9584-42d2-8483-7b41a8b46775",
+      "name": "Respond to Webhook1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aaea97b0-1a01-403e-a2c5-0da56a528fe5",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1728,
+        16
+      ],
+      "id": "91543b1c-e3f2-4bb8-b865-db3e47832034",
+      "name": "Webhook1",
+      "webhookId": "aaea97b0-1a01-403e-a2c5-0da56a528fe5",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1424,
+        256
+      ],
+      "id": "e9327be7-63ea-4d14-bf40-3050453b88f5",
+      "name": "Loop Over Sites",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json.body || $input.first().json;\n\nconst siteUrl = item.siteUrl || item.url || '';\nconst customer = item.customer || {\n  firstName: 'Test',\n  lastName: 'User',\n  country: 'US',\n  address: '123 Test Street',\n  city: 'New York',\n  state: 'NY',\n  zip: '10001',\n  phone: '5551234567',\n  email: 'test@example.com'\n};\n\n// Build code as array of lines then join — avoids template literal issues\nconst codeLines = [\n  'export default async function({ page, context }) {',\n  '  const siteUrl = context.siteUrl;',\n  '  const customer = context.customer;',\n  '  const results = { steps: [], success: false, error: \"\" };',\n  '  const sleep = function(ms) { return new Promise(function(r) { setTimeout(r, ms); }); };',\n  '  results.steps.push(\"testing: \" + siteUrl);',\n  '  try {',\n  '    await page.goto(siteUrl + \"/shop/\", { waitUntil: \"load\", timeout: 30000 });',\n  '    await sleep(2000);',\n  '    results.steps.push(\"shop page loaded\");',\n  '    var addBtn = await page.$(\"a.add_to_cart_button, button.add_to_cart_button\");',\n  '    if (!addBtn) throw new Error(\"Add to cart button not found\");',\n  '    await addBtn.click();',\n  '    await sleep(3000);',\n  '    results.steps.push(\"product added to cart\");',\n  '    await page.goto(siteUrl + \"/cart/\", { waitUntil: \"load\" });',\n  '    await sleep(1500);',\n  '    await page.waitForSelector(\".cart_item\", { timeout: 10000 });',\n  '    results.steps.push(\"cart page loaded\");',\n  '    var checkoutBtn = await page.$(\"a.checkout-button, .wc-proceed-to-checkout a\");',\n  '    if (!checkoutBtn) throw new Error(\"Checkout button not found\");',\n  '    await checkoutBtn.click();',\n  '    await sleep(3000);',\n  '    results.steps.push(\"checkout page loaded\");',\n  '    var fillField = async function(sel, val) {',\n  '      var el = await page.$(sel);',\n  '      if (el) { await el.click({ clickCount: 3 }); await el.type(val, { delay: 40 }); }',\n  '    };',\n  '    await fillField(\"#billing_first_name\", customer.firstName);',\n  '    await fillField(\"#billing_last_name\", customer.lastName);',\n  '    await sleep(500);',\n  '    var countryEl = await page.$(\"#billing_country\");',\n  '    if (countryEl) { await page.select(\"#billing_country\", customer.country); await sleep(1500); }',\n  '    await fillField(\"#billing_address_1\", customer.address);',\n  '    await fillField(\"#billing_city\", customer.city);',\n  '    var stateEl = await page.$(\"#billing_state\");',\n  '    if (stateEl) {',\n  '      var tag = await page.evaluate(function(el) { return el.tagName; }, stateEl);',\n  '      if (tag === \"SELECT\") { await page.select(\"#billing_state\", customer.state); }',\n  '      else { await fillField(\"#billing_state\", customer.state); }',\n  '      await sleep(500);',\n  '    }',\n  '    await fillField(\"#billing_postcode\", customer.zip);',\n  '    await fillField(\"#billing_phone\", customer.phone);',\n  '    await fillField(\"#billing_email\", customer.email);',\n  '    results.steps.push(\"billing filled\");',\n  '    var codRadio = await page.$(\"input[value=\\\\\"cod\\\\\"]\");',\n  '    var stripeRadio = await page.$(\"input[value*=\\\\\"stripe\\\\\"]\");',\n  '    if (stripeRadio) {',\n  '      await stripeRadio.click();',\n  '      await sleep(2000);',\n  '      results.steps.push(\"stripe selected\");',\n  '    } else if (codRadio) {',\n  '      await codRadio.click();',\n  '      results.steps.push(\"cash on delivery selected\");',\n  '    } else {',\n  '      results.steps.push(\"no payment method found\");',\n  '    }',\n  '    await sleep(1500);',\n  '    var placeOrderBtn = await page.$(\"#place_order\");',\n  '    if (!placeOrderBtn) throw new Error(\"Place order button not found\");',\n  '    await placeOrderBtn.click();',\n  '    await sleep(5000);',\n  '    results.steps.push(\"order submitted\");',\n  '    var confirmation = await page.$(\".woocommerce-order-received, .entry-title\");',\n  '    results.success = !!confirmation;',\n  '    results.steps.push(results.success ? \"order confirmed\" : \"confirmation not detected\");',\n  '    return results;',\n  '  } catch(e) {',\n  '    results.error = e.message;',\n  '    results.steps.push(\"ERROR: \" + e.message);',\n  '    return results;',\n  '  }',\n  '}'\n];\n\nconst code = codeLines.join('\\n');\n\nconst bodyObj = {\n  code: code,\n  context: {\n    siteUrl: siteUrl,\n    customer: customer\n  }\n};\n\nreturn [{\n  json: {\n    browserlessBody: JSON.stringify(bodyObj),\n    siteUrl: siteUrl,\n    customer: customer\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1520,
+        16
+      ],
+      "id": "c5ae6c3a-b874-48d4-9ad9-31ddd82b1f82",
+      "name": "Code - Build Body",
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Loop Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI node": {
+      "main": [
+        [
+          {
+            "node": "Code - Pick Best Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Pick Best Image": {
+      "main": [
+        [
+          {
+            "node": "If node (check image found)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If node (check image found)": {
+      "main": [
+        [
+          {
+            "node": "HTTP Download Image url 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set - No Image (false branch)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - No Image (false branch)": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Upload": {
+      "main": [
+        [
+          {
+            "node": "Code - Build Drive URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Build Drive URL": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Download Image url 1": {
+      "main": [
+        [
+          {
+            "node": "If - URL 1 Success?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - URL 1 Success?": {
+      "main": [
+        [
+          {
+            "node": "Code - Merge Data 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request - Try URL 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Merge Data 1": {
+      "main": [
+        [
+          {
+            "node": "Google Drive Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Try URL 2": {
+      "main": [
+        [
+          {
+            "node": "If - URL 2 Success?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - URL 2 Success?": {
+      "main": [
+        [
+          {
+            "node": "Code - Merge Data 2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request - Try URL 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Merge Data 2": {
+      "main": [
+        [
+          {
+            "node": "Google Drive Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Try URL 3": {
+      "main": [
+        [
+          {
+            "node": "If - URL 3 Success?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - URL 3 Success?": {
+      "main": [
+        [
+          {
+            "node": "Code - Merge Data 3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set - No Image (false branch)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Merge Data 3": {
+      "main": [
+        [
+          {
+            "node": "Google Drive Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Create folder with domain name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "Move file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move file": {
+      "main": [
+        [
+          {
+            "node": "Generate headers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append headers in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code - Create Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate headers": {
+      "main": [
+        [
+          {
+            "node": "Append headers in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder with domain name": {
+      "main": [
+        [
+          {
+            "node": "Create folder for images",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder for images": {
+      "main": [
+        [
+          {
+            "node": "Create spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me1": {
+      "main": [
+        [
+          {
+            "node": "Loop Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Create Batches": {
+      "main": [
+        [
+          {
+            "node": "Loop Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Batches": {
+      "main": [
+        [
+          {
+            "node": "Code - Combine All Products",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SerpAPI node",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Combine All Products": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Sites",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Browserless": {
+      "main": [
+        [
+          {
+            "node": "If - Test Passed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Test Passed?": {
+      "main": [
+        [
+          {
+            "node": "Set - PASSED",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set - FAILED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - FAILED": {
+      "main": [
+        []
+      ]
+    },
+    "Set - PASSED": {
+      "main": [
+        []
+      ]
+    },
+    "Code - Build Results": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Code - Build Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Sites": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Replace Me2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Build Body": {
+      "main": [
+        [
+          {
+            "node": "HTTP Browserless",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "MK8sDrOfVLRm36eQ",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "ca4e0306-a7ba-47c0-9def-16ee42ab7edc",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-04-06T06:35:51.071Z",
+      "createdAt": "2026-04-06T06:35:51.071Z",
+      "role": "workflow:owner",
+      "workflowId": "iqytijpO36bnkdZl",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

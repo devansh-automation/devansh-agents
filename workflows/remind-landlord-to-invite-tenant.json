@@ -1,0 +1,215 @@
+{
+  "updatedAt": "2025-10-27T06:21:38.000Z",
+  "createdAt": "2025-10-27T06:20:55.471Z",
+  "id": "qCuUaZZC1fTKQVV1",
+  "name": "Remind landlord to invite tenant",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "62c2a671-acaa-4378-9a28-867ddb8d6779",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "Lease_Parse_Output",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "is_tenant_onboarded",
+              "condition": "eq",
+              "keyValue": "False"
+            },
+            {
+              "keyName": "created_at",
+              "condition": "lt",
+              "keyValue": "={{ new Date(Date.now() - 2*24*60*60*1000).toISOString().split('T')[0] }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "f0a30415-c992-4115-9cdf-35634de30c08",
+      "name": "Get many rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        440,
+        0
+      ],
+      "id": "b4b31115-d493-46da-851e-3708cdebebe1",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Get many rows').item.json.landlord_telegram_id }}",
+        "text": "=Hi {{ $json.first_name }}, Tenant {{ $('Get many rows').item.json.tenant_name }} is still not onboarded on telegram. Please share the invite link again, or ask tenant to join Kove on telegram using invitation link. ",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        920,
+        100
+      ],
+      "id": "c613d0d2-23d1-46e1-9f45-9b1c6cd4d94b",
+      "name": "Send a text message",
+      "webhookId": "fbe48ff6-ae25-4df9-a560-3e04166218a4",
+      "credentials": {
+        "telegramApi": {
+          "id": "BK9Q6BAVIG4zhnJV",
+          "name": "Scaleupally_kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "users",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telegram_id",
+              "keyValue": "={{ $json.landlord_telegram_id }}"
+            },
+            {
+              "keyName": "role",
+              "keyValue": "Landlord"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        660,
+        100
+      ],
+      "id": "67cfe8fa-21f8-4f2b-8370-b7dde138d050",
+      "name": "Get a row",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "944e4dbe-a864-4b71-b325-2a3cc0199b67",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-27T06:20:55.475Z",
+      "createdAt": "2025-10-27T06:20:55.475Z",
+      "role": "workflow:owner",
+      "workflowId": "qCuUaZZC1fTKQVV1",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

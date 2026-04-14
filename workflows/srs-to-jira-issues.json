@@ -1,0 +1,340 @@
+{
+  "updatedAt": "2025-10-06T06:12:38.000Z",
+  "createdAt": "2025-10-06T05:11:21.500Z",
+  "id": "Cd1p2fSwLezDIGX0",
+  "name": "SRS to JIRA ISSUES",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/document-upload",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        280
+      ],
+      "id": "4370d640-2d22-47cc-a1ff-baad74bb093d",
+      "webhookId": "b8fa257c-75fb-4a95-8f9b-7828688430c0"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "get",
+        "documentURL": "https://docs.google.com/document/d/1s_UtUbkERDGnu0twEh5Ouj4Phhj6KgmiOHXaUmy_8Ns/edit?tab=t.0"
+      },
+      "name": "Google Docs - Get Document",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 1,
+      "position": [
+        200,
+        0
+      ],
+      "id": "557f38d4-8a74-4037-9298-337192fcfaf3",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "I13QzRVumWGzkAV2",
+          "name": "Google Docs account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract text content safely\nconst item = items[0];\nconst content = item.json.content || '';\n\nreturn [{\n  json: {\n    plain_text: content.trim()\n  }\n}];\n"
+      },
+      "name": "Flatten Google Docs Content",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        400,
+        0
+      ],
+      "id": "99a273d3-6ff4-4078-94e3-8b4fe9d883a4"
+    },
+    {
+      "parameters": {
+        "project": {
+          "__rl": true,
+          "value": "11266",
+          "mode": "list",
+          "cachedResultName": "mantalks-might"
+        },
+        "issueType": {
+          "__rl": true,
+          "value": "10000",
+          "mode": "list",
+          "cachedResultName": "Epic"
+        },
+        "summary": "{{ $json.plain_text }}",
+        "additionalFields": {
+          "description": "={{ $json.plain_text }}"
+        }
+      },
+      "name": "Jira - Create Epic",
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        800,
+        0
+      ],
+      "id": "e3dab06d-d2fd-47b0-abf6-011513bdd45a",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "HiFA7Bh0tjX4MAYm",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "project": {
+          "__rl": true,
+          "value": "1213",
+          "mode": "id"
+        },
+        "issueType": "Story",
+        "summary": "{{$json['epics'][0]['stories'][0]['summary']}}",
+        "additionalFields": {}
+      },
+      "name": "Jira - Create Story",
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        0
+      ],
+      "id": "0444c78a-e789-4fb6-bb22-a0a4a60deb68",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "HiFA7Bh0tjX4MAYm",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "project": {
+          "__rl": true,
+          "value": "1213",
+          "mode": "id"
+        },
+        "issueType": "Task",
+        "summary": "={{$json['epics'][0]['stories'][0]['tasks'][0]['summary']}}",
+        "additionalFields": {}
+      },
+      "name": "Jira - Create Task",
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "563e9bda-c88a-4d6c-be28-a3e3626299cf",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "HiFA7Bh0tjX4MAYm",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "project": {
+          "__rl": true,
+          "value": "1213",
+          "mode": "id"
+        },
+        "issueType": "Sub-task",
+        "summary": "Test: {{ $json['epics'][0]['stories'][0]['tasks'][0]['tests'][0]['summary'] }}",
+        "additionalFields": {}
+      },
+      "name": "Jira - Create Test Case",
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        0
+      ],
+      "id": "651ca110-013c-4bf3-a5a4-e571bf0178c4",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "HiFA7Bh0tjX4MAYm",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        0
+      ],
+      "id": "7c89037a-7157-4f9c-8e49-2fa35c0f55bd",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are a project planner AI. \n\nYour task is to read the input text and generate a structured JSON containing Jira project details, epics, stories, tasks (frontend & backend), and test cases. \n\nThe JSON must follow this exact format:\n\n{\n  \"project\": {\n    \"name\": \"string\",\n    \"key\": \"string\"\n  },\n  \"epics\": [\n    {\n      \"summary\": \"string\",\n      \"description\": \"string\",\n      \"stories\": [\n        {\n          \"summary\": \"string\",\n          \"description\": \"string\",\n          \"tasks\": [\n            { \"summary\": \"string\", \"description\": \"string\" }\n          ],\n          \"tests\": [\n            { \n              \"summary\": \"string\", \n              \"steps\": [\"string\", \"string\"] \n            }\n          ]\n        }\n      ]\n    }\n  ]\n}\n\nImportant Rules:\n1. Always output **valid JSON only**. Do NOT include any text, explanations, or markdown outside the JSON.\n2. Keep the structure strictly as above; keys must match exactly.\n3. Each Epic, Story, Task, and Test should be concise but descriptive.\n4. For tasks, generate both frontend and backend if applicable.\n5. For tests, use \"steps\" in Given/When/Then style.\n\nInput Text:\n",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        520,
+        0
+      ],
+      "id": "56aecfb9-656a-4899-a811-e0e9c43e2baa",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        860,
+        540
+      ],
+      "id": "b88dc964-9d3e-4724-97d3-275e81309ba3",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "OwpHFeaaHjrxSotI",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        []
+      ]
+    },
+    "Google Docs - Get Document": {
+      "main": [
+        [
+          {
+            "node": "Flatten Google Docs Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten Google Docs Content": {
+      "main": [
+        [
+          {
+            "node": "Jira - Create Epic",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jira - Create Epic": {
+      "main": [
+        [
+          {
+            "node": "Jira - Create Story",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jira - Create Story": {
+      "main": [
+        [
+          {
+            "node": "Jira - Create Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jira - Create Task": {
+      "main": [
+        [
+          {
+            "node": "Jira - Create Test Case",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jira - Create Test Case": {
+      "main": [
+        []
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Google Docs - Get Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "16c4ef9b-7dc3-459b-91a6-1c3ec6a16b47",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-06T05:11:21.503Z",
+      "createdAt": "2025-10-06T05:11:21.503Z",
+      "role": "workflow:owner",
+      "workflowId": "Cd1p2fSwLezDIGX0",
+      "projectId": "kL4d2d65bbWAOPAf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

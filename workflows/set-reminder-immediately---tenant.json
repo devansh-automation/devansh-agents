@@ -1,0 +1,239 @@
+{
+  "updatedAt": "2025-10-27T07:33:48.000Z",
+  "createdAt": "2025-10-27T07:33:18.889Z",
+  "id": "lEGhcAAxoasqPC8f",
+  "name": "Set reminder immediately - Tenant",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "property_id"
+            },
+            {
+              "name": "remind_text"
+            }
+          ]
+        }
+      },
+      "id": "2cb85b3b-180a-4992-a2fb-ec1639b078d5",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "Lease_Parse_Output",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.property_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "671c03ec-5d6f-48a6-9d11-47aef744ba54",
+      "name": "Get landlord",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.landlord_telegram_id }}",
+        "text": "={{ $('When Executed by Another Workflow').item.json.remind_text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "8f70434b-4e44-41d0-9437-de87f668627e",
+      "name": "Send a text message",
+      "webhookId": "3e66f80f-37bd-4f77-8aa3-bb766f28f438",
+      "credentials": {
+        "telegramApi": {
+          "id": "BK9Q6BAVIG4zhnJV",
+          "name": "Scaleupally_kove"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get landlord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get landlord": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "a6d84da8-c8be-4abf-81f4-6731d01b7cf6",
+  "activeVersionId": "a6d84da8-c8be-4abf-81f4-6731d01b7cf6",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-27T07:33:18.893Z",
+      "createdAt": "2025-10-27T07:33:18.893Z",
+      "role": "workflow:owner",
+      "workflowId": "lEGhcAAxoasqPC8f",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-23T06:05:26.474Z",
+    "createdAt": "2025-12-23T06:05:26.474Z",
+    "versionId": "a6d84da8-c8be-4abf-81f4-6731d01b7cf6",
+    "workflowId": "lEGhcAAxoasqPC8f",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "property_id"
+              },
+              {
+                "name": "remind_text"
+              }
+            ]
+          }
+        },
+        "id": "2cb85b3b-180a-4992-a2fb-ec1639b078d5",
+        "typeVersion": 1.1,
+        "name": "When Executed by Another Workflow",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "position": [
+          0,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "Lease_Parse_Output",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "keyValue": "={{ $json.property_id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          220,
+          0
+        ],
+        "id": "671c03ec-5d6f-48a6-9d11-47aef744ba54",
+        "name": "Get landlord",
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $json.landlord_telegram_id }}",
+          "text": "={{ $('When Executed by Another Workflow').item.json.remind_text }}",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          440,
+          0
+        ],
+        "id": "8f70434b-4e44-41d0-9437-de87f668627e",
+        "name": "Send a text message",
+        "webhookId": "3e66f80f-37bd-4f77-8aa3-bb766f28f438",
+        "credentials": {
+          "telegramApi": {
+            "id": "BK9Q6BAVIG4zhnJV",
+            "name": "Scaleupally_kove"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Get landlord",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get landlord": {
+        "main": [
+          [
+            {
+              "node": "Send a text message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

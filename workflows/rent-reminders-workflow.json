@@ -1,0 +1,170 @@
+{
+  "updatedAt": "2025-10-27T06:20:04.000Z",
+  "createdAt": "2025-10-27T06:18:27.958Z",
+  "id": "34R6d50bQG35RHT8",
+  "name": "Rent Reminders workflow",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -240,
+        -80
+      ],
+      "id": "725a13e3-e3ec-4341-83e5-2c2b968c7d42",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "Lease_Parse_Output",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "rent_due_day",
+              "condition": "eq",
+              "keyValue": "={{ new Date(Date.now() + 1*24*60*60*1000).toISOString().slice(0,10) }}\n"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        -80
+      ],
+      "id": "84afde96-6c32-4b60-844b-804315f4a8b3",
+      "name": "Check reminders table",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "users",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telegram_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.send_to }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -80
+      ],
+      "id": "b93fb143-b47e-43b7-87af-d6d5aa585309",
+      "name": "GetNamefromusers",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Check reminders table').item.json.send_to }}",
+        "text": "=Hi {{ $json.first_name }}, Your rent is due tomorrow. Please complete the payment on time to avoid late fees.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        380,
+        -80
+      ],
+      "id": "c49f6007-f669-4c94-89f3-d9acde8ce9b9",
+      "name": "Send Reminder message",
+      "webhookId": "24c77ee0-59a3-4c1a-8cf1-b08d5ef5b21d",
+      "credentials": {
+        "telegramApi": {
+          "id": "BK9Q6BAVIG4zhnJV",
+          "name": "Scaleupally_kove"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check reminders table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check reminders table": {
+      "main": [
+        [
+          {
+            "node": "GetNamefromusers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetNamefromusers": {
+      "main": [
+        [
+          {
+            "node": "Send Reminder message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "89e0dcd5-8f1d-4370-b7f6-10af73db8601",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-27T06:18:27.961Z",
+      "createdAt": "2025-10-27T06:18:27.961Z",
+      "role": "workflow:owner",
+      "workflowId": "34R6d50bQG35RHT8",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

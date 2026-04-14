@@ -1,0 +1,1603 @@
+{
+  "updatedAt": "2026-04-09T07:53:46.401Z",
+  "createdAt": "2026-04-03T09:58:54.455Z",
+  "id": "HpVeFQcqpLK8YBEi",
+  "name": "Masking site product detail fetch - chatbot",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "cbc273f1-5dfe-47a2-b431-c95ac9bfa088",
+      "name": "When chat message received",
+      "webhookId": "d209a149-bc10-46d6-9f70-48e927337ae9"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a product researcher. Return ONLY valid JSON, no markdown, no explanation."
+            },
+            {
+              "content": "=Find 3 generic products for the type: \"{{ $json.chatInput }}\"\n\nReturn a JSON array with exactly 3 objects.\n\nEach object must have:\n- name (string , unique product name)\n- image_search_query: (6–8 words for finding a GENERIC final material/product-only photo)\n\nSTRICT RULES:\n1. NO brand names, NO packaging, NO labels\n2. NO humans, NO body parts, NO application or usage (e.g., no \"on face\", \"applying\", \"hands\", etc.)\n3. Focus ONLY on the product's physical appearance (texture, color, consistency, form)\n4. Prefer close-up, macro, or top-view descriptions\n5. The image should look like raw product material or plain product mass (e.g., cream texture, gel blob, powder, liquid)\n6. Avoid contextual words like: \"application\", \"routine\", \"spa\", \"bathroom\", \"model\"\n7. If the product is typically used on body (e.g., face mask), show ONLY the substance (e.g., clay texture, cream spread)\n8. Keep it generic and non-branded\n\nGOOD EXAMPLES:\n- \"smooth white cream texture swirl macro\"\n- \"green clay paste texture closeup top view\"\n\nBAD EXAMPLES:\n- \"face mask applied on woman face\"\n- \"person using lotion on hands\"\n- \"cosmetic product bottle on table\"\n\n- short_description: Write exactly 7 full sentences. Each sentence must be 25 words long.\n- long_description: Write exactly 10 full sentences. Each sentence must be 20 words long.\n- Length (string in inches)\n- Width (string in inches)\n- Height (string in inches)\n- Weight (string in lbs)\n- Categories (separated by comma)\n- Regular price (integer, no currency symbol, no decimals)\n- color (string or \"various\")\n- material (string)\n- industry_notes (string, 1 sentence about industry use)\n- usage\n\nAdditionally, dynamically generate product attributes based on the product type and name.\n\nInclude the following fields:\n- Attribute 2 name\n- Attribute 2 value(s)\n- Attribute 3 name\n- Attribute 3 value(s)\n...\n- Attribute 8 name\n- Attribute 8 value(s)\n\nRules for attributes:\n- Attributes must be relevant to the product (e.g., tools include \"Set Includes\", \"Tool Types\", \"Compatibility\", etc.)\n- Do not leave attributes empty — generate meaningful values\n- Attribute names should be clear and commonly used in eCommerce\n- Attribute values can include multiple items separated by commas\n- Avoid repeating the same information already covered in other fields\n- Keep naming consistent across products where applicable\n\nExample:\nIf product is a sculpting tool kit:\n- Attribute 2 name: Set Includes\n- Attribute 2 value(s): 8 tools\n- Attribute 3 name: Tool Types\n- Attribute 3 value(s): loop tools, ribbon tools, needle tool, scraper\n\nEnsure all attributes are realistic and useful for catalog or Shopify-style product listings."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "8ff50d7a-38e5-4577-8306-64dd16a1f433",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "g1CXBLzZrr3yFE19",
+          "name": "OpenAi for Masking Site"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output[0].content[0].text;\nconst products = JSON.parse(raw);\n\nreturn products.map(p => ({ json: p }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "12a9332d-0918-4e2c-98e7-29e2cbe61594",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1bQx80q33UU5rEdz9jErgst7Y11_ctMngJEdjKIF_XK0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bQx80q33UU5rEdz9jErgst7Y11_ctMngJEdjKIF_XK0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.name }}",
+            "Short description": "={{ $('Code in JavaScript').item.json.short_description }}",
+            "Description": "={{ $('Code in JavaScript').item.json.long_description }}",
+            "Purchase note": "={{ $('Code in JavaScript').item.json.industry_notes }}",
+            "Length (in)": "={{ $('Code in JavaScript').item.json.Length }}",
+            "Width (in)": "={{ $('Code in JavaScript').item.json.Width }}",
+            "Height (in)": "={{ $('Code in JavaScript').item.json.Height }}",
+            "Categories": "={{ $('Code in JavaScript').item.json.Categories }}",
+            "Regular price": "={{ $('Code in JavaScript').item.json[\"Regular price\"] }}",
+            "Attribute 1 value(s)": "={{ $json.material }}",
+            "Attribute 1 name": "Material",
+            "Sale price": "=",
+            "Type": "={{ $('When chat message received').item.json.chatInput }}",
+            "Attribute 9 name": "Usage",
+            "Attribute 9 value(s)": "={{ $json.usage }}",
+            "Attribute 2 name": "={{ $json[\"Attribute 2 name\"] }}",
+            "Attribute 2 value(s)": "={{ $json[\"Attribute 2 value(s)\"] }}",
+            "Attribute 3 name": "={{ $json[\"Attribute 3 name\"] }}",
+            "Attribute 3 value(s)": "={{ $json[\"Attribute 3 value(s)\"] }}",
+            "Attribute 4 name": "={{ $json[\"Attribute 4 name\"] }}",
+            "Attribute 4 value(s)": "={{ $json[\"Attribute 4 value(s)\"] }}",
+            "Attribute 5 name": "={{ $json[\"Attribute 5 name\"] }}",
+            "Attribute 5 value(s)": "={{ $json[\"Attribute 5 value(s)\"] }}",
+            "Attribute 6 name": "={{ $json[\"Attribute 6 name\"] }}",
+            "Attribute 7 name": "={{ $json[\"Attribute 7 name\"] }}",
+            "Attribute 8 name": "={{ $json[\"Attribute 8 name\"] }}",
+            "Attribute 6 value(s)": "={{ $json[\"Attribute 6 value(s)\"] }}",
+            "Attribute 7 value(s)": "={{ $json[\"Attribute 7 value(s)\"] }}",
+            "Attribute 8 value(s)": "={{ $json[\"Attribute 8 value(s)\"] }}",
+            "Images": "={{$json.drive_url}}",
+            "Weight (lbs)": "={{ $('Code in JavaScript').item.json.Weight }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SKU",
+              "displayName": "SKU",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "GTIN, UPC, EAN, or ISBN",
+              "displayName": "GTIN, UPC, EAN, or ISBN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Published",
+              "displayName": "Published",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Is featured?",
+              "displayName": "Is featured?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Visibility in catalog",
+              "displayName": "Visibility in catalog",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Short description",
+              "displayName": "Short description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date sale price starts",
+              "displayName": "Date sale price starts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date sale price ends",
+              "displayName": "Date sale price ends",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tax status",
+              "displayName": "Tax status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tax class",
+              "displayName": "Tax class",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "In stock?",
+              "displayName": "In stock?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Stock",
+              "displayName": "Stock",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Low stock amount",
+              "displayName": "Low stock amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Backorders allowed?",
+              "displayName": "Backorders allowed?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sold individually?",
+              "displayName": "Sold individually?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Weight (lbs)",
+              "displayName": "Weight (lbs)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Length (in)",
+              "displayName": "Length (in)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Width (in)",
+              "displayName": "Width (in)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Height (in)",
+              "displayName": "Height (in)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Allow customer reviews?",
+              "displayName": "Allow customer reviews?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Purchase note",
+              "displayName": "Purchase note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sale price",
+              "displayName": "Sale price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Regular price",
+              "displayName": "Regular price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Categories",
+              "displayName": "Categories",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tags",
+              "displayName": "Tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Shipping class",
+              "displayName": "Shipping class",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Images",
+              "displayName": "Images",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Download limit",
+              "displayName": "Download limit",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Download expiry days",
+              "displayName": "Download expiry days",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Parent",
+              "displayName": "Parent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Grouped products",
+              "displayName": "Grouped products",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Upsells",
+              "displayName": "Upsells",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cross-sells",
+              "displayName": "Cross-sells",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "External URL",
+              "displayName": "External URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Button text",
+              "displayName": "Button text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Position",
+              "displayName": "Position",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Brands",
+              "displayName": "Brands",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 1 name",
+              "displayName": "Attribute 1 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 1 value(s)",
+              "displayName": "Attribute 1 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 1 visible",
+              "displayName": "Attribute 1 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 1 global",
+              "displayName": "Attribute 1 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 2 name",
+              "displayName": "Attribute 2 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 2 value(s)",
+              "displayName": "Attribute 2 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 2 visible",
+              "displayName": "Attribute 2 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 2 global",
+              "displayName": "Attribute 2 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 3 name",
+              "displayName": "Attribute 3 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 3 value(s)",
+              "displayName": "Attribute 3 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 3 visible",
+              "displayName": "Attribute 3 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 3 global",
+              "displayName": "Attribute 3 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 4 name",
+              "displayName": "Attribute 4 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 4 value(s)",
+              "displayName": "Attribute 4 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 4 visible",
+              "displayName": "Attribute 4 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 4 global",
+              "displayName": "Attribute 4 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 5 name",
+              "displayName": "Attribute 5 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 5 value(s)",
+              "displayName": "Attribute 5 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 5 visible",
+              "displayName": "Attribute 5 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 5 global",
+              "displayName": "Attribute 5 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 6 name",
+              "displayName": "Attribute 6 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 6 value(s)",
+              "displayName": "Attribute 6 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 6 visible",
+              "displayName": "Attribute 6 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 6 global",
+              "displayName": "Attribute 6 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 7 name",
+              "displayName": "Attribute 7 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 7 value(s)",
+              "displayName": "Attribute 7 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 7 visible",
+              "displayName": "Attribute 7 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 7 global",
+              "displayName": "Attribute 7 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 8 name",
+              "displayName": "Attribute 8 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 8 value(s)",
+              "displayName": "Attribute 8 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 8 visible",
+              "displayName": "Attribute 8 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 8 global",
+              "displayName": "Attribute 8 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 9 name",
+              "displayName": "Attribute 9 name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 9 value(s)",
+              "displayName": "Attribute 9 value(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 9 visible",
+              "displayName": "Attribute 9 visible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attribute 9 global",
+              "displayName": "Attribute 9 global",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3760,
+        432
+      ],
+      "id": "29132ec0-14a0-4de2-97d6-bf771de440db",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dPuWQry0B9RX5YTL",
+          "name": "dev1_google_sheet"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search?tbs=isz:l&imgar=s&imgsz=70mp&num=1&image_type=photo&no_cache=true",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "api_key",
+              "value": "99b93493e3e5d4c60fb49f6652ad5cf1b9aeaf7b65a6a372cf80d42eaaf92114"
+            },
+            {
+              "name": "engine",
+              "value": "google_images"
+            },
+            {
+              "name": "q",
+              "value": "={{ $('Loop Over Items').item.json.image_search_query + ' no watermark no branding stock photo' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1120,
+        64
+      ],
+      "id": "01ea0d7d-f9fe-46f1-98d7-5bb44722ec62",
+      "name": "SerpAPI node",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst product = $('Loop Over Items').item.json;\nconst results = input.images_results || [];\n\n// ─── Empty results ───────────────────────────────────────────\nif (results.length === 0) {\n  return [{\n    json: {\n      totalHits: 0,\n      download_url: '',\n      fallback_url_1: '',\n      fallback_url_2: '',\n      image_source_site: 'none',\n      image_title: '',\n      name: product.name,\n      safe_name: product.safe_name,\n      image_search_query: product.image_search_query,\n      category: product.category || product.Categories,\n      price: product.price || product['Regular price'],\n      short_description: product.short_description,\n      long_description: product.long_description,\n      size: product.size,\n      color: product.color,\n      material: product.material,\n      weight: product.weight,\n      dimensions: product.dimensions,\n      features: product.features,\n      industry_use: product.industry_use || product.industry_notes,\n      attribute_2_name: product.attribute_2_name || '',\n      attribute_2_values: product.attribute_2_values || '',\n      attribute_3_name: product.attribute_3_name || '',\n      attribute_3_values: product.attribute_3_values || '',\n      attribute_4_name: product.attribute_4_name || '',\n      attribute_4_values: product.attribute_4_values || '',\n      attribute_5_name: product.attribute_5_name || '',\n      attribute_5_values: product.attribute_5_values || '',\n      attribute_6_name: product.attribute_6_name || '',\n      attribute_6_values: product.attribute_6_values || '',\n      attribute_7_name: product.attribute_7_name || '',\n      attribute_7_values: product.attribute_7_values || '',\n      attribute_8_name: product.attribute_8_name || '',\n      attribute_8_values: product.attribute_8_values || ''\n    }\n  }];\n}\n\n// ─── Blacklisted sources ──────────────────────────────────────\nconst blacklistSources = [\n  // Paid watermark stock sites\n  'shutterstock', 'getty', 'alamy', 'istockphoto',\n  'dreamstime', 'depositphotos', '123rf', 'adobe.com',\n  // Watermark free sites\n  'pngtree', 'freepik', 'vecteezy', 'canstockphoto',\n  'clipartmax', 'cleanpng', 'pngwing', 'kindpng',\n  // eCommerce / Cloudflare blocked\n  'brambleberry', 'demandware', 'myshopify',\n  'bigcommerce', 'squarespace', 'wixstatic',\n  'shopify', 'walmart', 'amazon', 'ebay',\n  'etsy', 'alibaba', 'flipkart', 'target',\n  // Social media auth-required CDNs\n  'fbsbx.com', 'facebook.com', 'instagram.com',\n  'cdninstagram.com', 'pinimg.com', 'twimg.com',\n  'tiktokcdn.com', 'snapchat.com', 'linkedin.com',\n  'lnkd.in'\n];\n\n// ─── Blacklisted URL patterns ─────────────────────────────────\nconst blacklistUrlPatterns = [\n  // Watermark sites\n  'pngtree.com', 'freepik.com', 'vecteezy.com',\n  'pngwing.com', 'kindpng.com', 'cleanpng.com',\n  // Watermark indicators\n  'watermark', '_preview.', '-preview.', 'comp_',\n  // Social media auth patterns\n  'lookaside.fbsbx', 'media_id=', 'fbcdn',\n  'scontent.', 'cdninstagram', 'pinimg',\n  'auth_token=', 'access_token=', '?media_id',\n  // Broken/unreliable CDN patterns\n  'nitrocdn.com',       // Nitro CDN - often 404\n  'optimized/rev-',     // Nitro optimized - often broken\n  // Non-image page patterns\n  '.html', '.php', '.asp', '.jsp',\n  // Private/restricted\n  'private', 'restricted', 'protected',\n   'lemon8-app.com',     // ← add\n  'lemon8.com',         // ← add\n  'tiktok.com',         // ← add\n  'bytedance.com'\n];\n\n// ─── Preferred clean royalty-free sources ─────────────────────\nconst preferredSources = [\n  'unsplash.com', 'pexels.com', 'pixabay.com',\n  'stocksnap.io', 'rawpixel.com', 'reshot.com',\n  'lifeofpix.com', 'picjumbo.com', 'kaboompics.com',\n  'burst.shopify', 'negativespace.co', 'gratisography.com'\n];\n\n// ─── URL validator ────────────────────────────────────────────\nfunction isValidImageUrl(url) {\n  if (!url || typeof url !== 'string') return false;\n  const lower = url.toLowerCase();\n\n  // Must start with http\n  if (!lower.startsWith('http')) return false;\n\n  // Reject auth/social CDN patterns\n  const authPatterns = [\n    'lookaside.fbsbx', 'media_id=', 'fbcdn',\n    'scontent.', 'cdninstagram', 'pinimg',\n    'auth_token=', 'access_token=', '?media_id',\n    'nitrocdn.com', 'optimized/rev-'\n  ];\n  if (authPatterns.some(p => lower.includes(p))) return false;\n\n  // Reject HTML pages\n  const urlWithoutParams = lower.split('?')[0];\n  const badExtensions = ['.html', '.htm', '.php', '.asp', '.jsp'];\n  if (badExtensions.some(ext => urlWithoutParams.endsWith(ext))) return false;\n\n  return true;\n}\n\n// ─── Filter clean images ──────────────────────────────────────\nconst clean = results.filter(img => {\n  const source = (img.source || '').toLowerCase();\n  const original = (img.original || '').toLowerCase();\n  const thumbnail = (img.thumbnail || '').toLowerCase();\n  const title = (img.title || '').toLowerCase();\n\n  // Reject blacklisted sources\n  if (blacklistSources.some(bad =>\n    source.includes(bad) || original.includes(bad)\n  )) return false;\n\n  // Reject blacklisted URL patterns\n  if (blacklistUrlPatterns.some(pattern =>\n    original.includes(pattern) || thumbnail.includes(pattern)\n  )) return false;\n\n  // Reject branded/copyright titles\n  if (\n    title.includes('™') || title.includes('®') ||\n    title.includes('©') || title.includes('watermark')\n  ) return false;\n\n  // Must have at least one valid downloadable URL\n  if (!isValidImageUrl(img.thumbnail) && !isValidImageUrl(img.original)) return false;\n\n  return true;\n});\n\n// ─── Prioritize preferred clean sources ───────────────────────\nconst preferred = clean.filter(img => {\n  const source = (img.source || '').toLowerCase();\n  const link = (img.original || '').toLowerCase();\n  return preferredSources.some(good =>\n    source.includes(good) || link.includes(good)\n  );\n});\n\n// ─── Final pool — priority order ─────────────────────────────\nconst pool = preferred.length > 0 ? preferred\n           : clean.length > 0 ? clean\n           : results;\n\n// ─── Pick best valid URL per image ───────────────────────────\nfunction getBestUrl(img) {\n  \n  // Original sometime Cloudflare blocked\n  if (isValidImageUrl(img.original)) return img.original;\n  // Thumbnail as fallback\n    if (isValidImageUrl(img.thumbnail)) return img.thumbnail;\n\n  return '';\n}\n\n// ─── Get top 3 valid images as fallbacks ─────────────────────\nconst top3 = pool\n  .map(img => ({\n    url: getBestUrl(img),\n    source: img.source || '',\n    title: img.title || ''\n  }))\n  .filter(item => item.url !== '')\n  .slice(0, 3);\n\nconst best = top3[0] || { url: '', source: '', title: '' };\n\n// ─── Final output ─────────────────────────────────────────────\nreturn [{\n  json: {\n    totalHits: pool.length,\n\n    // Primary + 2 fallback URLs\n    download_url: best.url,\n    fallback_url_1: top3[1]?.url || '',\n    fallback_url_2: top3[2]?.url || '',\n\n    image_source_site: best.source,\n    image_title: best.title,\n\n    // Product fields\n    name: product.name,\n    image_search_query: product.image_search_query,\n    category: product.category || product.Categories,\n    price: product.price || product['Regular price'],\n    short_description: product.short_description,\n    long_description: product.long_description,\n    size: product.size,\n    color: product.color,\n    material: product.material,\n    weight: product.weight,\n    dimensions: product.dimensions,\n    features: product.features,\n    industry_use: product.industry_use || product.industry_notes,\n\n    // Dynamic attributes\n    attribute_2_name: product.attribute_2_name || '',\n    attribute_2_values: product.attribute_2_values || '',\n    attribute_3_name: product.attribute_3_name || '',\n    attribute_3_values: product.attribute_3_values || '',\n    attribute_4_name: product.attribute_4_name || '',\n    attribute_4_values: product.attribute_4_values || '',\n    attribute_5_name: product.attribute_5_name || '',\n    attribute_5_values: product.attribute_5_values || '',\n    attribute_6_name: product.attribute_6_name || '',\n    attribute_6_values: product.attribute_6_values || '',\n    attribute_7_name: product.attribute_7_name || '',\n    attribute_7_values: product.attribute_7_values || '',\n    attribute_8_name: product.attribute_8_name || '',\n    attribute_8_values: product.attribute_8_values || ''\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        64
+      ],
+      "id": "c61d9dce-6ad6-4640-959c-187a0beade0d",
+      "name": "Code - Pick Best Image"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ac3cba8f-0a4e-4a75-a326-4895e7625fe6",
+              "leftValue": "={{ $json.download_url }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1536,
+        64
+      ],
+      "id": "69b52ba7-2eed-42b2-b2b2-f45767c429b4",
+      "name": "If node (check image found)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8b4c81dc-fdad-492f-97a0-f0c5259d8269",
+              "name": "drive_url",
+              "value": "NO_IMAGE_FOUND",
+              "type": "string"
+            },
+            {
+              "id": "b82ed203-5fc1-4478-99ac-61ab96f819b5",
+              "name": "image_source",
+              "value": "none",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2992,
+        432
+      ],
+      "id": "251c247c-4e3c-4a77-82fc-2a717565427b",
+      "name": "Set - No Image (false branch)"
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Code - Pick Best Image').item.json.name + '-' + $now.format('dd-MM-yy') + '.jpg' }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1CeqUtyT8b6JMHUYsrs59QsYZHqPcHMXI",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3280,
+        -64
+      ],
+      "id": "62059df1-09d5-4686-a78b-00cfc34fe0e5",
+      "name": "Google Drive Upload",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "7E5OE1b7EWf2HhfZ",
+          "name": "dev1_drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst product = $('Loop Over Items').item.json;\n\nconst fileId = input.id || null;\nconst driveUrl = fileId\n  ? `https://drive.google.com/file/d/${fileId}/view`\n  : 'UPLOAD_FAILED';\n\nreturn [{\n  json: {\n    ...product,\n    drive_url: driveUrl,\n    image_source: 'serpapi'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3504,
+        -64
+      ],
+      "id": "44e3bc59-2c85-4d9e-9b94-99460777e4f3",
+      "name": "Code - Build Drive URL"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        768,
+        0
+      ],
+      "id": "f9188832-ede9-4ecd-a050-9a929e6f5244",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        976,
+        208
+      ],
+      "id": "253766de-9f06-45db-b6a0-f2aee6b535f8",
+      "placeholder": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Code - Pick Best Image').item.json.download_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "image/webp,image/apng,image/*,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.9"
+            },
+            {
+              "name": "Referer",
+              "value": "https://www.google.com/"
+            },
+            {
+              "name": "sec-fetch-dest",
+              "value": "image"
+            },
+            {
+              "name": "sec-fetch-mode",
+              "value": "no-cors"
+            },
+            {
+              "name": "sec-fetch-site",
+              "value": "cross-site"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1808,
+        -144
+      ],
+      "id": "bec0ecf7-aeba-4980-9957-119438db6a47",
+      "name": "HTTP Download Image url 1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fa48ed15-8e95-4086-b7b1-818ce9523e11",
+              "leftValue": "={{ $binary?.data?.mimeType }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2016,
+        -144
+      ],
+      "id": "8faa0902-5a50-42bc-a317-7fc3e42bbeb7",
+      "name": "If - URL 1 Success?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const binary = $input.first().binary;\nconst product = $('Code - Pick Best Image').item.json;\n\nreturn [{\n  json: {\n    name: product.name,\n    safe_name: product.safe_name,\n    category: product.category || product.Categories,\n    price: product.price || product['Regular price'],\n    short_description: product.short_description,\n    long_description: product.long_description,\n    size: product.size,\n    color: product.color,\n    material: product.material,\n    weight: product.weight,\n    dimensions: product.dimensions,\n    features: product.features,\n    industry_use: product.industry_use || product.industry_notes,\n    attribute_2_name: product.attribute_2_name || '',\n    attribute_2_values: product.attribute_2_values || '',\n    attribute_3_name: product.attribute_3_name || '',\n    attribute_3_values: product.attribute_3_values || '',\n    attribute_4_name: product.attribute_4_name || '',\n    attribute_4_values: product.attribute_4_values || '',\n    attribute_5_name: product.attribute_5_name || '',\n    attribute_5_values: product.attribute_5_values || '',\n    attribute_6_name: product.attribute_6_name || '',\n    attribute_6_values: product.attribute_6_values || '',\n    attribute_7_name: product.attribute_7_name || '',\n    attribute_7_values: product.attribute_7_values || '',\n    attribute_8_name: product.attribute_8_name || '',\n    attribute_8_values: product.attribute_8_values || '',\n    image_source: product.image_source_site || 'serpapi',\n    download_success: true,\n    used_url: 'url1'\n  },\n  binary: binary\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2384,
+        -240
+      ],
+      "id": "32854baa-5429-4d81-a649-9a24bb4a4dc0",
+      "name": "Code - Merge Data 1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Code - Pick Best Image').item.json.fallback_url_1 }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "image/webp,image/apng,image/*,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.9"
+            },
+            {
+              "name": "Referer",
+              "value": "https://www.google.com/"
+            },
+            {
+              "name": "sec-fetch-dest",
+              "value": "image"
+            },
+            {
+              "name": "sec-fetch-mode",
+              "value": "no-cors"
+            },
+            {
+              "name": "sec-fetch-site",
+              "value": "cross-site"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2240,
+        -48
+      ],
+      "id": "45964bfb-857f-46e7-87ae-863b192b7fe4",
+      "name": "HTTP Request - Try URL 2",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ae64312a-fa68-4d71-8a96-e018da651fde",
+              "leftValue": "={{ $binary?.data?.mimeType }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2448,
+        -48
+      ],
+      "id": "f414b607-ef2f-4c1f-8c4b-03bfe377582e",
+      "name": "If - URL 2 Success?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const binary = $input.first().binary;\nconst product = $('Code - Pick Best Image').item.json;\n\nreturn [{\n  json: {\n    name: product.name,\n    safe_name: product.safe_name,\n    category: product.category || product.Categories,\n    price: product.price || product['Regular price'],\n    short_description: product.short_description,\n    long_description: product.long_description,\n    size: product.size,\n    color: product.color,\n    material: product.material,\n    weight: product.weight,\n    dimensions: product.dimensions,\n    features: product.features,\n    industry_use: product.industry_use || product.industry_notes,\n    attribute_2_name: product.attribute_2_name || '',\n    attribute_2_values: product.attribute_2_values || '',\n    attribute_3_name: product.attribute_3_name || '',\n    attribute_3_values: product.attribute_3_values || '',\n    attribute_4_name: product.attribute_4_name || '',\n    attribute_4_values: product.attribute_4_values || '',\n    attribute_5_name: product.attribute_5_name || '',\n    attribute_5_values: product.attribute_5_values || '',\n    attribute_6_name: product.attribute_6_name || '',\n    attribute_6_values: product.attribute_6_values || '',\n    attribute_7_name: product.attribute_7_name || '',\n    attribute_7_values: product.attribute_7_values || '',\n    attribute_8_name: product.attribute_8_name || '',\n    attribute_8_values: product.attribute_8_values || '',\n    image_source: product.image_source_site || 'serpapi',\n    download_success: true,\n    used_url: 'url2'\n  },\n  binary: binary\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        -64
+      ],
+      "id": "57b169d0-13fe-4f44-a21c-77971fc653cb",
+      "name": "Code - Merge Data 2"
+    },
+    {
+      "parameters": {
+        "url": "=  {{ $('Code - Pick Best Image').item.json.fallback_url_2  }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "image/webp,image/apng,image/*,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.9"
+            },
+            {
+              "name": "Referer",
+              "value": "https://www.google.com/"
+            },
+            {
+              "name": "sec-fetch-dest",
+              "value": "image"
+            },
+            {
+              "name": "sec-fetch-mode",
+              "value": "no-cors"
+            },
+            {
+              "name": "sec-fetch-site",
+              "value": "cross-site"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2624,
+        112
+      ],
+      "id": "1caa1e24-f0ae-455c-9dc2-c70e7dffad7d",
+      "name": "HTTP Request - Try URL 3",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ae64312a-fa68-4d71-8a96-e018da651fde",
+              "leftValue": "={{ $binary?.data?.mimeType }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2816,
+        112
+      ],
+      "id": "3aa7947d-015b-4c49-ba36-6b3b1096cd86",
+      "name": "If - URL 3 Success?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const binary = $input.first().binary;\nconst product = $('Code - Pick Best Image').item.json;\n\nreturn [{\n  json: {\n    name: product.name,\n    safe_name: product.safe_name,\n    category: product.category || product.Categories,\n    price: product.price || product['Regular price'],\n    short_description: product.short_description,\n    long_description: product.long_description,\n    size: product.size,\n    color: product.color,\n    material: product.material,\n    weight: product.weight,\n    dimensions: product.dimensions,\n    features: product.features,\n    industry_use: product.industry_use || product.industry_notes,\n    attribute_2_name: product.attribute_2_name || '',\n    attribute_2_values: product.attribute_2_values || '',\n    attribute_3_name: product.attribute_3_name || '',\n    attribute_3_values: product.attribute_3_values || '',\n    attribute_4_name: product.attribute_4_name || '',\n    attribute_4_values: product.attribute_4_values || '',\n    attribute_5_name: product.attribute_5_name || '',\n    attribute_5_values: product.attribute_5_values || '',\n    attribute_6_name: product.attribute_6_name || '',\n    attribute_6_values: product.attribute_6_values || '',\n    attribute_7_name: product.attribute_7_name || '',\n    attribute_7_values: product.attribute_7_values || '',\n    attribute_8_name: product.attribute_8_name || '',\n    attribute_8_values: product.attribute_8_values || '',\n    image_source: product.image_source_site || 'serpapi',\n    download_success: true,\n    used_url: 'url3'\n  },\n  binary: binary\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3056,
+        96
+      ],
+      "id": "433ec602-d22b-4f82-afab-dec4e3fdf913",
+      "name": "Code - Merge Data 3"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "SerpAPI node": {
+      "main": [
+        [
+          {
+            "node": "Code - Pick Best Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Pick Best Image": {
+      "main": [
+        [
+          {
+            "node": "If node (check image found)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If node (check image found)": {
+      "main": [
+        [
+          {
+            "node": "HTTP Download Image url 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set - No Image (false branch)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Upload": {
+      "main": [
+        [
+          {
+            "node": "Code - Build Drive URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Build Drive URL": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - No Image (false branch)": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "SerpAPI node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Download Image url 1": {
+      "main": [
+        [
+          {
+            "node": "If - URL 1 Success?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - URL 1 Success?": {
+      "main": [
+        [
+          {
+            "node": "Code - Merge Data 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request - Try URL 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Merge Data 1": {
+      "main": [
+        [
+          {
+            "node": "Google Drive Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Try URL 2": {
+      "main": [
+        [
+          {
+            "node": "If - URL 2 Success?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - URL 2 Success?": {
+      "main": [
+        [
+          {
+            "node": "Code - Merge Data 2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request - Try URL 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Merge Data 2": {
+      "main": [
+        [
+          {
+            "node": "Google Drive Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Try URL 3": {
+      "main": [
+        [
+          {
+            "node": "If - URL 3 Success?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - URL 3 Success?": {
+      "main": [
+        [
+          {
+            "node": "Code - Merge Data 3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set - No Image (false branch)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Merge Data 3": {
+      "main": [
+        [
+          {
+            "node": "Google Drive Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "bba09db4-0db9-4e97-a808-19b98f601586",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-04-03T09:58:54.457Z",
+      "createdAt": "2026-04-03T09:58:54.457Z",
+      "role": "workflow:owner",
+      "workflowId": "HpVeFQcqpLK8YBEi",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

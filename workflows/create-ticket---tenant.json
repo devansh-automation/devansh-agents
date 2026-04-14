@@ -1,0 +1,324 @@
+{
+  "updatedAt": "2025-10-27T07:03:25.000Z",
+  "createdAt": "2025-10-27T07:01:14.467Z",
+  "id": "uc7c4pdkgO2hpaTb",
+  "name": "create ticket - tenant",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "property_id"
+            },
+            {
+              "name": "tenant_id"
+            },
+            {
+              "name": "category"
+            },
+            {
+              "name": "description"
+            }
+          ]
+        }
+      },
+      "id": "d2ee4467-b6ab-43ef-82f4-23bae7105cc1",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "property_tickets",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "property_id",
+              "fieldValue": "={{ $json.id }}"
+            },
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $('Start').item.json.tenant_id }}"
+            },
+            {
+              "fieldId": "landlord_id",
+              "fieldValue": "={{ $json.landlord_telegram_id }}"
+            },
+            {
+              "fieldId": "raised_by",
+              "fieldValue": "tenant"
+            },
+            {
+              "fieldId": "issue_description",
+              "fieldValue": "={{ $('Start').item.json.description }}"
+            },
+            {
+              "fieldId": "category",
+              "fieldValue": "={{ $('Start').item.json.category }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "open"
+            },
+            {
+              "fieldId": "is_urgent",
+              "fieldValue": "false"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        740,
+        20
+      ],
+      "id": "40e7cc4e-647f-48ee-9ac2-ecd7e11f4690",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "Lease_Parse_Output",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.property_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "aeedd0ed-4906-4a41-a0fa-5ca42d2a29f4",
+      "name": "Get a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Get a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Start": [
+      {
+        "json": {
+          "property_id": 46,
+          "tenant_id": 979280586,
+          "category": "plumbing",
+          "description": "Faucet is leaking"
+        }
+      }
+    ]
+  },
+  "versionId": "c7c3b042-935d-402a-971a-1107b8582667",
+  "activeVersionId": "c7c3b042-935d-402a-971a-1107b8582667",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-27T07:01:14.472Z",
+      "createdAt": "2025-10-27T07:01:14.472Z",
+      "role": "workflow:owner",
+      "workflowId": "uc7c4pdkgO2hpaTb",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-23T06:05:26.474Z",
+    "createdAt": "2025-12-23T06:05:26.474Z",
+    "versionId": "c7c3b042-935d-402a-971a-1107b8582667",
+    "workflowId": "uc7c4pdkgO2hpaTb",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "property_id"
+              },
+              {
+                "name": "tenant_id"
+              },
+              {
+                "name": "category"
+              },
+              {
+                "name": "description"
+              }
+            ]
+          }
+        },
+        "id": "d2ee4467-b6ab-43ef-82f4-23bae7105cc1",
+        "typeVersion": 1.1,
+        "name": "Start",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "position": [
+          0,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "property_tickets",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "property_id",
+                "fieldValue": "={{ $json.id }}"
+              },
+              {
+                "fieldId": "tenant_id",
+                "fieldValue": "={{ $('Start').item.json.tenant_id }}"
+              },
+              {
+                "fieldId": "landlord_id",
+                "fieldValue": "={{ $json.landlord_telegram_id }}"
+              },
+              {
+                "fieldId": "raised_by",
+                "fieldValue": "tenant"
+              },
+              {
+                "fieldId": "issue_description",
+                "fieldValue": "={{ $('Start').item.json.description }}"
+              },
+              {
+                "fieldId": "category",
+                "fieldValue": "={{ $('Start').item.json.category }}"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "open"
+              },
+              {
+                "fieldId": "is_urgent",
+                "fieldValue": "false"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          740,
+          20
+        ],
+        "id": "40e7cc4e-647f-48ee-9ac2-ecd7e11f4690",
+        "name": "Create a row",
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "Lease_Parse_Output",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "keyValue": "={{ $json.property_id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          220,
+          0
+        ],
+        "id": "aeedd0ed-4906-4a41-a0fa-5ca42d2a29f4",
+        "name": "Get a row",
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Start": {
+        "main": [
+          [
+            {
+              "node": "Get a row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get a row": {
+        "main": [
+          [
+            {
+              "node": "Create a row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

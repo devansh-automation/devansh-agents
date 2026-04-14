@@ -1,0 +1,194 @@
+{
+  "updatedAt": "2026-02-02T00:41:38.000Z",
+  "createdAt": "2025-07-08T10:49:14.594Z",
+  "id": "2n7rCwqqBDxiKlPv",
+  "name": "Guest Post Trigger - Phase2",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 3,
+              "triggerAtMinute": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -256,
+        208
+      ],
+      "id": "7ea7a859-dc10-49db-993a-e27e8d8a9f9e",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "IrwUcpN1W9ZTuWTe",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/IrwUcpN1W9ZTuWTe",
+          "cachedResultName": "Guest Post Agent - Phase 2"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "threadId": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "threadId"
+          ],
+          "schema": [
+            {
+              "id": "threadId",
+              "displayName": "threadId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        208
+      ],
+      "name": "Call handle email",
+      "id": "eb3d8d4b-1960-499b-a76b-7ac8ba01b5c0"
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "filters": {
+          "labelIds": [
+            "UNREAD"
+          ],
+          "readStatus": "unread"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -48,
+        208
+      ],
+      "id": "f3707418-f797-440e-8a34-1235f2476d41",
+      "name": "Get many threads",
+      "webhookId": "0dd87dbe-c909-4ff6-b4a9-cc0e453f71dd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        32
+      ],
+      "id": "38835c6d-afce-4977-a9a6-547c6b1db37b",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many threads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many threads": {
+      "main": [
+        [
+          {
+            "node": "Call handle email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get many threads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Email Trigger (IMAP)": {
+      "lastMessageUid": 148
+    },
+    "node:Gmail Trigger": {
+      "Gmail Trigger": {
+        "lastTimeChecked": 1753932773,
+        "possibleDuplicates": [
+          "1985e8a438936a44",
+          "1985dc9224fdeeda"
+        ]
+      }
+    },
+    "node:Schedule Trigger": {
+      "recurrenceRules": [
+        6
+      ]
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "6d76de85-3a0f-4f47-97ed-e2f5e0dd78a6",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-07-08T10:49:14.597Z",
+      "createdAt": "2025-07-08T10:49:14.597Z",
+      "role": "workflow:owner",
+      "workflowId": "2n7rCwqqBDxiKlPv",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [
+    {
+      "updatedAt": "2025-07-14T06:22:00.853Z",
+      "createdAt": "2025-07-14T06:21:42.741Z",
+      "id": "o0gqDTGMQjrNvQzK",
+      "name": "Devansh workflow"
+    }
+  ]
+}

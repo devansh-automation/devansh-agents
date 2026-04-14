@@ -1,0 +1,704 @@
+{
+  "updatedAt": "2026-04-13T06:20:14.829Z",
+  "createdAt": "2026-03-28T06:43:42.126Z",
+  "id": "bBZNSE0efNQb7TEu",
+  "name": "MCP – Execute Action v2",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"id\" : \"BcH7K4c5VBVIV2C4\"\n}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        16
+      ],
+      "id": "32d37018-c84e-49d1-819b-d2b20fff803b",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        192,
+        16
+      ],
+      "id": "56d099f7-eb46-49c7-a5d0-f83e7900ba79",
+      "name": "Get a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "executing"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        400,
+        16
+      ],
+      "id": "7b18e7fc-6127-40d8-a6b4-23e72dcc024e",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ JSON.stringify($json) }}\n\nThis is the json from the output of the read agent. You have to perform the following write instructions.",
+        "options": {
+          "systemMessage": "=You are a CRM write execution agent. You do not converse. You execute.\n\nYou receive a confirmed action proposal as a JSON object. Execute exactly what is specified.\n\n---\n\nUNDERSTANDING THE PROPOSAL\n\nThe JSON you receive contains:\n- action: operation to perform\n- module: Zoho module\n- record_id: the Zoho numeric ID of the record — used as path variable for all update and convert actions\n- fields: field values to write\n- step_queue: array of steps for multi-step operations\n- proposal_id: UUID for Supabase update\n- user_id: Telegram ID for notify_user\n\n---\n\nPATH VARIABLE RULES — CRITICAL\n\nFor every action on an existing record, record_id MUST be the path variable:\n- convert_lead → path_variables.leadId = record_id\n- update_deal → path_variables.dealId = record_id\n- update_contact → path_variables.contactId = record_id\n- update_account → path_variables.accountId = record_id\n- update_lead → path_variables.leadId = record_id\n\nNEVER use a record name as a path variable. Always use the numeric ID.\n\n---\n\nOWNER CHANGE RULE — CRITICAL\n\nAll records are created under the default API credential owner (Devansh).\nIf the Owner field in the proposal specifies a different person, you MUST\ncall changeSingleRecordOwner after the create or convert step to assign\nthe correct owner.\n\nThis applies to:\n- create_lead → after createRecords, call changeSingleRecordOwner with the new record ID\n- create_contact → after createRecords, call changeSingleRecordOwner\n- create_account → after createRecords, call changeSingleRecordOwner\n- create_deal → after createRecords, call changeSingleRecordOwner\n- convert_lead → after convertLead, call changeSingleRecordOwner on the new deal ID\n\nOnly skip changeSingleRecordOwner if Owner.id matches Devansh's ID: 5118344000004729073.\nFor all other Owner IDs, always call it.\n\n---\n\nEXECUTION RULES\n\nSingle step:\n- Call the MCP tool using action, module, record_id, fields\n- Use record_id as path variable as described above\n- If Owner requires a change, call changeSingleRecordOwner immediately after\n\nMulti-step:\n- Execute steps in order\n- After each step extract the returned record ID from the MCP response\n- Replace [[step_N_id]] placeholders in subsequent steps with the actual ID\n- Apply owner change rule after each create or convert step\n- If any step fails, stop immediately\n\n---\n\nACTION TO TOOL MAPPING\n\n- create_* → createRecords with correct module\n- update_* → updateRecord with record_id as path variable\n- convert_lead → convertLead with record_id as leadId\n- create_note → createNotes\n- create_task → createRecords Tasks module\n- ownership → changeSingleRecordOwner or changeOwnerBulk\n\n---\n\nCOMPLETION RULES — NON-NEGOTIABLE\n\nYou MUST call exactly two tools at the end of every execution:\n\n1. FIRST: update_proposal_status\n   - proposal_id from the JSON\n   - status = \"executed\" on success, \"failed\" on any failure\n   - completion_message = plain text summary\n\n2. SECOND: notify_user\n   - user_id from the JSON\n   - same message as above\n\nThese are mandatory. Outputting text is NOT a substitute for calling notify_user.\nThe user receives nothing if you skip it. Always call both even on failure.\n\n---\n\nOUTPUT\n\nPlain text, record names not IDs, no markdown, no bullets.\nSuccess: \"Converted Aarit Arora to a deal and created the project task.\"\nFailure: \"Step 1 failed: [specific reason]. [What succeeded before the failure, if anything].\"\n\nWhen reporting failures, describe what went wrong in plain human language. \nDo not include raw API error strings, JSON paths, field codes, or technical \nerror messages from Zoho. Translate them into simple language the user understands."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        816,
+        16
+      ],
+      "id": "5372cacd-e604-41fe-8618-5dffdfd94f19",
+      "name": "Write Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.4-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5.4-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        240
+      ],
+      "id": "e0225c93-9c47-420a-9e18-cd1c3d3e15fd",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wXqOixbEbb7kpnQc",
+          "name": "Devansh_Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://n8nwriteagentserver-918915813.zohomcp.com/mcp/1ea2195336b43270806e6a1ded5358cd/message",
+        "authentication": "mcpOAuth2Api",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        912,
+        288
+      ],
+      "id": "8f0f31c2-f536-4479-94b1-f5ec0df92bc3",
+      "name": "Write Client",
+      "credentials": {
+        "mcpOAuth2Api": {
+          "id": "x4LFisfJNsiap84Z",
+          "name": "MCP write"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "=proposal_id: {{ $('Get a row').first().json.id }}\nuser_id: {{ $('Get a row').first().json.user_id }}\nstatus: done\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1168,
+        16
+      ],
+      "id": "c1cbe98c-2106-40dc-aef8-23fba32c7ac9",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "=Use this tool to send a message to the user on Telegram after completing or failing an execution.\n\nCall this tool exactly once per execution — after all MCP write steps are done (or after a failure stops execution).\n\nWhen to call:\n- After successful execution: send a warm, plain-text summary of what was done\n- After a failed step: send a clear explanation of which step failed and why\n\nMessage rules:\n- Use record names not IDs\n- One sentence per completed action\n- No markdown, no bullet points, no bold text\n- Warm and direct tone\n- Success example: \"Done — created the Danube Properties account, added Ahmed Al Mansoori as a contact, and logged the intro meeting note.\"\n- Failure example: \"Something went wrong on step 2 while creating the contact. The account was created successfully. Please try again or ask for help.\"",
+        "chatId": "={{ $('Get a row').first().json.user_id }}",
+        "text": "={{ $fromAI('message', 'Completion or error message to send to user', 'string') }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "type": "n8n-nodes-base.telegramTool",
+      "typeVersion": 1.2,
+      "position": [
+        1024,
+        288
+      ],
+      "id": "bf2783a8-d97e-4012-b542-d2caea33be3d",
+      "name": "notify_user",
+      "webhookId": "6218dce9-f42c-4ff7-b497-27979f68d7c9",
+      "credentials": {
+        "telegramApi": {
+          "id": "5LcTaFrxMf6lEi05",
+          "name": "SUACRM_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "=Use this tool to update the proposal record in Supabase after execution completes or fails.\n\nCall this tool exactly once per execution — always, regardless of success or failure.\n\nWhen to call:\n- After all MCP steps complete successfully: set status to executed\n- After any step fails and execution stops: set status to failed\n\nFields to pass:\n- proposal_id: the UUID of the proposal being executed (provided in your instruction)\n- status: exactly \"executed\" on success or \"failed\" on failure\n- completion_message: the same plain-text summary you are sending to the user\n- executed_at: current timestamp in Asia/Kolkata timezone\n\nRules:\n- Always call this tool before notifying the user\n- Never skip this tool even if the MCP call returned an unexpected response\n- Do not set status to executed if any step failed — use failed instead\n- completion_message must use record names not IDs, matching exactly what you send to the user",
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Get a row').first().json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $fromAI('status', 'executed or failed', 'string') }}"
+            },
+            {
+              "fieldId": "completion_message",
+              "fieldValue": "={{ $fromAI('completion_message', 'Summary of what happened', 'string') }}"
+            },
+            {
+              "fieldId": "executed_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:mm') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        288
+      ],
+      "id": "cab031e7-e6b1-49b1-8e25-26d446fadc4b",
+      "name": "update_proposal_status",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        [
+          {
+            "node": "Write Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Write Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "Write Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "notify_user": {
+      "ai_tool": [
+        [
+          {
+            "node": "Write Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_proposal_status": {
+      "ai_tool": [
+        [
+          {
+            "node": "Write Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "id": "9a9c18ed-4727-439a-8f38-fabd48dd11d4"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "3ea88b00-f20a-46ce-915f-7bf94aef4cb0",
+  "activeVersionId": "3ea88b00-f20a-46ce-915f-7bf94aef4cb0",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-28T06:43:42.129Z",
+      "createdAt": "2026-03-28T06:43:42.129Z",
+      "role": "workflow:owner",
+      "workflowId": "bBZNSE0efNQb7TEu",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-04-13T06:20:23.000Z",
+    "createdAt": "2026-04-13T06:20:14.830Z",
+    "versionId": "3ea88b00-f20a-46ce-915f-7bf94aef4cb0",
+    "workflowId": "bBZNSE0efNQb7TEu",
+    "nodes": [
+      {
+        "parameters": {
+          "inputSource": "jsonExample",
+          "jsonExample": "{\n  \"id\" : \"BcH7K4c5VBVIV2C4\"\n}"
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -16,
+          16
+        ],
+        "id": "32d37018-c84e-49d1-819b-d2b20fff803b",
+        "name": "When Executed by Another Workflow"
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "crm_action_proposals",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "keyValue": "={{ $json.id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          192,
+          16
+        ],
+        "id": "56d099f7-eb46-49c7-a5d0-f83e7900ba79",
+        "name": "Get a row",
+        "credentials": {
+          "supabaseApi": {
+            "id": "XtU0aykhI7HfjMZq",
+            "name": "CRM_agent"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "crm_action_proposals",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status",
+                "fieldValue": "executing"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          400,
+          16
+        ],
+        "id": "7b18e7fc-6127-40d8-a6b4-23e72dcc024e",
+        "name": "Update a row",
+        "credentials": {
+          "supabaseApi": {
+            "id": "XtU0aykhI7HfjMZq",
+            "name": "CRM_agent"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ JSON.stringify($json) }}\n\nThis is the json from the output of the read agent. You have to perform the following write instructions.",
+          "options": {
+            "systemMessage": "=You are a CRM write execution agent. You do not converse. You execute.\n\nYou receive a confirmed action proposal as a JSON object. Execute exactly what is specified.\n\n---\n\nUNDERSTANDING THE PROPOSAL\n\nThe JSON you receive contains:\n- action: operation to perform\n- module: Zoho module\n- record_id: the Zoho numeric ID of the record — used as path variable for all update and convert actions\n- fields: field values to write\n- step_queue: array of steps for multi-step operations\n- proposal_id: UUID for Supabase update\n- user_id: Telegram ID for notify_user\n\n---\n\nPATH VARIABLE RULES — CRITICAL\n\nFor every action on an existing record, record_id MUST be the path variable:\n- convert_lead → path_variables.leadId = record_id\n- update_deal → path_variables.dealId = record_id\n- update_contact → path_variables.contactId = record_id\n- update_account → path_variables.accountId = record_id\n- update_lead → path_variables.leadId = record_id\n\nNEVER use a record name as a path variable. Always use the numeric ID.\n\n---\n\nOWNER CHANGE RULE — CRITICAL\n\nAll records are created under the default API credential owner (Devansh).\nIf the Owner field in the proposal specifies a different person, you MUST\ncall changeSingleRecordOwner after the create or convert step to assign\nthe correct owner.\n\nThis applies to:\n- create_lead → after createRecords, call changeSingleRecordOwner with the new record ID\n- create_contact → after createRecords, call changeSingleRecordOwner\n- create_account → after createRecords, call changeSingleRecordOwner\n- create_deal → after createRecords, call changeSingleRecordOwner\n- convert_lead → after convertLead, call changeSingleRecordOwner on the new deal ID\n\nOnly skip changeSingleRecordOwner if Owner.id matches Devansh's ID: 5118344000004729073.\nFor all other Owner IDs, always call it.\n\n---\n\nEXECUTION RULES\n\nSingle step:\n- Call the MCP tool using action, module, record_id, fields\n- Use record_id as path variable as described above\n- If Owner requires a change, call changeSingleRecordOwner immediately after\n\nMulti-step:\n- Execute steps in order\n- After each step extract the returned record ID from the MCP response\n- Replace [[step_N_id]] placeholders in subsequent steps with the actual ID\n- Apply owner change rule after each create or convert step\n- If any step fails, stop immediately\n\n---\n\nACTION TO TOOL MAPPING\n\n- create_* → createRecords with correct module\n- update_* → updateRecord with record_id as path variable\n- convert_lead → convertLead with record_id as leadId\n- create_note → createNotes\n- create_task → createRecords Tasks module\n- ownership → changeSingleRecordOwner or changeOwnerBulk\n\n---\n\nCOMPLETION RULES — NON-NEGOTIABLE\n\nYou MUST call exactly two tools at the end of every execution:\n\n1. FIRST: update_proposal_status\n   - proposal_id from the JSON\n   - status = \"executed\" on success, \"failed\" on any failure\n   - completion_message = plain text summary\n\n2. SECOND: notify_user\n   - user_id from the JSON\n   - same message as above\n\nThese are mandatory. Outputting text is NOT a substitute for calling notify_user.\nThe user receives nothing if you skip it. Always call both even on failure.\n\n---\n\nOUTPUT\n\nPlain text, record names not IDs, no markdown, no bullets.\nSuccess: \"Converted Aarit Arora to a deal and created the project task.\"\nFailure: \"Step 1 failed: [specific reason]. [What succeeded before the failure, if anything].\"\n\nWhen reporting failures, describe what went wrong in plain human language. \nDo not include raw API error strings, JSON paths, field codes, or technical \nerror messages from Zoho. Translate them into simple language the user understands."
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          816,
+          16
+        ],
+        "id": "5372cacd-e604-41fe-8618-5dffdfd94f19",
+        "name": "Write Agent"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-5.4-mini",
+            "mode": "list",
+            "cachedResultName": "gpt-5.4-mini"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          720,
+          240
+        ],
+        "id": "e0225c93-9c47-420a-9e18-cd1c3d3e15fd",
+        "name": "OpenAI Chat Model",
+        "credentials": {
+          "openAiApi": {
+            "id": "wXqOixbEbb7kpnQc",
+            "name": "Devansh_Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "endpointUrl": "https://n8nwriteagentserver-918915813.zohomcp.com/mcp/1ea2195336b43270806e6a1ded5358cd/message",
+          "authentication": "mcpOAuth2Api",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+        "typeVersion": 1.2,
+        "position": [
+          912,
+          288
+        ],
+        "id": "8f0f31c2-f536-4479-94b1-f5ec0df92bc3",
+        "name": "Write Client",
+        "credentials": {
+          "mcpOAuth2Api": {
+            "id": "x4LFisfJNsiap84Z",
+            "name": "MCP write"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "=proposal_id: {{ $('Get a row').first().json.id }}\nuser_id: {{ $('Get a row').first().json.user_id }}\nstatus: done\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1168,
+          16
+        ],
+        "id": "c1cbe98c-2106-40dc-aef8-23fba32c7ac9",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "descriptionType": "manual",
+          "toolDescription": "=Use this tool to send a message to the user on Telegram after completing or failing an execution.\n\nCall this tool exactly once per execution — after all MCP write steps are done (or after a failure stops execution).\n\nWhen to call:\n- After successful execution: send a warm, plain-text summary of what was done\n- After a failed step: send a clear explanation of which step failed and why\n\nMessage rules:\n- Use record names not IDs\n- One sentence per completed action\n- No markdown, no bullet points, no bold text\n- Warm and direct tone\n- Success example: \"Done — created the Danube Properties account, added Ahmed Al Mansoori as a contact, and logged the intro meeting note.\"\n- Failure example: \"Something went wrong on step 2 while creating the contact. The account was created successfully. Please try again or ask for help.\"",
+          "chatId": "={{ $('Get a row').first().json.user_id }}",
+          "text": "={{ $fromAI('message', 'Completion or error message to send to user', 'string') }}",
+          "additionalFields": {
+            "appendAttribution": false,
+            "parse_mode": "Markdown"
+          }
+        },
+        "type": "n8n-nodes-base.telegramTool",
+        "typeVersion": 1.2,
+        "position": [
+          1024,
+          288
+        ],
+        "id": "bf2783a8-d97e-4012-b542-d2caea33be3d",
+        "name": "notify_user",
+        "webhookId": "6218dce9-f42c-4ff7-b497-27979f68d7c9",
+        "credentials": {
+          "telegramApi": {
+            "id": "5LcTaFrxMf6lEi05",
+            "name": "SUACRM_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "descriptionType": "manual",
+          "toolDescription": "=Use this tool to update the proposal record in Supabase after execution completes or fails.\n\nCall this tool exactly once per execution — always, regardless of success or failure.\n\nWhen to call:\n- After all MCP steps complete successfully: set status to executed\n- After any step fails and execution stops: set status to failed\n\nFields to pass:\n- proposal_id: the UUID of the proposal being executed (provided in your instruction)\n- status: exactly \"executed\" on success or \"failed\" on failure\n- completion_message: the same plain-text summary you are sending to the user\n- executed_at: current timestamp in Asia/Kolkata timezone\n\nRules:\n- Always call this tool before notifying the user\n- Never skip this tool even if the MCP call returned an unexpected response\n- Do not set status to executed if any step failed — use failed instead\n- completion_message must use record names not IDs, matching exactly what you send to the user",
+          "operation": "update",
+          "tableId": "crm_action_proposals",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Get a row').first().json.id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status",
+                "fieldValue": "={{ $fromAI('status', 'executed or failed', 'string') }}"
+              },
+              {
+                "fieldId": "completion_message",
+                "fieldValue": "={{ $fromAI('completion_message', 'Summary of what happened', 'string') }}"
+              },
+              {
+                "fieldId": "executed_at",
+                "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:mm') }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabaseTool",
+        "typeVersion": 1,
+        "position": [
+          1168,
+          288
+        ],
+        "id": "cab031e7-e6b1-49b1-8e25-26d446fadc4b",
+        "name": "update_proposal_status",
+        "credentials": {
+          "supabaseApi": {
+            "id": "XtU0aykhI7HfjMZq",
+            "name": "CRM_agent"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Get a row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get a row": {
+        "main": [
+          [
+            {
+              "node": "Update a row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update a row": {
+        "main": [
+          [
+            {
+              "node": "Write Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Write Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Write Agent": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Write Client": {
+        "ai_tool": [
+          [
+            {
+              "node": "Write Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "notify_user": {
+        "ai_tool": [
+          [
+            {
+              "node": "Write Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "update_proposal_status": {
+        "ai_tool": [
+          [
+            {
+              "node": "Write Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dev Scaleupally",
+    "name": "Version 3ea88b00",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

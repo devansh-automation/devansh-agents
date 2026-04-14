@@ -1,0 +1,201 @@
+{
+  "updatedAt": "2025-07-15T10:15:44.000Z",
+  "createdAt": "2025-07-11T08:21:35.555Z",
+  "id": "Bys1THVs4gUM4BPO",
+  "name": "Contact Sink Automation",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://accounts.zoho.com/oauth/v2/token",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "refresh_token",
+              "value": "1000.718ed6b37a41f9b72e4647016ac07311.a9c79710673fecdda7c5b97b2c4f2dc5"
+            },
+            {
+              "name": "client_id",
+              "value": "1000.RZAESYJB6QEKLOG02NDZPNIEKLRRHD"
+            },
+            {
+              "name": "client_secret",
+              "value": "17fde7ba66e7d1e48f2f46178d3d84da1e5a786b0e"
+            },
+            {
+              "name": "grant_type",
+              "value": "refresh_token"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -440,
+        180
+      ],
+      "id": "1cec636f-1b23-4c21-8319-5eba9eb89ae6",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "https://www.zohoapis.com/crm/v8/Contacts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Zoho-oauthtoken  {{ $json.access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -220,
+        180
+      ],
+      "id": "82b4d320-eb4f-40e0-b76f-be686ce9df57",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const users = items[0].json.users;\n\nfunction parseDate(input) {\n  if (!input) return null;\n  const date = new Date(input);\n  return date.toISOString().slice(0, 19).replace('T', ' ');\n}\n\nfunction escapeString(val) {\n  return val ? val.toString().replace(/'/g, \"''\") : '';\n}\n\nconst values = users.map(user => {\n  return `(\n    '${escapeString(user.id)}',\n    '${escapeString(user.first_name)}',\n    '${escapeString(user.full_name)}',\n    '${escapeString(user.email)}',\n    '${escapeString(user.alias)}',\n    ${user.dob ? `'${escapeString(user.dob)}'` : 'NULL'},\n    '${escapeString(user.phone)}',\n    '${escapeString(user.created_by?.name)}',\n    '${escapeString(user.created_by?.id)}',\n    ${user.Shift_Effective_From ? `'${parseDate(user.Shift_Effective_From)}'` : 'NULL'},\n    '${escapeString(user.zuid)}',\n    ${user.confirm === true ? 1 : 0},\n    '${escapeString(JSON.stringify(user.territories || []))}',\n    '${escapeString(user.date_format)}',\n    '${escapeString(user.status)}',\n    '${escapeString(user.profile?.id)}',\n    '${escapeString(user.profile?.name)}',\n    ${user.created_time ? `'${parseDate(user.created_time)}'` : 'NULL'},\n    ${user.Modified_Time ? `'${parseDate(user.Modified_Time)}'` : 'NULL'}\n  )`;\n});\n\nreturn [{ json: { bulkValues: values.join(',\\n') } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        180
+      ],
+      "id": "0d575626-dfeb-462f-9a08-c48fe75dcc57",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO users (\n  id, first_name, full_name, email, alias, dob, phone, created_by_name, created_by_id,\n  shift_effective_from, zuid, confirm, territories, date_format, status,\n  profile_id, profile_name, created_time, modified_time\n)\nVALUES\n{{ $json.bulkValues }}\nON DUPLICATE KEY UPDATE\n  first_name = VALUES(first_name),\n  full_name = VALUES(full_name),\n  email = VALUES(email),\n  alias = VALUES(alias),\n  dob = VALUES(dob),\n  phone = VALUES(phone),\n  created_by_name = VALUES(created_by_name),\n  created_by_id = VALUES(created_by_id),\n  shift_effective_from = VALUES(shift_effective_from),\n  zuid = VALUES(zuid),\n  confirm = VALUES(confirm),\n  territories = VALUES(territories),\n  date_format = VALUES(date_format),\n  status = VALUES(status),\n  profile_id = VALUES(profile_id),\n  profile_name = VALUES(profile_name),\n  created_time = VALUES(created_time),\n  modified_time = VALUES(modified_time);\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        220,
+        180
+      ],
+      "id": "132a3b91-573c-4159-8ae9-704ab64a53bd",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "xQBeQaj1zis9Y1yi",
+          "name": "MySQL account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -740,
+        200
+      ],
+      "id": "a62e60d2-a73c-451f-b8d9-906b0e2587c1",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        []
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "39996cf6-d504-43f2-8f38-f7a5f4526168",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-07-11T08:21:35.560Z",
+      "createdAt": "2025-07-11T08:21:35.560Z",
+      "role": "workflow:owner",
+      "workflowId": "Bys1THVs4gUM4BPO",
+      "projectId": "kL4d2d65bbWAOPAf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

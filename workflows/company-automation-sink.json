@@ -1,0 +1,42 @@
+{
+  "updatedAt": "2025-07-14T13:02:23.000Z",
+  "createdAt": "2025-07-14T12:44:32.479Z",
+  "id": "k3jUuzQSVVn3nuUd",
+  "name": "Company Automation Sink",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        -60
+      ],
+      "id": "bbff31cc-e94c-494a-bb12-e9227d7bb349",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "75c0f7f2-5841-439b-a021-119be2673b55",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-07-14T12:44:32.487Z",
+      "createdAt": "2025-07-14T12:44:32.487Z",
+      "role": "workflow:owner",
+      "workflowId": "k3jUuzQSVVn3nuUd",
+      "projectId": "kL4d2d65bbWAOPAf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

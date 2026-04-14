@@ -1,0 +1,1319 @@
+{
+  "updatedAt": "2026-02-17T10:14:56.426Z",
+  "createdAt": "2026-02-17T06:33:51.542Z",
+  "id": "5A0pbO0QWTTIWmO8",
+  "name": "LinkedIn Lead Extractor",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "linkedin-lead-extractor",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "39ac301b-349d-4814-b3a1-1909c4ff1bc2",
+      "name": "Webhook",
+      "webhookId": "596df061-ec55-4098-9a86-78a0f17f1e3e"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Dk2-4FfHjraiBhgMT8u5K0qw9EtPlwhVhUuFPmpeSec",
+          "mode": "list",
+          "cachedResultName": "Staffing Lead Gen & Partnership",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Dk2-4FfHjraiBhgMT8u5K0qw9EtPlwhVhUuFPmpeSec/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1297259179,
+          "mode": "list",
+          "cachedResultName": "Direct reachout",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Dk2-4FfHjraiBhgMT8u5K0qw9EtPlwhVhUuFPmpeSec/edit#gid=1297259179"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Person Linkedin Url",
+              "lookupValue": "={{ $json.body.profile_url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "2537a1ba-6353-4ac7-830d-76789562593a",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cby4gQ9hDXfjYT1n",
+          "name": "Mis_Google_Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c1887bbe-320d-4b91-a0da-6cb455c0182e",
+              "leftValue": "={{ $json['Person Linkedin Url'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "41e59249-c4e6-45d9-9dbc-7e1029c55390",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Dk2-4FfHjraiBhgMT8u5K0qw9EtPlwhVhUuFPmpeSec",
+          "mode": "list",
+          "cachedResultName": "Staffing Lead Gen & Partnership",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Dk2-4FfHjraiBhgMT8u5K0qw9EtPlwhVhUuFPmpeSec/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1297259179,
+          "mode": "list",
+          "cachedResultName": "Direct reachout",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Dk2-4FfHjraiBhgMT8u5K0qw9EtPlwhVhUuFPmpeSec/edit#gid=1297259179"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Company Name": "={{ $('Webhook').item.json.body.company_name || '' }}",
+            "Company Website": "={{ $('Webhook').item.json.body.company_website || ''}}",
+            "First Name": "={{ $('Webhook').item.json.body.first_name || ''}}",
+            "Last Name": "={{ $('Webhook').item.json.body.last_name || '' }}",
+            "Email": "={{ String($('Webhook').item.json.body.email || '')}}",
+            "Title": "={{ String($('Webhook').item.json.body.designation || '' )}}",
+            "Person Linkedin Url": "={{ $('Webhook').item.json.body.profile_url || ''}}",
+            "Corporate Phone": "={{ String($('Webhook').item.json.body.corporate_phone || '')}}",
+            "Employees": "={{ String($('Webhook').item.json.body.number_of_employees || '') }}",
+            "Industry": "={{ $('Webhook').item.json.body.industry || ''}}",
+            "Company Linkedin Url": "={{ $('Webhook').item.json.body.company_linkedin_url || ''}}",
+            "Annual Revenue": "={{ $('Webhook').item.json.body.annual_revenue || ''}}",
+            "City": "={{ $('Webhook').item.json.body.city || ''}}",
+            "State": "={{ $('Webhook').item.json.body.state || ''}}",
+            "Country": "={{ $('Webhook').item.json.body.country || '' }}",
+            "Request send date": "={{\n  $('Webhook').item.json.body.request_sent_date\n    ? DateTime.fromISO($('Webhook').item.json.body.request_sent_date)\n        .toFormat('M/dd/yyyy')\n    : ''\n}}",
+            "Request Status": "={{ $('Webhook').item.json.body.request_status || ''}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "S No",
+              "displayName": "S No",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company Website",
+              "displayName": "Company Website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "First Name",
+              "displayName": "First Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Name",
+              "displayName": "Last Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Person Linkedin Url",
+              "displayName": "Person Linkedin Url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Corporate Phone",
+              "displayName": "Corporate Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Employees",
+              "displayName": "Employees",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Industry",
+              "displayName": "Industry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company Linkedin Url",
+              "displayName": "Company Linkedin Url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Annual Revenue",
+              "displayName": "Annual Revenue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "City",
+              "displayName": "City",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "State",
+              "displayName": "State",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Country",
+              "displayName": "Country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Request send date",
+              "displayName": "Request send date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Sent Date",
+              "displayName": "Email Sent Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Week Start Date",
+              "displayName": "Week Start Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "MM-YYYY",
+              "displayName": "MM-YYYY",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Request Status",
+              "displayName": "Request Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Status",
+              "displayName": "Email Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Partnership Status",
+              "displayName": "Partnership Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Comments & Meeting points ",
+              "displayName": "Comments & Meeting points ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Additional reachouts",
+              "displayName": "Additional reachouts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Additional Accept",
+              "displayName": "Additional Accept",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total Reachouts",
+              "displayName": "Total Reachouts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total Accepts",
+              "displayName": "Total Accepts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Week Start Filter",
+              "displayName": "Week Start Filter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Month Filter",
+              "displayName": "Month Filter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        688,
+        128
+      ],
+      "id": "9bc10c7e-0eef-4695-909d-80158fb7800d",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cby4gQ9hDXfjYT1n",
+          "name": "Mis_Google_Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1344,
+        0
+      ],
+      "id": "129a8549-e2bc-4762-bf35-f51379e95ed9",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1120,
+        0
+      ],
+      "id": "35e33fa0-4f49-412c-9483-2f369c4832f7",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2f18d72b-bee2-4fc5-8657-182fac158075",
+              "name": "exists",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "494003ba-2b7c-4c02-99ee-f0976e5e0970",
+              "name": "Message",
+              "value": "Creating a new lead",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        128
+      ],
+      "id": "40408fbc-fb93-4004-a468-eed7cde6d400",
+      "name": "SET lead created"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "59e78cbf-14a4-4ffa-80ee-97c72a13f41c",
+              "name": "exists",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "d165f99c-893f-480a-bbfc-4650fca07bf5",
+              "name": "message",
+              "value": "LinkedIn lead already exists",
+              "type": "string"
+            },
+            {
+              "id": "10df9ca7-f383-4b66-a820-42757ec7f835",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        -112
+      ],
+      "id": "fe96bfb0-90da-4574-a054-9a0251e0c7e7",
+      "name": "SET lead exists"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "SET lead exists",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "SET lead created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SET lead created": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "SET lead exists": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "devscaleup.app.n8n.cloud",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+            "content-length": "547",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-US,en;q=0.9",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "2401:4900:8844:bad2:d554:c0e0:60a1:cea0",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "IN",
+            "cf-ray": "9cf3b4e40014a6f5-DEL",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "origin": "chrome-extension://bmapomekbnkpjlhfajlpddfjgiahpphp",
+            "priority": "u=1, i",
+            "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "none",
+            "sec-fetch-storage-access": "active",
+            "x-forwarded-for": "2401:4900:8844:bad2:d554:c0e0:60a1:cea0, 162.158.142.171",
+            "x-forwarded-host": "devscaleup.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-70-565db6c64f-rs2pf",
+            "x-is-trusted": "yes",
+            "x-real-ip": "2401:4900:8844:bad2:d554:c0e0:60a1:cea0"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "first_name": "Vidya",
+            "last_name": "Narayanan",
+            "designation": "Co-Founder",
+            "email": null,
+            "profile_url": "https://www.linkedin.com/in/hellovidya/",
+            "company_name": "FinalLayer",
+            "company_website": "https://finallayer.com/",
+            "corporate_phone": null,
+            "number_of_employees": "11-50",
+            "industry": "Technology, Information and Media",
+            "company_linkedin_url": "https://www.linkedin.com/company/105013219/",
+            "annual_revenue": null,
+            "city": "San Francisco",
+            "state": "California",
+            "country": "USA",
+            "request_sent_date": "2026-02-17",
+            "request_status": "Pending",
+            "platform": "LinkedIn"
+          },
+          "webhookUrl": "https://devscaleup.app.n8n.cloud/webhook/linkedin-lead-extractor",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "7e1fb66b-ad24-437c-8894-160a81864ca8",
+  "activeVersionId": "7e1fb66b-ad24-437c-8894-160a81864ca8",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-02-17T06:33:51.545Z",
+      "createdAt": "2026-02-17T06:33:51.545Z",
+      "role": "workflow:owner",
+      "workflowId": "5A0pbO0QWTTIWmO8",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-02-17T10:15:02.000Z",
+    "createdAt": "2026-02-17T10:14:56.427Z",
+    "versionId": "7e1fb66b-ad24-437c-8894-160a81864ca8",
+    "workflowId": "5A0pbO0QWTTIWmO8",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "linkedin-lead-extractor",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "39ac301b-349d-4814-b3a1-1909c4ff1bc2",
+        "name": "Webhook",
+        "webhookId": "596df061-ec55-4098-9a86-78a0f17f1e3e"
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1Dk2-4FfHjraiBhgMT8u5K0qw9EtPlwhVhUuFPmpeSec",
+            "mode": "list",
+            "cachedResultName": "Staffing Lead Gen & Partnership",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Dk2-4FfHjraiBhgMT8u5K0qw9EtPlwhVhUuFPmpeSec/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1297259179,
+            "mode": "list",
+            "cachedResultName": "Direct reachout",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Dk2-4FfHjraiBhgMT8u5K0qw9EtPlwhVhUuFPmpeSec/edit#gid=1297259179"
+          },
+          "filtersUI": {
+            "values": [
+              {
+                "lookupColumn": "Person Linkedin Url",
+                "lookupValue": "={{ $json.body.profile_url }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          224,
+          0
+        ],
+        "id": "2537a1ba-6353-4ac7-830d-76789562593a",
+        "name": "Get row(s) in sheet",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "cby4gQ9hDXfjYT1n",
+            "name": "Mis_Google_Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "c1887bbe-320d-4b91-a0da-6cb455c0182e",
+                "leftValue": "={{ $json['Person Linkedin Url'] }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          448,
+          0
+        ],
+        "id": "41e59249-c4e6-45d9-9dbc-7e1029c55390",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1Dk2-4FfHjraiBhgMT8u5K0qw9EtPlwhVhUuFPmpeSec",
+            "mode": "list",
+            "cachedResultName": "Staffing Lead Gen & Partnership",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Dk2-4FfHjraiBhgMT8u5K0qw9EtPlwhVhUuFPmpeSec/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1297259179,
+            "mode": "list",
+            "cachedResultName": "Direct reachout",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Dk2-4FfHjraiBhgMT8u5K0qw9EtPlwhVhUuFPmpeSec/edit#gid=1297259179"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Company Name": "={{ $('Webhook').item.json.body.company_name || '' }}",
+              "Company Website": "={{ $('Webhook').item.json.body.company_website || ''}}",
+              "First Name": "={{ $('Webhook').item.json.body.first_name || ''}}",
+              "Last Name": "={{ $('Webhook').item.json.body.last_name || '' }}",
+              "Email": "={{ String($('Webhook').item.json.body.email || '')}}",
+              "Title": "={{ String($('Webhook').item.json.body.designation || '' )}}",
+              "Person Linkedin Url": "={{ $('Webhook').item.json.body.profile_url || ''}}",
+              "Corporate Phone": "={{ String($('Webhook').item.json.body.corporate_phone || '')}}",
+              "Employees": "={{ String($('Webhook').item.json.body.number_of_employees || '') }}",
+              "Industry": "={{ $('Webhook').item.json.body.industry || ''}}",
+              "Company Linkedin Url": "={{ $('Webhook').item.json.body.company_linkedin_url || ''}}",
+              "Annual Revenue": "={{ $('Webhook').item.json.body.annual_revenue || ''}}",
+              "City": "={{ $('Webhook').item.json.body.city || ''}}",
+              "State": "={{ $('Webhook').item.json.body.state || ''}}",
+              "Country": "={{ $('Webhook').item.json.body.country || '' }}",
+              "Request send date": "={{\n  $('Webhook').item.json.body.request_sent_date\n    ? DateTime.fromISO($('Webhook').item.json.body.request_sent_date)\n        .toFormat('M/dd/yyyy')\n    : ''\n}}",
+              "Request Status": "={{ $('Webhook').item.json.body.request_status || ''}}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "S No",
+                "displayName": "S No",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Company Name",
+                "displayName": "Company Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Company Website",
+                "displayName": "Company Website",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "First Name",
+                "displayName": "First Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Last Name",
+                "displayName": "Last Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Title",
+                "displayName": "Title",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Email",
+                "displayName": "Email",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Person Linkedin Url",
+                "displayName": "Person Linkedin Url",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Corporate Phone",
+                "displayName": "Corporate Phone",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Employees",
+                "displayName": "Employees",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Industry",
+                "displayName": "Industry",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Company Linkedin Url",
+                "displayName": "Company Linkedin Url",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Annual Revenue",
+                "displayName": "Annual Revenue",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "City",
+                "displayName": "City",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "State",
+                "displayName": "State",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Country",
+                "displayName": "Country",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Request send date",
+                "displayName": "Request send date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Email Sent Date",
+                "displayName": "Email Sent Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Week Start Date",
+                "displayName": "Week Start Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "MM-YYYY",
+                "displayName": "MM-YYYY",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Request Status",
+                "displayName": "Request Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Email Status",
+                "displayName": "Email Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Partnership Status",
+                "displayName": "Partnership Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Comments & Meeting points ",
+                "displayName": "Comments & Meeting points ",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Additional reachouts",
+                "displayName": "Additional reachouts",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Additional Accept",
+                "displayName": "Additional Accept",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Total Reachouts",
+                "displayName": "Total Reachouts",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Total Accepts",
+                "displayName": "Total Accepts",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Week Start Filter",
+                "displayName": "Week Start Filter",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Month Filter",
+                "displayName": "Month Filter",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          688,
+          128
+        ],
+        "id": "9bc10c7e-0eef-4695-909d-80158fb7800d",
+        "name": "Append row in sheet",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "cby4gQ9hDXfjYT1n",
+            "name": "Mis_Google_Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          1344,
+          0
+        ],
+        "id": "129a8549-e2bc-4762-bf35-f51379e95ed9",
+        "name": "Respond to Webhook"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          1120,
+          0
+        ],
+        "id": "35e33fa0-4f49-412c-9483-2f369c4832f7",
+        "name": "Merge"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "2f18d72b-bee2-4fc5-8657-182fac158075",
+                "name": "exists",
+                "value": false,
+                "type": "boolean"
+              },
+              {
+                "id": "494003ba-2b7c-4c02-99ee-f0976e5e0970",
+                "name": "Message",
+                "value": "Creating a new lead",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          896,
+          128
+        ],
+        "id": "40408fbc-fb93-4004-a468-eed7cde6d400",
+        "name": "SET lead created"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "59e78cbf-14a4-4ffa-80ee-97c72a13f41c",
+                "name": "exists",
+                "value": true,
+                "type": "boolean"
+              },
+              {
+                "id": "d165f99c-893f-480a-bbfc-4650fca07bf5",
+                "name": "message",
+                "value": "LinkedIn lead already exists",
+                "type": "string"
+              },
+              {
+                "id": "10df9ca7-f383-4b66-a820-42757ec7f835",
+                "name": "",
+                "value": "",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          896,
+          -112
+        ],
+        "id": "fe96bfb0-90da-4574-a054-9a0251e0c7e7",
+        "name": "SET lead exists"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get row(s) in sheet": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "SET lead exists",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Append row in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet": {
+        "main": [
+          [
+            {
+              "node": "SET lead created",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Respond to Webhook": {
+        "main": [
+          []
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "SET lead created": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "SET lead exists": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dev Scaleupally",
+    "name": "Version 7e1fb66b",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

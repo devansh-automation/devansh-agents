@@ -1,0 +1,275 @@
+{
+  "updatedAt": "2026-03-17T13:04:46.468Z",
+  "createdAt": "2026-03-17T13:04:15.426Z",
+  "id": "z2jqlua4uEyQJ2ti",
+  "name": "db-agent-sub-workflow-table-schema-cleffo",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    c.TABLE_NAME,\n    GROUP_CONCAT(\n        CONCAT(\n            c.COLUMN_NAME, ' ', c.COLUMN_TYPE,\n            IF(k.REFERENCED_TABLE_NAME IS NOT NULL,\n               CONCAT(' FK->', k.REFERENCED_TABLE_NAME, '.', k.REFERENCED_COLUMN_NAME),\n               '')\n        )\n        ORDER BY c.ORDINAL_POSITION\n        SEPARATOR ', '\n    ) AS columns\nFROM INFORMATION_SCHEMA.COLUMNS c\nLEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE k\n    ON c.TABLE_SCHEMA = k.TABLE_SCHEMA\n    AND c.TABLE_NAME = k.TABLE_NAME\n    AND c.COLUMN_NAME = k.COLUMN_NAME\nWHERE c.TABLE_SCHEMA = 'scaleup_payments'\nGROUP BY c.TABLE_NAME;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c38c7cea-d113-4acc-bea5-fa511a576adf",
+      "name": "Get tables schemas columns and foreign keys",
+      "credentials": {
+        "mySql": {
+          "id": "ox1WKyhWm7SCMGcB",
+          "name": "Scaleup Dev DB User: Read-Only"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "ec21df93-7773-4bfa-9f1f-075ed96a0e36",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "cdc6658a-a8ce-4cf8-88b7-78044c21f425",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "name"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -208,
+        0
+      ],
+      "id": "f285cc76-8e5d-40d9-85e7-ad40dd52aaa7",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "connections": {
+    "Get tables schemas columns and foreign keys": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get tables schemas columns and foreign keys",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "name": "First item",
+          "code": 1
+        }
+      },
+      {
+        "json": {
+          "name": "Second item",
+          "code": 2
+        }
+      }
+    ]
+  },
+  "versionId": "e09f717a-f3eb-4898-a08c-17fc088adc2a",
+  "activeVersionId": "e09f717a-f3eb-4898-a08c-17fc088adc2a",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-17T13:04:15.429Z",
+      "createdAt": "2026-03-17T13:04:15.429Z",
+      "role": "workflow:owner",
+      "workflowId": "z2jqlua4uEyQJ2ti",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-03-17T13:06:11.000Z",
+    "createdAt": "2026-03-17T13:04:46.468Z",
+    "versionId": "e09f717a-f3eb-4898-a08c-17fc088adc2a",
+    "workflowId": "z2jqlua4uEyQJ2ti",
+    "nodes": [
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT \n    c.TABLE_NAME,\n    GROUP_CONCAT(\n        CONCAT(\n            c.COLUMN_NAME, ' ', c.COLUMN_TYPE,\n            IF(k.REFERENCED_TABLE_NAME IS NOT NULL,\n               CONCAT(' FK->', k.REFERENCED_TABLE_NAME, '.', k.REFERENCED_COLUMN_NAME),\n               '')\n        )\n        ORDER BY c.ORDINAL_POSITION\n        SEPARATOR ', '\n    ) AS columns\nFROM INFORMATION_SCHEMA.COLUMNS c\nLEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE k\n    ON c.TABLE_SCHEMA = k.TABLE_SCHEMA\n    AND c.TABLE_NAME = k.TABLE_NAME\n    AND c.COLUMN_NAME = k.COLUMN_NAME\nWHERE c.TABLE_SCHEMA = 'scaleup_payments'\nGROUP BY c.TABLE_NAME;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          0,
+          0
+        ],
+        "id": "c38c7cea-d113-4acc-bea5-fa511a576adf",
+        "name": "Get tables schemas columns and foreign keys",
+        "credentials": {
+          "mySql": {
+            "id": "ox1WKyhWm7SCMGcB",
+            "name": "Scaleup Dev DB User: Read-Only"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "aggregate": "aggregateAllItemData",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.aggregate",
+        "typeVersion": 1,
+        "position": [
+          208,
+          0
+        ],
+        "id": "ec21df93-7773-4bfa-9f1f-075ed96a0e36",
+        "name": "Aggregate"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "{}",
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          416,
+          0
+        ],
+        "id": "cdc6658a-a8ce-4cf8-88b7-78044c21f425",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "name"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -208,
+          0
+        ],
+        "id": "f285cc76-8e5d-40d9-85e7-ad40dd52aaa7",
+        "name": "When Executed by Another Workflow"
+      }
+    ],
+    "connections": {
+      "Get tables schemas columns and foreign keys": {
+        "main": [
+          [
+            {
+              "node": "Aggregate",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aggregate": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Get tables schemas columns and foreign keys",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dev Scaleupally",
+    "name": "Version e09f717a",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": [
+    {
+      "updatedAt": "2026-03-07T08:48:56.096Z",
+      "createdAt": "2026-03-07T08:48:56.096Z",
+      "id": "VoNjG541wq5KL1Eh",
+      "name": "DB-based"
+    }
+  ]
+}

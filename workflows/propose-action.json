@@ -1,0 +1,312 @@
+{
+  "updatedAt": "2026-03-02T10:46:17.158Z",
+  "createdAt": "2026-02-24T07:13:05.308Z",
+  "id": "uOt6jlN9xwU2GSrH",
+  "name": "PROPOSE ACTION",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "action"
+            },
+            {
+              "name": "module"
+            },
+            {
+              "name": "record_id"
+            },
+            {
+              "name": "fields",
+              "type": "object"
+            },
+            {
+              "name": "notes"
+            },
+            {
+              "name": "user_id"
+            },
+            {
+              "name": "agent_confidence",
+              "type": "number"
+            },
+            {
+              "name": "agent_message"
+            },
+            {
+              "name": "step_queue"
+            }
+          ]
+        }
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        272,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "crm_action_proposals",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $json.user_id }}"
+            },
+            {
+              "fieldId": "action",
+              "fieldValue": "={{ $json.action }}"
+            },
+            {
+              "fieldId": "module",
+              "fieldValue": "={{ $json.module }}"
+            },
+            {
+              "fieldId": "record_id",
+              "fieldValue": "={{ $json.record_id }}"
+            },
+            {
+              "fieldId": "fields",
+              "fieldValue": "={{ $json.fields }}"
+            },
+            {
+              "fieldId": "notes",
+              "fieldValue": "={{ $json.notes }}"
+            },
+            {
+              "fieldId": "confirmed",
+              "fieldValue": "=false"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "=pending"
+            },
+            {
+              "fieldId": "agent_confidence",
+              "fieldValue": "={{ $json.agent_confidence }}"
+            },
+            {
+              "fieldId": "agent_message",
+              "fieldValue": "={{ $json.agent_message }}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:mm') }}"
+            },
+            {
+              "fieldId": "step_queue",
+              "fieldValue": "={{ $json.step_queue || null }}"
+            },
+            {
+              "fieldId": "completed_steps",
+              "fieldValue": "[]"
+            },
+            {
+              "fieldId": "current_step",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "completion_message",
+              "fieldValue": "={{ $json.completion_message || null }}"
+            },
+            {
+              "fieldId": "execution_result",
+              "fieldValue": "null"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        704,
+        352
+      ],
+      "id": "59b226e1-6071-41f6-aeda-8b52be1b0430",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.user_id }}",
+        "text": "={{ $json.agent_message }}\n\nReference ID: {{ $json.id }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Yes",
+                    "additionalFields": {
+                      "callback_data": "yes"
+                    }
+                  },
+                  {
+                    "text": "No",
+                    "additionalFields": {
+                      "callback_data": "no"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        928,
+        352
+      ],
+      "id": "37eee0e9-40dd-44cf-a0e9-795ee5e12c7a",
+      "name": "Send a text message",
+      "webhookId": "382aa836-b743-49c5-9bfb-17d81a61734a",
+      "credentials": {
+        "telegramApi": {
+          "id": "5LcTaFrxMf6lEi05",
+          "name": "SUACRM_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\n// Extract reference ID from the text\nfunction extractReferenceId(text){\n  if (!text) return null;\n  const match = text.match(/Reference ID:\\s*([a-f0-9\\-]{36})/);\n  return match ? match[1]: null;\n}\nif(input.ok === true){\n  return[{\n    json:\n    {\n      status : \"proposed\",\n      message_id: input.result?.message_id,\n      reference_id: extractReferenceId(input.result?.text)\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    status: \"error\",\n    message: input.error || input.description || \"Unknown error\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        352
+      ],
+      "id": "2633fd8b-c0db-403a-944e-b107831ca212",
+      "name": "trim_message_output"
+    },
+    {
+      "parameters": {
+        "jsCode": "// FIELD NORMALIZER — PROPOSE ACTION sub-workflow\n// Position: after trigger receives agent fields, BEFORE Supabase insert\n\nconst raw = $json.fields || {};\nconst normalized = {};\nconst action = $json.action || '';\n\n// ─────────────────────────────────────────────────────\n// Helper: extract {id} from any representation\n// Accepts: \"5118344000000350001\"  →  {id: \"5118344000000350001\"}\n//          {id: \"...\", name: \"...\"} →  {id: \"...\"}\n//          {id: \"...\"}  →  {id: \"...\"}\n//          \"Alphabet Inc\"  →  null\n// ─────────────────────────────────────────────────────\nfunction toRelObj(val) {\n  if (!val) return null;\n  if (typeof val === 'object' && !Array.isArray(val) && val.id) {\n    const result = { id: String(val.id) };\n    if (val.name) result.name = String(val.name);\n    return result;\n  }\n  if (typeof val === 'string') {\n    const clean = val.trim();\n    if (/^\\d{15,20}$/.test(clean)) return { id: clean };\n    return null;\n  }\n  return null;\n}\n\n// ─────────────────────────────────────────────────────\n// Helper: extract display name string from any representation\n// Accepts: {id: \"...\", name: \"Alphabet Inc\"}  →  \"Alphabet Inc\"\n//          \"Alphabet Inc\"  →  \"Alphabet Inc\"\n//          \"5118344000000350001\"  →  null (pure ID rejected)\n// ─────────────────────────────────────────────────────\nfunction toDisplayName(val) {\n  if (!val) return null;\n  if (typeof val === 'object' && val.name) return String(val.name);\n  if (typeof val === 'string' && !/^\\d{15,20}$/.test(val.trim())) return val.trim();\n  return null;\n}\n\n// ─────────────────────────────────────────────────────\n// Primary display fields vary by action:\n// update_account  → Account_Name must be plain string\n// update_deal     → Deal_Name must be plain string\n// update_contact / update_lead → Last_Name must be plain string\n// All other actions → these are relationship {id} objects\n// ─────────────────────────────────────────────────────\nconst PRIMARY_DISPLAY_ACTIONS = {\n  'Account_Name': ['update_account'],\n  'Deal_Name':    ['update_deal'],\n  'Last_Name':    ['update_contact', 'update_lead'],\n};\n\n// ─────────────────────────────────────────────────────\n// Canonical key map: any alias → canonical key + transformer\n// ─────────────────────────────────────────────────────\nconst FIELD_RULES = {\n  // Relationship fields — must be {id:...} or null\n  \"Account_Name\":         { canon: \"Account_Name\",      fn: toRelObj },\n  \"Account_Name.id\":      { canon: \"Account_Name\",      fn: toRelObj },\n  \"account_name_id\":      { canon: \"Account_Name\",      fn: toRelObj },\n  \"Contact_Name\":         { canon: \"Contact_Name\",      fn: toRelObj },\n  \"Contact_Name.id\":      { canon: \"Contact_Name\",      fn: toRelObj },\n  \"contact_name_id\":      { canon: \"Contact_Name\",      fn: toRelObj },\n  \"Strategic_Partner\":    { canon: \"Strategic_Partner\", fn: toRelObj },\n  \"Strategic_Partner.id\": { canon: \"Strategic_Partner\", fn: toRelObj },\n  \"Owner\":                { canon: \"Owner\",             fn: toRelObj },\n  \"Owner.id\":             { canon: \"Owner\",             fn: toRelObj },\n  \"Who_Id\":               { canon: \"Who_Id\",            fn: toRelObj },\n  \"Who_Id.id\":            { canon: \"Who_Id\",            fn: toRelObj },\n  \"What_Id\":              { canon: \"What_Id\",           fn: toRelObj },\n  \"What_Id.id\":           { canon: \"What_Id\",           fn: toRelObj },\n  // Boolean fields\n  \"Listed_Company\":       { canon: \"Listed_Company\",    fn: (v) => v === true || v === \"true\" || v === \"True\" || v === 1 },\n  // Array fields\n  \"Service_Type\":         { canon: \"Service_Type\",      fn: (v) => Array.isArray(v) ? v : (v ? [v] : []) },\n};\n\n// ─────────────────────────────────────────────────────\n// Process each field the agent provided\n// ─────────────────────────────────────────────────────\nconst validationErrors = [];\n\nfor (const [rawKey, rawVal] of Object.entries(raw)) {\n  // Check if this field is a primary display field for this action\n  const displayActions = PRIMARY_DISPLAY_ACTIONS[rawKey];\n  if (displayActions && displayActions.includes(action)) {\n    // Extract plain string name instead of {id} object\n    const name = toDisplayName(rawVal);\n    if (name !== null) {\n      normalized[rawKey] = name;\n    } else {\n      validationErrors.push(`${rawKey}: could not extract display name from \"${JSON.stringify(rawVal)}\" — skipped`);\n    }\n    continue;\n  }\n\n  const rule = FIELD_RULES[rawKey];\n  if (rule) {\n    const result = rule.fn(rawVal);\n    if (result !== null && result !== undefined) {\n      normalized[rule.canon] = result;\n    } else if (rawKey.includes(\"Account_Name\") || rawKey.includes(\"Owner\")) {\n      validationErrors.push(`${rawKey}: \"${JSON.stringify(rawVal)}\" is not a valid Zoho ID — skipped`);\n    }\n  } else {\n    // Unknown key — pass through as-is\n    normalized[rawKey] = rawVal;\n  }\n}\n\n// ─────────────────────────────────────────────────────\n// OWNER VALIDATION — must always be present and valid\n// ─────────────────────────────────────────────────────\nconst VALID_OWNERS = [\n  \"5118344000000350001\",  // Manu\n  \"5118344000003068049\",  // Sparsh\n  \"5118344000003068001\",  // Pranay\n  \"5118344000004729073\",  // Devansh\n  \"5118344000003068065\",  // Vikas\n];\n\nif (normalized.Owner && !VALID_OWNERS.includes(normalized.Owner.id)) {\n  validationErrors.push(`Owner ID ${normalized.Owner.id} is not in the authorized owner list`);\n  delete normalized.Owner;\n}\n\nreturn [{ json: {\n  ...$json,\n  fields: normalized,\n  _validation_warnings: validationErrors\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        352
+      ],
+      "id": "31f6060e-91f3-40a5-b023-5cb2184ff3c2",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "trim_message_output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "action": "update_account",
+          "module": "Accounts",
+          "record_id": "5118344000005019001",
+          "fields": {
+            "Owner": {
+              "id": "5118344000004729073",
+              "name": "Devansh Agarwal"
+            },
+            "Account_Name": {
+              "id": "5118344000005019001",
+              "name": "Alphabet"
+            },
+            "Website": "www.google.com"
+          },
+          "notes": "",
+          "user_id": "1467700243",
+          "agent_confidence": 0.95,
+          "agent_message": "Update the Alphabet account website to www.google.com, then create contact Sundar Pichai at Alphabet with email sundar.pichai@google.com, phone +917001186286, and Contact Type Partner, and finally add a note to this contact titled First meeting done.",
+          "step_queue": "[{\"step\":1,\"action\":\"update_account\",\"module\":\"Accounts\",\"record_id\":\"5118344000005019001\",\"fields\":{\"Owner\":{\"id\":\"5118344000004729073\",\"name\":\"Devansh Agarwal\"},\"Account_Name\":{\"id\":\"5118344000005019001\",\"name\":\"Alphabet\"},\"Website\":\"www.google.com\"},\"depends_on\":null},{\"step\":2,\"action\":\"create_contact\",\"module\":\"Contacts\",\"record_id\":\"NEW\",\"fields\":{\"Owner\":{\"id\":\"5118344000004729073\",\"name\":\"Devansh Agarwal\"},\"First_Name\":\"Sundar\",\"Last_Name\":\"Pichai\",\"Email\":\"sundar.pichai@google.com\",\"Mobile\":\"+917001186286\",\"Contact_Type\":\"Partner\",\"Account_Name\":{\"id\":\"5118344000005019001\",\"name\":\"Alphabet\"}},\"depends_on\":null},{\"step\":3,\"action\":\"create_note\",\"module\":\"Contacts\",\"record_id\":\"NEW\",\"fields\":{\"Note_Title\":\"First meeting done\",\"Note_Content\":\"First meeting done\",\"Who_Id\":\"[[step_2_id]]\"},\"depends_on\":2}]"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "f2fe44ae-2226-4a24-b42f-090791e44887",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-02-24T07:13:05.313Z",
+      "createdAt": "2026-02-24T07:13:05.313Z",
+      "role": "workflow:owner",
+      "workflowId": "uOt6jlN9xwU2GSrH",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

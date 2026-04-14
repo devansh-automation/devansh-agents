@@ -1,0 +1,511 @@
+{
+  "updatedAt": "2026-04-07T06:32:25.317Z",
+  "createdAt": "2026-03-28T06:42:44.933Z",
+  "id": "uLKFrXMM2GWucHjN",
+  "name": "PROPOSE ACTION v2",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "action"
+            },
+            {
+              "name": "module"
+            },
+            {
+              "name": "record_id"
+            },
+            {
+              "name": "fields",
+              "type": "object"
+            },
+            {
+              "name": "notes"
+            },
+            {
+              "name": "user_id"
+            },
+            {
+              "name": "agent_confidence",
+              "type": "number"
+            },
+            {
+              "name": "agent_message"
+            },
+            {
+              "name": "step_queue"
+            }
+          ]
+        }
+      },
+      "id": "a1ab1ca0-f5f6-41e8-9354-9d7e025fb2bc",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        272,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "crm_action_proposals",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $json.user_id }}"
+            },
+            {
+              "fieldId": "action",
+              "fieldValue": "={{ $json.action }}"
+            },
+            {
+              "fieldId": "module",
+              "fieldValue": "={{ $json.module }}"
+            },
+            {
+              "fieldId": "record_id",
+              "fieldValue": "={{ $json.record_id }}"
+            },
+            {
+              "fieldId": "fields",
+              "fieldValue": "={{ $json.fields }}"
+            },
+            {
+              "fieldId": "notes",
+              "fieldValue": "={{ $json.notes }}"
+            },
+            {
+              "fieldId": "confirmed",
+              "fieldValue": "=false"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "=pending"
+            },
+            {
+              "fieldId": "agent_confidence",
+              "fieldValue": "={{ $json.agent_confidence }}"
+            },
+            {
+              "fieldId": "agent_message",
+              "fieldValue": "={{ $json.agent_message }}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:mm') }}"
+            },
+            {
+              "fieldId": "step_queue",
+              "fieldValue": "={{ $json.step_queue || null }}"
+            },
+            {
+              "fieldId": "completed_steps",
+              "fieldValue": "[]"
+            },
+            {
+              "fieldId": "current_step",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "completion_message",
+              "fieldValue": "={{ $json.completion_message || null }}"
+            },
+            {
+              "fieldId": "execution_result",
+              "fieldValue": "null"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        704,
+        352
+      ],
+      "id": "33f70ff8-6afa-4af7-a5e2-2ea0ae2a85c4",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.user_id }}",
+        "text": "={{ $json.agent_message }}\n\nReply with \"yes\" to confirm and \"no\" to deny.\n\nReference ID: {{ $json.id }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        944,
+        352
+      ],
+      "id": "f84967c5-ebca-404f-95e0-828407a3d688",
+      "name": "Send a text message",
+      "webhookId": "45538660-6377-475e-a8fd-1081edf97cb3",
+      "credentials": {
+        "telegramApi": {
+          "id": "5LcTaFrxMf6lEi05",
+          "name": "SUACRM_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nreturn [{\n  json: {\n    status: \"proposed\",\n    reference_id: input.id  // Supabase auto-generated UUID\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        352
+      ],
+      "id": "7351bfcb-c048-4645-9a71-17e87926f47e",
+      "name": "trim_message_output"
+    },
+    {
+      "parameters": {
+        "jsCode": "// FIELD NORMALIZER — PROPOSE ACTION sub-workflow\n// Position: after trigger receives agent fields, BEFORE Supabase insert\n\nconst raw = $json.fields || {};\nconst normalized = {};\nconst action = $json.action || '';\n\n// ─────────────────────────────────────────────────────\n// Helper: extract {id} from any representation\n// Accepts: \"5118344000000350001\"  →  {id: \"5118344000000350001\"}\n//          {id: \"...\", name: \"...\"} →  {id: \"...\"}\n//          {id: \"...\"}  →  {id: \"...\"}\n//          \"Alphabet Inc\"  →  null\n// ─────────────────────────────────────────────────────\nfunction toRelObj(val) {\n  if (!val) return null;\n  if (typeof val === 'object' && !Array.isArray(val) && val.id) {\n    const result = { id: String(val.id) };\n    if (val.name) result.name = String(val.name);\n    return result;\n  }\n  if (typeof val === 'string') {\n    const clean = val.trim();\n    if (/^\\d{15,20}$/.test(clean)) return { id: clean };\n    return null;\n  }\n  return null;\n}\n\n// ─────────────────────────────────────────────────────\n// Helper: extract display name string from any representation\n// Accepts: {id: \"...\", name: \"Alphabet Inc\"}  →  \"Alphabet Inc\"\n//          \"Alphabet Inc\"  →  \"Alphabet Inc\"\n//          \"5118344000000350001\"  →  null (pure ID rejected)\n// ─────────────────────────────────────────────────────\nfunction toDisplayName(val) {\n  if (!val) return null;\n  if (typeof val === 'object' && val.name) return String(val.name);\n  if (typeof val === 'string' && !/^\\d{15,20}$/.test(val.trim())) return val.trim();\n  return null;\n}\n\n// ─────────────────────────────────────────────────────\n// Primary display fields vary by action:\n// update_account  → Account_Name must be plain string\n// update_deal     → Deal_Name must be plain string\n// update_contact / update_lead → Last_Name must be plain string\n// All other actions → these are relationship {id} objects\n// ─────────────────────────────────────────────────────\nconst PRIMARY_DISPLAY_ACTIONS = {\n  'Account_Name': ['update_account'],\n  'Deal_Name':    ['update_deal'],\n  'Last_Name':    ['update_contact', 'update_lead'],\n};\n\n// ─────────────────────────────────────────────────────\n// Canonical key map: any alias → canonical key + transformer\n// ─────────────────────────────────────────────────────\nconst FIELD_RULES = {\n  // Relationship fields — must be {id:...} or null\n  \"Account_Name\":         { canon: \"Account_Name\",      fn: toRelObj },\n  \"Account_Name.id\":      { canon: \"Account_Name\",      fn: toRelObj },\n  \"account_name_id\":      { canon: \"Account_Name\",      fn: toRelObj },\n  \"Contact_Name\":         { canon: \"Contact_Name\",      fn: toRelObj },\n  \"Contact_Name.id\":      { canon: \"Contact_Name\",      fn: toRelObj },\n  \"contact_name_id\":      { canon: \"Contact_Name\",      fn: toRelObj },\n  \"Strategic_Partner\":    { canon: \"Strategic_Partner\", fn: toRelObj },\n  \"Strategic_Partner.id\": { canon: \"Strategic_Partner\", fn: toRelObj },\n  \"Owner\":                { canon: \"Owner\",             fn: toRelObj },\n  \"Owner.id\":             { canon: \"Owner\",             fn: toRelObj },\n  \"Who_Id\":               { canon: \"Who_Id\",            fn: toRelObj },\n  \"Who_Id.id\":            { canon: \"Who_Id\",            fn: toRelObj },\n  \"What_Id\":              { canon: \"What_Id\",           fn: toRelObj },\n  \"What_Id.id\":           { canon: \"What_Id\",           fn: toRelObj },\n  // Boolean fields\n  \"Listed_Company\":       { canon: \"Listed_Company\",    fn: (v) => v === true || v === \"true\" || v === \"True\" || v === 1 },\n  // Array fields\n  \"Service_Type\":         { canon: \"Service_Type\",      fn: (v) => Array.isArray(v) ? v : (v ? [v] : []) },\n};\n\n// ─────────────────────────────────────────────────────\n// Process each field the agent provided\n// ─────────────────────────────────────────────────────\nconst validationErrors = [];\n\nfor (const [rawKey, rawVal] of Object.entries(raw)) {\n  // Check if this field is a primary display field for this action\n  const displayActions = PRIMARY_DISPLAY_ACTIONS[rawKey];\n  if (displayActions && displayActions.includes(action)) {\n    // Extract plain string name instead of {id} object\n    const name = toDisplayName(rawVal);\n    if (name !== null) {\n      normalized[rawKey] = name;\n    } else {\n      validationErrors.push(`${rawKey}: could not extract display name from \"${JSON.stringify(rawVal)}\" — skipped`);\n    }\n    continue;\n  }\n\n  const rule = FIELD_RULES[rawKey];\n  if (rule) {\n    const result = rule.fn(rawVal);\n    if (result !== null && result !== undefined) {\n      normalized[rule.canon] = result;\n    } else if (rawKey.includes(\"Account_Name\") || rawKey.includes(\"Owner\")) {\n      validationErrors.push(`${rawKey}: \"${JSON.stringify(rawVal)}\" is not a valid Zoho ID — skipped`);\n    }\n  } else {\n    // Unknown key — pass through as-is\n    normalized[rawKey] = rawVal;\n  }\n}\n\n// ─────────────────────────────────────────────────────\n// OWNER VALIDATION — must always be present and valid\n// ─────────────────────────────────────────────────────\nconst VALID_OWNERS = [\n  \"5118344000000350001\",  // Manu\n  \"5118344000003068049\",  // Sparsh\n  \"5118344000003068001\",  // Pranay\n  \"5118344000004729073\",  // Devansh\n  \"5118344000003068065\",  // Vikas\n];\n\nif (normalized.Owner && !VALID_OWNERS.includes(normalized.Owner.id)) {\n  validationErrors.push(`Owner ID ${normalized.Owner.id} is not in the authorized owner list`);\n  delete normalized.Owner;\n}\n\nreturn [{ json: {\n  ...$json,\n  fields: normalized,\n  _validation_warnings: validationErrors\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        352
+      ],
+      "id": "5f2b406c-1692-4437-b036-191b8814d6c7",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "trim_message_output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "trim_message_output": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "a471d3b6-1c47-42e2-8799-5f7c81954d11",
+  "activeVersionId": "a471d3b6-1c47-42e2-8799-5f7c81954d11",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-28T06:42:44.937Z",
+      "createdAt": "2026-03-28T06:42:44.937Z",
+      "role": "workflow:owner",
+      "workflowId": "uLKFrXMM2GWucHjN",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-04-06T07:20:36.000Z",
+    "createdAt": "2026-04-06T07:20:19.787Z",
+    "versionId": "a471d3b6-1c47-42e2-8799-5f7c81954d11",
+    "workflowId": "uLKFrXMM2GWucHjN",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "action"
+              },
+              {
+                "name": "module"
+              },
+              {
+                "name": "record_id"
+              },
+              {
+                "name": "fields",
+                "type": "object"
+              },
+              {
+                "name": "notes"
+              },
+              {
+                "name": "user_id"
+              },
+              {
+                "name": "agent_confidence",
+                "type": "number"
+              },
+              {
+                "name": "agent_message"
+              },
+              {
+                "name": "step_queue"
+              }
+            ]
+          }
+        },
+        "id": "a1ab1ca0-f5f6-41e8-9354-9d7e025fb2bc",
+        "typeVersion": 1.1,
+        "name": "When Executed by Another Workflow",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "position": [
+          272,
+          352
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "crm_action_proposals",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "user_id",
+                "fieldValue": "={{ $json.user_id }}"
+              },
+              {
+                "fieldId": "action",
+                "fieldValue": "={{ $json.action }}"
+              },
+              {
+                "fieldId": "module",
+                "fieldValue": "={{ $json.module }}"
+              },
+              {
+                "fieldId": "record_id",
+                "fieldValue": "={{ $json.record_id }}"
+              },
+              {
+                "fieldId": "fields",
+                "fieldValue": "={{ $json.fields }}"
+              },
+              {
+                "fieldId": "notes",
+                "fieldValue": "={{ $json.notes }}"
+              },
+              {
+                "fieldId": "confirmed",
+                "fieldValue": "=false"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "=pending"
+              },
+              {
+                "fieldId": "agent_confidence",
+                "fieldValue": "={{ $json.agent_confidence }}"
+              },
+              {
+                "fieldId": "agent_message",
+                "fieldValue": "={{ $json.agent_message }}"
+              },
+              {
+                "fieldId": "created_at",
+                "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:mm') }}"
+              },
+              {
+                "fieldId": "step_queue",
+                "fieldValue": "={{ $json.step_queue || null }}"
+              },
+              {
+                "fieldId": "completed_steps",
+                "fieldValue": "[]"
+              },
+              {
+                "fieldId": "current_step",
+                "fieldValue": "0"
+              },
+              {
+                "fieldId": "completion_message",
+                "fieldValue": "={{ $json.completion_message || null }}"
+              },
+              {
+                "fieldId": "execution_result",
+                "fieldValue": "null"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          704,
+          352
+        ],
+        "id": "33f70ff8-6afa-4af7-a5e2-2ea0ae2a85c4",
+        "name": "Create a row",
+        "credentials": {
+          "supabaseApi": {
+            "id": "XtU0aykhI7HfjMZq",
+            "name": "CRM_agent"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('When Executed by Another Workflow').item.json.user_id }}",
+          "text": "={{ $json.agent_message }}\n\nReply with \"yes\" to confirm and \"no\" to deny.\n\nReference ID: {{ $json.id }}",
+          "additionalFields": {
+            "appendAttribution": false,
+            "parse_mode": "HTML"
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          944,
+          352
+        ],
+        "id": "f84967c5-ebca-404f-95e0-828407a3d688",
+        "name": "Send a text message",
+        "webhookId": "45538660-6377-475e-a8fd-1081edf97cb3",
+        "credentials": {
+          "telegramApi": {
+            "id": "5LcTaFrxMf6lEi05",
+            "name": "SUACRM_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $input.first().json;\n\nreturn [{\n  json: {\n    status: \"proposed\",\n    reference_id: input.id  // Supabase auto-generated UUID\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1184,
+          352
+        ],
+        "id": "7351bfcb-c048-4645-9a71-17e87926f47e",
+        "name": "trim_message_output"
+      },
+      {
+        "parameters": {
+          "jsCode": "// FIELD NORMALIZER — PROPOSE ACTION sub-workflow\n// Position: after trigger receives agent fields, BEFORE Supabase insert\n\nconst raw = $json.fields || {};\nconst normalized = {};\nconst action = $json.action || '';\n\n// ─────────────────────────────────────────────────────\n// Helper: extract {id} from any representation\n// Accepts: \"5118344000000350001\"  →  {id: \"5118344000000350001\"}\n//          {id: \"...\", name: \"...\"} →  {id: \"...\"}\n//          {id: \"...\"}  →  {id: \"...\"}\n//          \"Alphabet Inc\"  →  null\n// ─────────────────────────────────────────────────────\nfunction toRelObj(val) {\n  if (!val) return null;\n  if (typeof val === 'object' && !Array.isArray(val) && val.id) {\n    const result = { id: String(val.id) };\n    if (val.name) result.name = String(val.name);\n    return result;\n  }\n  if (typeof val === 'string') {\n    const clean = val.trim();\n    if (/^\\d{15,20}$/.test(clean)) return { id: clean };\n    return null;\n  }\n  return null;\n}\n\n// ─────────────────────────────────────────────────────\n// Helper: extract display name string from any representation\n// Accepts: {id: \"...\", name: \"Alphabet Inc\"}  →  \"Alphabet Inc\"\n//          \"Alphabet Inc\"  →  \"Alphabet Inc\"\n//          \"5118344000000350001\"  →  null (pure ID rejected)\n// ─────────────────────────────────────────────────────\nfunction toDisplayName(val) {\n  if (!val) return null;\n  if (typeof val === 'object' && val.name) return String(val.name);\n  if (typeof val === 'string' && !/^\\d{15,20}$/.test(val.trim())) return val.trim();\n  return null;\n}\n\n// ─────────────────────────────────────────────────────\n// Primary display fields vary by action:\n// update_account  → Account_Name must be plain string\n// update_deal     → Deal_Name must be plain string\n// update_contact / update_lead → Last_Name must be plain string\n// All other actions → these are relationship {id} objects\n// ─────────────────────────────────────────────────────\nconst PRIMARY_DISPLAY_ACTIONS = {\n  'Account_Name': ['update_account'],\n  'Deal_Name':    ['update_deal'],\n  'Last_Name':    ['update_contact', 'update_lead'],\n};\n\n// ─────────────────────────────────────────────────────\n// Canonical key map: any alias → canonical key + transformer\n// ─────────────────────────────────────────────────────\nconst FIELD_RULES = {\n  // Relationship fields — must be {id:...} or null\n  \"Account_Name\":         { canon: \"Account_Name\",      fn: toRelObj },\n  \"Account_Name.id\":      { canon: \"Account_Name\",      fn: toRelObj },\n  \"account_name_id\":      { canon: \"Account_Name\",      fn: toRelObj },\n  \"Contact_Name\":         { canon: \"Contact_Name\",      fn: toRelObj },\n  \"Contact_Name.id\":      { canon: \"Contact_Name\",      fn: toRelObj },\n  \"contact_name_id\":      { canon: \"Contact_Name\",      fn: toRelObj },\n  \"Strategic_Partner\":    { canon: \"Strategic_Partner\", fn: toRelObj },\n  \"Strategic_Partner.id\": { canon: \"Strategic_Partner\", fn: toRelObj },\n  \"Owner\":                { canon: \"Owner\",             fn: toRelObj },\n  \"Owner.id\":             { canon: \"Owner\",             fn: toRelObj },\n  \"Who_Id\":               { canon: \"Who_Id\",            fn: toRelObj },\n  \"Who_Id.id\":            { canon: \"Who_Id\",            fn: toRelObj },\n  \"What_Id\":              { canon: \"What_Id\",           fn: toRelObj },\n  \"What_Id.id\":           { canon: \"What_Id\",           fn: toRelObj },\n  // Boolean fields\n  \"Listed_Company\":       { canon: \"Listed_Company\",    fn: (v) => v === true || v === \"true\" || v === \"True\" || v === 1 },\n  // Array fields\n  \"Service_Type\":         { canon: \"Service_Type\",      fn: (v) => Array.isArray(v) ? v : (v ? [v] : []) },\n};\n\n// ─────────────────────────────────────────────────────\n// Process each field the agent provided\n// ─────────────────────────────────────────────────────\nconst validationErrors = [];\n\nfor (const [rawKey, rawVal] of Object.entries(raw)) {\n  // Check if this field is a primary display field for this action\n  const displayActions = PRIMARY_DISPLAY_ACTIONS[rawKey];\n  if (displayActions && displayActions.includes(action)) {\n    // Extract plain string name instead of {id} object\n    const name = toDisplayName(rawVal);\n    if (name !== null) {\n      normalized[rawKey] = name;\n    } else {\n      validationErrors.push(`${rawKey}: could not extract display name from \"${JSON.stringify(rawVal)}\" — skipped`);\n    }\n    continue;\n  }\n\n  const rule = FIELD_RULES[rawKey];\n  if (rule) {\n    const result = rule.fn(rawVal);\n    if (result !== null && result !== undefined) {\n      normalized[rule.canon] = result;\n    } else if (rawKey.includes(\"Account_Name\") || rawKey.includes(\"Owner\")) {\n      validationErrors.push(`${rawKey}: \"${JSON.stringify(rawVal)}\" is not a valid Zoho ID — skipped`);\n    }\n  } else {\n    // Unknown key — pass through as-is\n    normalized[rawKey] = rawVal;\n  }\n}\n\n// ─────────────────────────────────────────────────────\n// OWNER VALIDATION — must always be present and valid\n// ─────────────────────────────────────────────────────\nconst VALID_OWNERS = [\n  \"5118344000000350001\",  // Manu\n  \"5118344000003068049\",  // Sparsh\n  \"5118344000003068001\",  // Pranay\n  \"5118344000004729073\",  // Devansh\n  \"5118344000003068065\",  // Vikas\n];\n\nif (normalized.Owner && !VALID_OWNERS.includes(normalized.Owner.id)) {\n  validationErrors.push(`Owner ID ${normalized.Owner.id} is not in the authorized owner list`);\n  delete normalized.Owner;\n}\n\nreturn [{ json: {\n  ...$json,\n  fields: normalized,\n  _validation_warnings: validationErrors\n}}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          480,
+          352
+        ],
+        "id": "5f2b406c-1692-4437-b036-191b8814d6c7",
+        "name": "Code in JavaScript"
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create a row": {
+        "main": [
+          [
+            {
+              "node": "Send a text message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send a text message": {
+        "main": [
+          [
+            {
+              "node": "trim_message_output",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Create a row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "trim_message_output": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "authors": "Dev Scaleupally",
+    "name": "Version a471d3b6",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

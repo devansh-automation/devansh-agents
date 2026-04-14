@@ -1,0 +1,71 @@
+{
+  "updatedAt": "2026-04-03T07:25:12.238Z",
+  "createdAt": "2026-04-03T06:40:51.495Z",
+  "id": "9O4E4H85M116GXQy",
+  "name": "creds test",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1e5NejhrggmoND06Mo5f_0-B91McARjbv",
+          "mode": "list",
+          "cachedResultName": "Input resume",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1e5NejhrggmoND06Mo5f_0-B91McARjbv"
+        },
+        "event": "fileUpdated",
+        "options": {
+          "fileType": "application/vnd.google-apps.document"
+        }
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0b059993-0126-4022-84c9-5def42d51e8e",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "syaoqffBzia8JWgi",
+          "name": "Aarit_creds"
+        }
+      }
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "9d129ead-ebba-4441-82f7-1633359418ec",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-04-03T06:40:51.499Z",
+      "createdAt": "2026-04-03T06:40:51.499Z",
+      "role": "workflow:owner",
+      "workflowId": "9O4E4H85M116GXQy",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

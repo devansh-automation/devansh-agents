@@ -1,0 +1,687 @@
+{
+  "updatedAt": "2025-10-27T07:52:10.000Z",
+  "createdAt": "2025-10-27T07:45:11.331Z",
+  "id": "Nv4olYIl5jqmcbJz",
+  "name": "Set reminder for later",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "chat",
+              "type": "object"
+            },
+            {
+              "name": "property_id"
+            },
+            {
+              "name": "Remind_at "
+            },
+            {
+              "name": "remind_text"
+            }
+          ]
+        }
+      },
+      "id": "095d2b8e-a9c9-4fac-8dd1-7fd5e369c3f4",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -440,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "Reminders",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "send_to",
+              "fieldValue": "={{ $json.telegram_id }}"
+            },
+            {
+              "fieldId": "created_by",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.chat.json.Everything.message.from.id }}"
+            },
+            {
+              "fieldId": "remind_at",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json['Remind_at '] }}"
+            },
+            {
+              "fieldId": "reminder_text",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.remind_text }}"
+            },
+            {
+              "fieldId": "sent",
+              "fieldValue": "false"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        520,
+        360
+      ],
+      "id": "7a147e24-f3a8-4d12-9430-113790320606",
+      "name": "Create reminder row in database",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"status\": \"error\",\n  \"error_code\": \"TENANT_NOT_INVITED\",\n  \"message\": \"Tenant is not invited/onboarded on Telegram, reminders can be created for self(landlord) only.\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        560
+      ],
+      "id": "aadb863c-ef97-47ec-b57a-3dfaba82f0b5",
+      "name": "Terms, for no match"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "Lease_Parse_Output",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.property_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        480
+      ],
+      "id": "56578624-ba46-4973-84eb-57943b14c95e",
+      "name": "Get Property details",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "users",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_tenancy",
+              "keyValue": "={{ $json.tenant_invite_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        140,
+        480
+      ],
+      "id": "52725be5-532d-43ae-99d5-f4f64240d045",
+      "name": "Get Tenant ChatID",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "Reminders",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "send_to",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.chat.json.Everything.message?.chat.id || $('When Executed by Another Workflow').item.json.chat.json.Everything.callback_query.message.chat.id }}"
+            },
+            {
+              "fieldId": "remind_at",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json['Remind_at '] }}"
+            },
+            {
+              "fieldId": "reminder_text",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.remind_text }}"
+            },
+            {
+              "fieldId": "created_by",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.chat.json.Everything.message?.chat.id || $('When Executed by Another Workflow').item.json.chat.json.Everything.callback_query.message.chat.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "cf349d47-45e0-423f-a7fe-2808924e65b6",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d40df176-d101-490c-85c7-b9bba75ee081",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        300,
+        480
+      ],
+      "id": "a5f02117-5aed-448a-bfec-310a60de26f4",
+      "name": "If Tenant not found"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "44a326f7-d893-4f3d-b454-030c6efd8268",
+              "leftValue": "={{ $json.property_id.toString().toLowerCase().trim() }}",
+              "rightValue": "null",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -260,
+        180
+      ],
+      "id": "d1036633-7b6d-4346-8f78-df2c9c534be3",
+      "name": "If property_id is null"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "If property_id is null",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Property details": {
+      "main": [
+        [
+          {
+            "node": "Get Tenant ChatID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tenant ChatID": {
+      "main": [
+        [
+          {
+            "node": "If Tenant not found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Tenant not found": {
+      "main": [
+        [
+          {
+            "node": "Create reminder row in database",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Terms, for no match",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If property_id is null": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Property details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "d70b500c-c313-423e-abe8-0cdcf55e4088",
+  "activeVersionId": "d70b500c-c313-423e-abe8-0cdcf55e4088",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-27T07:45:11.335Z",
+      "createdAt": "2025-10-27T07:45:11.335Z",
+      "role": "workflow:owner",
+      "workflowId": "Nv4olYIl5jqmcbJz",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-23T06:05:26.474Z",
+    "createdAt": "2025-12-23T06:05:26.474Z",
+    "versionId": "d70b500c-c313-423e-abe8-0cdcf55e4088",
+    "workflowId": "Nv4olYIl5jqmcbJz",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "chat",
+                "type": "object"
+              },
+              {
+                "name": "property_id"
+              },
+              {
+                "name": "Remind_at "
+              },
+              {
+                "name": "remind_text"
+              }
+            ]
+          }
+        },
+        "id": "095d2b8e-a9c9-4fac-8dd1-7fd5e369c3f4",
+        "typeVersion": 1.1,
+        "name": "When Executed by Another Workflow",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "position": [
+          -440,
+          180
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "Reminders",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "send_to",
+                "fieldValue": "={{ $json.telegram_id }}"
+              },
+              {
+                "fieldId": "created_by",
+                "fieldValue": "={{ $('When Executed by Another Workflow').item.json.chat.json.Everything.message.from.id }}"
+              },
+              {
+                "fieldId": "remind_at",
+                "fieldValue": "={{ $('When Executed by Another Workflow').item.json['Remind_at '] }}"
+              },
+              {
+                "fieldId": "reminder_text",
+                "fieldValue": "={{ $('When Executed by Another Workflow').item.json.remind_text }}"
+              },
+              {
+                "fieldId": "sent",
+                "fieldValue": "false"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          520,
+          360
+        ],
+        "id": "7a147e24-f3a8-4d12-9430-113790320606",
+        "name": "Create reminder row in database",
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "{\n  \"status\": \"error\",\n  \"error_code\": \"TENANT_NOT_INVITED\",\n  \"message\": \"Tenant is not invited/onboarded on Telegram, reminders can be created for self(landlord) only.\"\n}\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          560,
+          560
+        ],
+        "id": "aadb863c-ef97-47ec-b57a-3dfaba82f0b5",
+        "name": "Terms, for no match"
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "Lease_Parse_Output",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "keyValue": "={{ $json.property_id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -40,
+          480
+        ],
+        "id": "56578624-ba46-4973-84eb-57943b14c95e",
+        "name": "Get Property details",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "users",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "tenant_tenancy",
+                "keyValue": "={{ $json.tenant_invite_id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          140,
+          480
+        ],
+        "id": "52725be5-532d-43ae-99d5-f4f64240d045",
+        "name": "Get Tenant ChatID",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "Reminders",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "send_to",
+                "fieldValue": "={{ $('When Executed by Another Workflow').item.json.chat.json.Everything.message?.chat.id || $('When Executed by Another Workflow').item.json.chat.json.Everything.callback_query.message.chat.id }}"
+              },
+              {
+                "fieldId": "remind_at",
+                "fieldValue": "={{ $('When Executed by Another Workflow').item.json['Remind_at '] }}"
+              },
+              {
+                "fieldId": "reminder_text",
+                "fieldValue": "={{ $('When Executed by Another Workflow').item.json.remind_text }}"
+              },
+              {
+                "fieldId": "created_by",
+                "fieldValue": "={{ $('When Executed by Another Workflow').item.json.chat.json.Everything.message?.chat.id || $('When Executed by Another Workflow').item.json.chat.json.Everything.callback_query.message.chat.id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "cf349d47-45e0-423f-a7fe-2808924e65b6",
+        "name": "Create a row",
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "d40df176-d101-490c-85c7-b9bba75ee081",
+                "leftValue": "={{ $json }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "object",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          300,
+          480
+        ],
+        "id": "a5f02117-5aed-448a-bfec-310a60de26f4",
+        "name": "If Tenant not found"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "44a326f7-d893-4f3d-b454-030c6efd8268",
+                "leftValue": "={{ $json.property_id.toString().toLowerCase().trim() }}",
+                "rightValue": "null",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -260,
+          180
+        ],
+        "id": "d1036633-7b6d-4346-8f78-df2c9c534be3",
+        "name": "If property_id is null"
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "If property_id is null",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Property details": {
+        "main": [
+          [
+            {
+              "node": "Get Tenant ChatID",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Tenant ChatID": {
+        "main": [
+          [
+            {
+              "node": "If Tenant not found",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Tenant not found": {
+        "main": [
+          [
+            {
+              "node": "Create reminder row in database",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Terms, for no match",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If property_id is null": {
+        "main": [
+          [
+            {
+              "node": "Create a row",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Get Property details",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

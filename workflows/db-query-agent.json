@@ -1,0 +1,226 @@
+{
+  "updatedAt": "2026-03-17T13:07:40.576Z",
+  "createdAt": "2026-03-07T08:48:42.422Z",
+  "id": "e1zX48QMC8rNPXxb",
+  "name": "DB Query Agent",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -176,
+        -64
+      ],
+      "id": "5e9ed2ad-7373-4183-802f-4aec9c1ff4e5",
+      "name": "When chat message received",
+      "webhookId": "35995bdd-e9e9-49e4-a459-1aa1e1f76738"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=You are an AI assistant that answers user questions using data stored in a SQL database.\n\nYour task is to convert the user’s question into a SQL query, execute it on the database, and return a clear and accurate answer based on the results.\n\nYou must follow the process below.\n\nStep 1 — Understand the Database Schema\n\nBefore writing any SQL query, you must call the tool:\n\n\"Get tables, schemas, columns, and foreign keys\"\n\nUse this information to understand:\n\navailable tables\n\ncolumn names\n\nrelationships between tables\n\nforeign key references\n\nYou must only use tables and columns that exist in the schema.\n\nStep 2 — Determine Relevant Tables\n\nIdentify the tables required to answer the user's question.\n\nIf multiple tables are involved, construct JOIN statements using the correct foreign key relationships.\n\nPrefer a single well-structured SQL query rather than multiple queries whenever possible.\n\nStep 3 — Validate Filter Values\n\nIf the query requires filtering using a WHERE clause:\n\nRun SELECT DISTINCT queries (LIMIT 100) on the relevant columns first to discover valid values.\n\nVerify that any user-provided value actually exists in the database.\n\nIf the value does not exist, return a response explaining that the value is not present in the dataset.\n\nDo NOT run SELECT DISTINCT on ID columns.\n\nStep 4 — Construct the SQL Query\n\nWhen writing SQL queries:\n\nOnly generate read-only queries\n\nNever run:\nDELETE\nUPDATE\nINSERT\nALTER\nDROP\nTRUNCATE\n\nFollow these guidelines:\n\nUse explicit column names instead of SELECT * when possible.\n\nApply appropriate filters.\n\nUse JOINs where required.\n\nAdd LIMIT when returning large result sets.\n\nEnsure the query is syntactically valid.\n\nStep 5 — Execute the Query\n\nExecute the SQL query using the database execution tool. All the queries should be executed on the database name \"sua_ecom_db\"\n\nIf the query returns no results:\n\nExplain that no matching data was found.\n\nStep 6 — Generate the Final Answer\n\nInterpret the query results and provide a clear response to the user.\n\nThe response should:\n\ndirectly answer the user’s question\n\nsummarize the relevant data\n\navoid exposing raw SQL unless necessary\n\npresent results in a readable format\n\nImportant Rules\n\nAll queries must use tables from the database sua_ecom_db.\n\nAlways inspect the schema before querying.\n\nAlways respect foreign key relationships when joining tables.\n\nNever assume column names or table names.\n\nNever perform write operations on the database.\n\nAlways verify filter values before applying them."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        32,
+        -64
+      ],
+      "id": "ec82bbaa-b2fb-4129-b01a-c28fa20cf1d0",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "o4-mini",
+          "mode": "list",
+          "cachedResultName": "o4-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -112,
+        144
+      ],
+      "id": "943f0688-e471-4e2d-a788-f46353fe3a2a",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        64,
+        176
+      ],
+      "id": "6913d780-bc2d-4030-80df-939adb03d7b5",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "cKfHo7hGYNqVB8iU",
+          "cachedResultName": "db-agent-sub-workflow-table-schema"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "name"
+          ],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        176
+      ],
+      "id": "670396e0-5b4a-445d-99db-fefa2b8ad09d",
+      "name": "Call 'db-agent-sub-workflow-table-schema'"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Execute a SQL query in MySQL",
+        "operation": "executeQuery",
+        "query": "{{$json[\"query\"]}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySqlTool",
+      "typeVersion": 2.5,
+      "position": [
+        416,
+        160
+      ],
+      "id": "853daee3-e11e-4da6-9eae-201ba2ac8baf",
+      "name": "Execute a SQL query in MySQL",
+      "credentials": {
+        "mySql": {
+          "id": "ox1WKyhWm7SCMGcB",
+          "name": "Scaleup Dev DB User: Read-Only"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'db-agent-sub-workflow-table-schema'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query in MySQL": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "c60a10ea-7ae0-4e03-8186-72897e6f26b9",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-07T08:48:42.426Z",
+      "createdAt": "2026-03-07T08:48:42.426Z",
+      "role": "workflow:owner",
+      "workflowId": "e1zX48QMC8rNPXxb",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [
+    {
+      "updatedAt": "2026-03-07T08:48:56.096Z",
+      "createdAt": "2026-03-07T08:48:56.096Z",
+      "id": "VoNjG541wq5KL1Eh",
+      "name": "DB-based"
+    }
+  ]
+}

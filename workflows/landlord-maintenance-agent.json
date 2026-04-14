@@ -1,0 +1,792 @@
+{
+  "updatedAt": "2025-10-27T06:37:52.000Z",
+  "createdAt": "2025-10-27T06:36:15.411Z",
+  "id": "Ga5uAcFVLnzhVU0l",
+  "name": "Landlord Maintenance Agent",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "landlord_id",
+              "type": "number"
+            },
+            {
+              "name": "description"
+            },
+            {
+              "name": "tenancy_id",
+              "type": "number"
+            },
+            {
+              "name": "tenant_id",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "id": "41eb9895-48a4-4c61-bd60-fb17f9d96bc8",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -660,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.description }}",
+        "options": {
+          "systemMessage": "=You are a Maintenance manager.\n---\n## Your Tasks\n- Search or create new maintenance tickets.\n- Search or update maintenance updates.\n- When you log/update a maintenance ticket or an update.\n\nAvailable columns in ticket's table for filters: `id, raised_by, issue_description, category, status, is_urgent, created_at, resolved_at`\n\nFlow example:\nmessage: create new ticket; [issue]\naction; create a new ticket with given details, and output a final status method(e.g. ticket created!)\n\nMUST FOLLOW RULES:\n- Try to proceed without requesting any further details.\n- Use PostgREST syntax with `ilike` or pattern matching.\n    Example: `Name=ilike.*Haylee*` instead of `Name=eq.Haylee` when accessing details like issue_description not dates or ids."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        180
+      ],
+      "id": "3fc2fbe3-afdf-4185-9a40-3f5862d6becb",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4d27f18a-95d4-4d9b-bc8d-4e72b23dd0f1",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Only call when require more details about the property, or need to search for properties.\n\nCalling this function is discouranged except rare scenarios.",
+        "operation": "getAll",
+        "tableId": "Lease_Parse_Output",
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}",
+        "filterType": "string",
+        "filterString": "=landlord_telegram_id=eq.{{ $json.tenancy_id }}&{{ $fromAI('Filters__String_', `Use PostgREST filter, separated by \"&\" and available columns are: \"id, tenant_name(only full text search), landlord_name(only full text search), address(only full text search)\"`, 'string') || '' }}"
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        -440,
+        580
+      ],
+      "id": "940ab65b-7652-4efa-8596-cd78efc66bf3",
+      "name": "Lease Database",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Call this tool when you need to read/search tickets created by a particular landlord\n\nAvailable columns: `raised_by`(landlord or tenant enum), `issue_description`, `category`, `status`, `is_urgent`, `created_at`, `resolved_at`.\n\nMust use postgREST filter(each filter separated by &)\ne.g. `raised_by=eq.landlord&status=open`(without backticks)",
+        "operation": "getAll",
+        "tableId": "property_tickets",
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}",
+        "filterType": "string",
+        "filterString": "=landlord_id=eq.{{ $json.landlord_id }}&{{ $fromAI('Filters__String_', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        -280,
+        640
+      ],
+      "id": "2b804a6f-80cf-4e3f-b8f4-199b28198cdb",
+      "name": "Get tickets from Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to create a ticket related to maintenance",
+        "tableId": "property_tickets",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "property_id",
+              "fieldValue": "={{ $json.tenancy_id }}"
+            },
+            {
+              "fieldId": "landlord_id",
+              "fieldValue": "={{ $json.landlord_id }}"
+            },
+            {
+              "fieldId": "raised_by",
+              "fieldValue": "landlord"
+            },
+            {
+              "fieldId": "issue_description",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues3_Field_Value', `If there needs to be a ticket created, the description of the issue should be stored here.`, 'string') }}"
+            },
+            {
+              "fieldId": "category",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues4_Field_Value', `Available categories:\n“Plumbing, HVAC, Appliance, Locks/Security, Mould, Other”\nNOTHING ELSE ALLOWED`, 'string') }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "open"
+            },
+            {
+              "fieldId": "is_urgent",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues6_Field_Value', `If the ticket is stated urgent as per user.`, 'string') }}"
+            },
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $json.tenant_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        640
+      ],
+      "id": "23988319-5b74-434b-b100-15ededc4450d",
+      "name": "Create maintenance ticket",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "property_tickets",
+        "filterType": "string",
+        "filterString": "={{ $fromAI('Filters__String_', `The columns that you can update are \nstatus - It is the status of tickets.\nis_urgent - refers whether the status is urgent or not.\nresolved_at - refers to the time when the task was resolved.`, 'string') }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues0_Field_Value', `Status can be input in 4 categories: open, in_progress, resolved, closed.`, 'string') }}"
+            },
+            {
+              "fieldId": "is_urgent",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues1_Field_Value', `Is boolean so return true/false.`, 'string') }}"
+            },
+            {
+              "fieldId": "resolved_at",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues2_Field_Value', `Is in timestamp format.`, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        140,
+        640
+      ],
+      "id": "88443623-4da3-49c0-b3b9-4d96b3b1b856",
+      "name": "Update maintenance tickets",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to create ticket updates when there's a news/update on a particular ticket.\ne.g. vendor arrived at property, landord will take care of the ticket later.",
+        "tableId": "ticket_updates",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "ticket_id",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues0_Field_Value', `pull the ticket_id from the 'get tickets from Supabase'. It is the id column in the Supabase.`, 'string') }}"
+            },
+            {
+              "fieldId": "logged_by",
+              "fieldValue": "Landlord"
+            },
+            {
+              "fieldId": "description",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues2_Field_Value', `Description of the ticket update, is in the string format.`, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        460,
+        560
+      ],
+      "id": "628a2b64-23b6-44d2-936e-112a79ccbfab",
+      "name": "create ticket_updates",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Call this tool to get data related to ticket updates.",
+        "operation": "getAll",
+        "tableId": "ticket_updates",
+        "filterType": "string",
+        "filterString": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Filters__String_', `Available Filters:\nticket_id - This is a must to have filter. NO REQUESTS ARE ALLOWED WITHOUT IT.\ndescription - for text search only.\ncreated_at - datetime of update on ticket.`, 'string') }}"
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        600,
+        420
+      ],
+      "id": "3a7f7870-24a8-4894-8177-b2b5e465ce24",
+      "name": "Get ticket_updates",
+      "credentials": {
+        "supabaseApi": {
+          "id": "rsZ1TuOE3J9fd6xE",
+          "name": "Scaleupally_Kove"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lease Database": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get tickets from Supabase": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create maintenance ticket": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update maintenance tickets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create ticket_updates": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get ticket_updates": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "landlord_id": 979280586,
+          "description": "are there any tickets about faucet?",
+          "tenancy_id": 35,
+          "tenant_id": 0
+        }
+      }
+    ]
+  },
+  "versionId": "5361c259-712a-465d-8952-3e9668319fa1",
+  "activeVersionId": "5361c259-712a-465d-8952-3e9668319fa1",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-27T06:36:15.415Z",
+      "createdAt": "2025-10-27T06:36:15.415Z",
+      "role": "workflow:owner",
+      "workflowId": "Ga5uAcFVLnzhVU0l",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-23T06:05:26.474Z",
+    "createdAt": "2025-12-23T06:05:26.474Z",
+    "versionId": "5361c259-712a-465d-8952-3e9668319fa1",
+    "workflowId": "Ga5uAcFVLnzhVU0l",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "landlord_id",
+                "type": "number"
+              },
+              {
+                "name": "description"
+              },
+              {
+                "name": "tenancy_id",
+                "type": "number"
+              },
+              {
+                "name": "tenant_id",
+                "type": "number"
+              }
+            ]
+          }
+        },
+        "id": "41eb9895-48a4-4c61-bd60-fb17f9d96bc8",
+        "typeVersion": 1.1,
+        "name": "When Executed by Another Workflow",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "position": [
+          -660,
+          180
+        ]
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $json.description }}",
+          "options": {
+            "systemMessage": "=You are a Maintenance manager.\n---\n## Your Tasks\n- Search or create new maintenance tickets.\n- Search or update maintenance updates.\n- When you log/update a maintenance ticket or an update.\n\nAvailable columns in ticket's table for filters: `id, raised_by, issue_description, category, status, is_urgent, created_at, resolved_at`\n\nFlow example:\nmessage: create new ticket; [issue]\naction; create a new ticket with given details, and output a final status method(e.g. ticket created!)\n\nMUST FOLLOW RULES:\n- Try to proceed without requesting any further details.\n- Use PostgREST syntax with `ilike` or pattern matching.\n    Example: `Name=ilike.*Haylee*` instead of `Name=eq.Haylee` when accessing details like issue_description not dates or ids."
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 2,
+        "position": [
+          -100,
+          180
+        ],
+        "id": "3fc2fbe3-afdf-4185-9a40-3f5862d6becb",
+        "name": "AI Agent"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-5-mini",
+            "mode": "list",
+            "cachedResultName": "gpt-5-mini"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "id": "4d27f18a-95d4-4d9b-bc8d-4e72b23dd0f1",
+        "name": "OpenAI Chat Model",
+        "credentials": {
+          "openAiApi": {
+            "id": "2SN6l7TZaVixYAzM",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "descriptionType": "manual",
+          "toolDescription": "Only call when require more details about the property, or need to search for properties.\n\nCalling this function is discouranged except rare scenarios.",
+          "operation": "getAll",
+          "tableId": "Lease_Parse_Output",
+          "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}",
+          "filterType": "string",
+          "filterString": "=landlord_telegram_id=eq.{{ $json.tenancy_id }}&{{ $fromAI('Filters__String_', `Use PostgREST filter, separated by \"&\" and available columns are: \"id, tenant_name(only full text search), landlord_name(only full text search), address(only full text search)\"`, 'string') || '' }}"
+        },
+        "type": "n8n-nodes-base.supabaseTool",
+        "typeVersion": 1,
+        "position": [
+          -440,
+          580
+        ],
+        "id": "940ab65b-7652-4efa-8596-cd78efc66bf3",
+        "name": "Lease Database",
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "descriptionType": "manual",
+          "toolDescription": "Call this tool when you need to read/search tickets created by a particular landlord\n\nAvailable columns: `raised_by`(landlord or tenant enum), `issue_description`, `category`, `status`, `is_urgent`, `created_at`, `resolved_at`.\n\nMust use postgREST filter(each filter separated by &)\ne.g. `raised_by=eq.landlord&status=open`(without backticks)",
+          "operation": "getAll",
+          "tableId": "property_tickets",
+          "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}",
+          "filterType": "string",
+          "filterString": "=landlord_id=eq.{{ $json.landlord_id }}&{{ $fromAI('Filters__String_', ``, 'string') }}"
+        },
+        "type": "n8n-nodes-base.supabaseTool",
+        "typeVersion": 1,
+        "position": [
+          -280,
+          640
+        ],
+        "id": "2b804a6f-80cf-4e3f-b8f4-199b28198cdb",
+        "name": "Get tickets from Supabase",
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "descriptionType": "manual",
+          "toolDescription": "Use this tool to create a ticket related to maintenance",
+          "tableId": "property_tickets",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "property_id",
+                "fieldValue": "={{ $json.tenancy_id }}"
+              },
+              {
+                "fieldId": "landlord_id",
+                "fieldValue": "={{ $json.landlord_id }}"
+              },
+              {
+                "fieldId": "raised_by",
+                "fieldValue": "landlord"
+              },
+              {
+                "fieldId": "issue_description",
+                "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues3_Field_Value', `If there needs to be a ticket created, the description of the issue should be stored here.`, 'string') }}"
+              },
+              {
+                "fieldId": "category",
+                "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues4_Field_Value', `Available categories:\n“Plumbing, HVAC, Appliance, Locks/Security, Mould, Other”\nNOTHING ELSE ALLOWED`, 'string') }}"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "open"
+              },
+              {
+                "fieldId": "is_urgent",
+                "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues6_Field_Value', `If the ticket is stated urgent as per user.`, 'string') }}"
+              },
+              {
+                "fieldId": "tenant_id",
+                "fieldValue": "={{ $json.tenant_id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabaseTool",
+        "typeVersion": 1,
+        "position": [
+          -40,
+          640
+        ],
+        "id": "23988319-5b74-434b-b100-15ededc4450d",
+        "name": "Create maintenance ticket",
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "property_tickets",
+          "filterType": "string",
+          "filterString": "={{ $fromAI('Filters__String_', `The columns that you can update are \nstatus - It is the status of tickets.\nis_urgent - refers whether the status is urgent or not.\nresolved_at - refers to the time when the task was resolved.`, 'string') }}",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status",
+                "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues0_Field_Value', `Status can be input in 4 categories: open, in_progress, resolved, closed.`, 'string') }}"
+              },
+              {
+                "fieldId": "is_urgent",
+                "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues1_Field_Value', `Is boolean so return true/false.`, 'string') }}"
+              },
+              {
+                "fieldId": "resolved_at",
+                "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues2_Field_Value', `Is in timestamp format.`, 'string') }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabaseTool",
+        "typeVersion": 1,
+        "position": [
+          140,
+          640
+        ],
+        "id": "88443623-4da3-49c0-b3b9-4d96b3b1b856",
+        "name": "Update maintenance tickets",
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "descriptionType": "manual",
+          "toolDescription": "Use this tool to create ticket updates when there's a news/update on a particular ticket.\ne.g. vendor arrived at property, landord will take care of the ticket later.",
+          "tableId": "ticket_updates",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "ticket_id",
+                "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues0_Field_Value', `pull the ticket_id from the 'get tickets from Supabase'. It is the id column in the Supabase.`, 'string') }}"
+              },
+              {
+                "fieldId": "logged_by",
+                "fieldValue": "Landlord"
+              },
+              {
+                "fieldId": "description",
+                "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues2_Field_Value', `Description of the ticket update, is in the string format.`, 'string') }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabaseTool",
+        "typeVersion": 1,
+        "position": [
+          460,
+          560
+        ],
+        "id": "628a2b64-23b6-44d2-936e-112a79ccbfab",
+        "name": "create ticket_updates",
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "descriptionType": "manual",
+          "toolDescription": "Call this tool to get data related to ticket updates.",
+          "operation": "getAll",
+          "tableId": "ticket_updates",
+          "filterType": "string",
+          "filterString": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Filters__String_', `Available Filters:\nticket_id - This is a must to have filter. NO REQUESTS ARE ALLOWED WITHOUT IT.\ndescription - for text search only.\ncreated_at - datetime of update on ticket.`, 'string') }}"
+        },
+        "type": "n8n-nodes-base.supabaseTool",
+        "typeVersion": 1,
+        "position": [
+          600,
+          420
+        ],
+        "id": "3a7f7870-24a8-4894-8177-b2b5e465ce24",
+        "name": "Get ticket_updates",
+        "credentials": {
+          "supabaseApi": {
+            "id": "rsZ1TuOE3J9fd6xE",
+            "name": "Scaleupally_Kove"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Lease Database": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get tickets from Supabase": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create maintenance ticket": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update maintenance tickets": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "create ticket_updates": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get ticket_updates": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

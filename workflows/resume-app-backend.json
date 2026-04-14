@@ -1,0 +1,2873 @@
+{
+  "updatedAt": "2026-04-01T11:31:26.445Z",
+  "createdAt": "2026-03-23T07:16:56.111Z",
+  "id": "Zinia9sYTgMvpkn0",
+  "name": "resume app backend",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "resume_agent",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -272,
+        1104
+      ],
+      "id": "45e89c00-dddc-4d1d-9072-7d1864693009",
+      "name": "Webhook",
+      "webhookId": "cf7fd5d4-9a46-4f90-a12f-e7892817bd13"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"reply\": \"{{ $json.reply }}\",\n  \"doc_url\": null,\n  \"stage\": \"chat\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        752,
+        1520
+      ],
+      "id": "c70bf0b4-06d7-4d05-8afd-1622dd06af73",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "PROCESS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e214478b-f2c6-4896-902d-aa201b0d4a43"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "process_branch"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2a30edfb-0cc3-4eae-9c58-b493e30f2358",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "REVISE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "revise_branch"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b9cac7dd-5807-4cef-8c4a-7d4ec981fb3f",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "CREATE_DOC",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "create_branch"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "86de8df3-417d-4518-bb60-ace9b32eda84",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "chat_branch"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        528,
+        1072
+      ],
+      "id": "d6f8280b-8807-47b0-b4e8-e10f70ef5bc4",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.resume_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        752,
+        608
+      ],
+      "id": "798ecbb5-8e2a-4399-84f7-8570b4f3ca86",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        608
+      ],
+      "id": "77f98515-8a86-46e4-9481-3334efde54db",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst raw = $json.output;\nconst d = JSON.parse(raw);\n\nconst skillRows = [];\nfor (let i = 1; i <= 6; i++) {\n  if (d[`SKILL_CATEGORY_${i}`]) {\n    skillRows.push(`**${d[`SKILL_CATEGORY_${i}`]}:** ${d[`SKILL_CONTENT_${i}`]}`);\n  }\n}\n\nconst projectBlocks = [];\nfor (let i = 1; i <= 6; i++) {\n  if (d[`PROJECT_TITLE_${i}`]) {\n    projectBlocks.push(\n      `### Project ${i}: ${d[`PROJECT_TITLE_${i}`]}\\n` +\n      `${d[`PROJECT_DESCRIPTION_${i}`]}\\n\\n` +\n      `**Responsibilities:**\\n${d[`PROJECT_RESPONSIBILITIES_${i}`]}\\n\\n` +\n      `**Tech Stack:** ${d[`PROJECT_TECHSTACK_${i}`]}`\n    );\n  }\n}\n\nconst eduRows = [];\nfor (let i = 1; i <= 2; i++) {\n  if (d[`EDUCATION_DEGREE_${i}`]) {\n    eduRows.push(`- ${d[`EDUCATION_DEGREE_${i}`]} — ${d[`EDUCATION_INSTITUTE_${i}`]} (${d[`EDUCATION_YEAR_${i}`]})`);\n  }\n}\n\nconst preview = [\n  `## 👤 ${d.CANDIDATE_NAME} — ${d.CANDIDATE_ROLE}`,\n  `---`,\n  `### Professional Summary`,\n  d.PROFESSIONAL_SUMMARY,\n  `---`,\n  `### Skills`,\n  skillRows.join('\\n'),\n  `---`,\n  `### Projects`,\n  projectBlocks.join('\\n\\n---\\n'),\n  `---`,\n  `### Education`,\n  eduRows.join('\\n')\n].join('\\n\\n');\n\nreturn [{ json: { \n  fields: d,\n  preview: preview + \"\\n\\n---\\n\\nHere's the formatted content! Please review each section. You can ask me to make changes — for example: *'Make the summary more concise'* or *'Add Django to Project 2's tech stack'*. When you're happy, just say **'Looks good'** and I'll create the Google Doc.\",\n  raw_resume_text: $('Extract from File').item.json.text\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2128,
+        464
+      ],
+      "id": "bb1747ac-c6c6-4d7c-9ff0-4920d83a4bbe",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{JSON.stringify({\n  reply: $json.preview,\n  fields: $json.fields,\n  raw_resume_text: $json.raw_resume_text,\n  stage: \"preview\",\n  doc_url: null\n})}}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2352,
+        688
+      ],
+      "id": "f01201db-0ae8-44a6-9faf-c9db22bc35c2",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst raw = $json.output;\nconst d = JSON.parse(raw);\n\nconst skillRows = [];\nfor (let i = 1; i <= 6; i++) {\n  if (d[`SKILL_CATEGORY_${i}`]) {\n    skillRows.push(`**${d[`SKILL_CATEGORY_${i}`]}:** ${d[`SKILL_CONTENT_${i}`]}`);\n  }\n}\n\nconst projectBlocks = [];\nfor (let i = 1; i <= 6; i++) {\n  if (d[`PROJECT_TITLE_${i}`]) {\n    projectBlocks.push(\n      `### Project ${i}: ${d[`PROJECT_TITLE_${i}`]}\\n` +\n      `${d[`PROJECT_DESCRIPTION_${i}`]}\\n\\n` +\n      `**Responsibilities:**\\n${d[`PROJECT_RESPONSIBILITIES_${i}`]}\\n\\n` +\n      `**Tech Stack:** ${d[`PROJECT_TECHSTACK_${i}`]}`\n    );\n  }\n}\n\nconst eduRows = [];\nfor (let i = 1; i <= 2; i++) {\n  if (d[`EDUCATION_DEGREE_${i}`]) {\n    eduRows.push(`- ${d[`EDUCATION_DEGREE_${i}`]} — ${d[`EDUCATION_INSTITUTE_${i}`]} (${d[`EDUCATION_YEAR_${i}`]})`);\n  }\n}\n\nconst preview = [\n  `## 👤 ${d.CANDIDATE_NAME} — ${d.CANDIDATE_ROLE}`,\n  `---`,\n  `### Professional Summary`,\n  d.PROFESSIONAL_SUMMARY,\n  `---`,\n  `### Skills`,\n  skillRows.join('\\n'),\n  `---`,\n  `### Projects`,\n  projectBlocks.join('\\n\\n---\\n'),\n  `---`,\n  `### Education`,\n  eduRows.join('\\n')\n].join('\\n\\n');\n\nreturn { json: { \n  fields: d,\n  preview: preview + \"\\n\\n---\\n\\nHere's the formatted content! Please review each section. You can ask me to make changes — for example: *'Make the summary more concise'* or *'Add Django to Project 2's tech stack'*. When you're happy, just say **'Looks good'** and I'll create the Google Doc.\"\n}};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2128,
+        896
+      ],
+      "id": "62485229-9d94-4690-9390-125b8247f96d",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the incoming data from the chat app:\n\nMessage: {{ $json.body.message }}\nFile URL: {{ $json.body.file_url }}\nFile Type: {{ $json.body.file_type }}\nApproved Fields (if in revision stage): {{ $json.body.approved_fields }}\n\nConversation history so far:\nHistory as of now - {{ JSON.stringify($json.body.history) }}",
+        "options": {
+          "systemMessage": "=You are Resu, the ScaleupAlly Resume Formatter Agent 🤝\nYou help the ScaleupAlly team quickly reformat candidate resumes into the company's polished standard template.\nYou're sharp, warm, and efficient — like a great colleague who just happens to be really good at this.\n\nYou receive messages from team members through a chat interface. Your job is to read the conversation,\nfigure out where things stand, and move things forward naturally — like you're actually paying attention.\n\n---\n\nWHAT YOU'RE GATHERING (in this general order — but stay flexible):\n1. resume_url — a PDF link (you can't do anything without this)\n2. job_description — the JD for the role they're hiring for (nice to have, ask once, can be optional)\n3. highlight_areas — anything to push forward or dial back in the resume (ask once, totally optional)\n\n---\n\nHOW TO HANDLE EACH SITUATION:\n\n→ No resume shared yet?\n   action: NEED_RESUME\n   Be welcoming. Let them know you're ready when they are.\n   Example vibe: \"Hey! Drop the candidate's resume PDF whenever you're ready and we'll get started 🚀\"\n\n→ A new file_url appears in the current message AND no JD exists \n  anywhere in the conversation history?\n   action: NEED_JD\n   Acknowledge the upload with energy, then ask naturally — don't make it feel like a form.\n   Do NOT say \"Got the resume\" or confirm it's a resume.\n   Just acknowledge a file was received and ask for the JD neutrally.\n   Example vibe: \"Got your file! Before I process it — do you have a JD for the role? \n   Paste it here and I'll tailor the output. You can also add any focus areas or just \n   type 'skip' to proceed as-is.\"\n\n→ Resume exists AND user has explicitly pasted actual JD text (job title, \n  requirements, responsibilities etc.) in any message in the history?\n   action: PROCESS\n   Extract that JD from history and use it.\n   Example vibe: \"Perfect, got the JD too — give me a moment ✨\"\n\n→ Resume exists AND user explicitly said \"skip\", \"no jd\", \"proceed without\", \n  \"go ahead without it\"?\n   action: PROCESS\n   Proceed without JD.\n   Example vibe: \"Got it, rolling without a JD — give me a sec ✨\"\n\n→ A new file_url appears in the current message AND a JD was already shared \n  earlier in the conversation history (even alongside a previously rejected PDF)?\n   action: PROCESS\n   Do NOT ask for JD again. Extract it from history and use it directly.\n   Example vibe: \"Got it — I already have your JD, processing now ✨\"\n\n→ A preview has already been shared (approved_fields is not null) AND user wants a change?\n   action: REVISE\n   Be responsive and specific. Acknowledge what they want changed.\n   Example vibe: \"On it — let me tighten that up for you.\"\n\n→ User is just chatting, asking something general, or saying hi?\n   action: CHAT\n   Be human. Respond naturally and briefly. Don't over-explain.\n\n→ A preview has been shared (approved_fields is not null) AND the user is \n  explicitly approving the document with clear intent — saying things like \n  \"looks good\", \"approved\", \"go ahead\", \"create it\", \"yes\", \"perfect\", \n  \"thank you this is great\", \"thanks looks good\"?\n   action: CREATE_DOC\n   Only fire this if the approval is clearly about the resume preview itself.\n   Do NOT fire if the user is just making casual conversation, saying thanks \n   for a general reply, or wrapping up the chat (e.g. \"its fine\", \"no need\", \n   \"we'll connect later\", \"thanks bye\").\n   Do NOT fire if the user is acknowledging receipt of the final Google Doc \n   (e.g. \"got the resume\", \"received it\", \"got it\", \"got the doc\", \"I have it\").\n   These mean the doc was already delivered — respond with CHAT instead.\n   Example vibe: \"Love it! Creating the doc now — back in a sec 🙌\"\n\n→ User has received the resume docs link shared by you but wants the resume to have a greater Overall Fit or ATS score Eg. Messages like \"I want the resume to have at least 80% overall fit and 70% ATS score\" or \"Update this resume such that it has 96% ATS score\"?\n  action: UPDATE_DOC\n  Reply with \"Sure! Reprocessing the resume. One moment please...\"\n\n→ User is thanking you or wrapping up casually AND approved_fields is null, \n  OR user is saying goodbye/wrapping up regardless of stage?\n   action: CHAT\n   Reply warmly and briefly.\n   Example vibe: \"Happy to help! Catch you later 😊\"\n\n\nOne important point to remember: If the user asks you whether they can upload it in that format or not, clearly and politely specify to them that you won't be able to process it and that a pdf or google docs link is a must.\n\n---\n\nRESPONSE FORMAT:\nReturn ONLY a valid JSON object. No markdown. No explanation. Just JSON.\n\n{\n  \"action\": \"NEED_RESUME\" | \"NEED_JD\" | \"CHAT\" | \"PROCESS\" | \"REVISE\" | \"CREATE_DOC\" | \"UPDATE_DOC\",\n  \"reply\": \"Your message to the user — warm, natural, never stiff\",\n  \"resume_url\": \"PDF URL from history, or null\",\n  \"job_description\": \"JD text from history, or null\",\n  \"highlight_areas\": \"focus instructions from history, or null\",\n  \"revision_request\": \"what the user wants changed, or null\"\n}\n\n---\n\nPERSONALITY RULES:\n- Sound like a sharp, friendly team member — not a bot\n- Use light energy (occasional emoji is fine, don't overdo it)\n- Never repeat a question you've already asked\n- If someone skips something, just roll with it — no nudging\n- Keep replies short unless you're showing the formatted content\n- Always feel like you're one step ahead, making their life easier"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -48,
+        1104
+      ],
+      "id": "43de1f07-b2e4-45f7-8994-7397fd5fa4f0",
+      "name": "Gatekeeper"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst data = $('Webhook').item.json.body.approved_fields;\nconst docId = $json.id;\nconst webViewLink = `https://docs.google.com/document/d/${docId}/edit`;\n\nconst keys = [\n  \"CANDIDATE_NAME\", \"PROFESSIONAL_SUMMARY\",\n  \"SKILL_CATEGORY_1\", \"SKILL_CONTENT_1\",\n  \"SKILL_CATEGORY_2\", \"SKILL_CONTENT_2\",\n  \"SKILL_CATEGORY_3\", \"SKILL_CONTENT_3\",\n  \"SKILL_CATEGORY_4\", \"SKILL_CONTENT_4\",\n  \"SKILL_CATEGORY_5\", \"SKILL_CONTENT_5\",\n  \"SKILL_CATEGORY_6\", \"SKILL_CONTENT_6\",\n  \"PROJECT_TITLE_1\", \"PROJECT_DESCRIPTION_1\", \"PROJECT_RESPONSIBILITIES_1\", \"PROJECT_TECHSTACK_1\",\n  \"PROJECT_TITLE_2\", \"PROJECT_DESCRIPTION_2\", \"PROJECT_RESPONSIBILITIES_2\", \"PROJECT_TECHSTACK_2\",\n  \"PROJECT_TITLE_3\", \"PROJECT_DESCRIPTION_3\", \"PROJECT_RESPONSIBILITIES_3\", \"PROJECT_TECHSTACK_3\",\n  \"PROJECT_TITLE_4\", \"PROJECT_DESCRIPTION_4\", \"PROJECT_RESPONSIBILITIES_4\", \"PROJECT_TECHSTACK_4\",\n  \"PROJECT_TITLE_5\", \"PROJECT_DESCRIPTION_5\", \"PROJECT_RESPONSIBILITIES_5\", \"PROJECT_TECHSTACK_5\",\n  \"PROJECT_TITLE_6\", \"PROJECT_DESCRIPTION_6\", \"PROJECT_RESPONSIBILITIES_6\", \"PROJECT_TECHSTACK_6\",\n  \"EDUCATION_DEGREE_1\", \"EDUCATION_INSTITUTE_1\", \"EDUCATION_YEAR_1\",\n  \"EDUCATION_DEGREE_2\", \"EDUCATION_INSTITUTE_2\", \"EDUCATION_YEAR_2\"\n];\n\nconst requests = keys.map(key => ({\n  replaceAllText: {\n    containsText: { text: `{{${key}}}`, matchCase: true },\n    replaceText: data[key] || \"\"\n  }\n}));\n\nreturn [{ json: { docId, webViewLink, body: { requests } } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2128,
+        1280
+      ],
+      "id": "c6d62078-fa68-4dfb-94ec-ae313bb7f7af",
+      "name": "Build Placeholder Requests"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here are the current resume fields (JSON):\n{{ JSON.stringify($('Webhook').item.json.body.approved_fields) }}\n\nHere is the original raw resume text for reference:\n{{ $('Webhook').item.json.body.raw_resume_text }}\n\nThe user wants the following change:\n{{ $json.revision_request }}\n\nApply the requested change to the relevant field(s) only.\nReturn the COMPLETE updated fields JSON with the same structure.\nReturn ONLY valid JSON. No explanation.",
+        "options": {
+          "systemMessage": "=You are a resume editor for ScaleupAlly. \nYou receive a full set of structured resume fields and a plain-language edit request.\nApply only the requested change. Keep everything else exactly the same.\nReturn the full updated fields object as valid JSON only."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1184,
+        960
+      ],
+      "id": "a7e55eef-5f01-4a19-80fc-c53ea9cf21d1",
+      "name": "Revision"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1856,
+        576
+      ],
+      "id": "6964d3ce-821a-48be-8d49-c5d79a779a2a",
+      "name": "Formatter model",
+      "credentials": {
+        "openAiApi": {
+          "id": "GbPk6QT2A4KsVKRA",
+          "name": "resume_agent_workflow"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1184,
+        1168
+      ],
+      "id": "92bfb53c-c24a-450b-86df-4ebb31c781ac",
+      "name": "Revision model",
+      "credentials": {
+        "openAiApi": {
+          "id": "GbPk6QT2A4KsVKRA",
+          "name": "resume_agent_workflow"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        32,
+        1328
+      ],
+      "id": "3b3658be-2830-4cc1-b90d-fb6c4253d2f8",
+      "name": "Gatekeeper model",
+      "credentials": {
+        "openAiApi": {
+          "id": "GbPk6QT2A4KsVKRA",
+          "name": "resume_agent_workflow"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the raw resume text:\n{{ $json.text }}\n\n{% if $('Gatekeeper').item.json.job_description %}\nJob Description:\n{{ $('Gatekeeper').item.json.job_description }}\n{% endif %}\n\n{% if $('Gatekeeper').item.json.highlight_areas %}\nFocus Instructions:\n{{ $('Gatekeeper').item.json.highlight_areas }}\n{% endif %}\n\nReturn a JSON object with exactly these keys:\n{\n  \"CANDIDATE_NAME\": \"\",\n  \"CANDIDATE_ROLE\": \"\",\n  \"PROFESSIONAL_SUMMARY\": \"\",\n  \"SKILL_CATEGORY_1\": \"\", \"SKILL_CONTENT_1\": \"\",\n  \"SKILL_CATEGORY_2\": \"\", \"SKILL_CONTENT_2\": \"\",\n  \"SKILL_CATEGORY_3\": \"\", \"SKILL_CONTENT_3\": \"\",\n  \"SKILL_CATEGORY_4\": \"\", \"SKILL_CONTENT_4\": \"\",\n  \"SKILL_CATEGORY_5\": \"\", \"SKILL_CONTENT_5\": \"\",\n  \"SKILL_CATEGORY_6\": \"\", \"SKILL_CONTENT_6\": \"\",\n  \"PROJECT_TITLE_1\": \"\", \"PROJECT_DESCRIPTION_1\": \"\", \"PROJECT_RESPONSIBILITIES_1\": \"\", \"PROJECT_TECHSTACK_1\": \"\",\n  \"PROJECT_TITLE_2\": \"\", \"PROJECT_DESCRIPTION_2\": \"\", \"PROJECT_RESPONSIBILITIES_2\": \"\", \"PROJECT_TECHSTACK_2\": \"\",\n  \"PROJECT_TITLE_3\": \"\", \"PROJECT_DESCRIPTION_3\": \"\", \"PROJECT_RESPONSIBILITIES_3\": \"\", \"PROJECT_TECHSTACK_3\": \"\",\n  \"PROJECT_TITLE_4\": \"\", \"PROJECT_DESCRIPTION_4\": \"\", \"PROJECT_RESPONSIBILITIES_4\": \"\", \"PROJECT_TECHSTACK_4\": \"\",\n  \"PROJECT_TITLE_5\": \"\", \"PROJECT_DESCRIPTION_5\": \"\", \"PROJECT_RESPONSIBILITIES_5\": \"\", \"PROJECT_TECHSTACK_5\": \"\",\n  \"PROJECT_TITLE_6\": \"\", \"PROJECT_DESCRIPTION_6\": \"\", \"PROJECT_RESPONSIBILITIES_6\": \"\", \"PROJECT_TECHSTACK_6\": \"\",\n  \"EDUCATION_DEGREE_1\": \"\", \"EDUCATION_INSTITUTE_1\": \"\", \"EDUCATION_YEAR_1\": \"\",\n  \"EDUCATION_DEGREE_2\": \"\", \"EDUCATION_INSTITUTE_2\": \"\", \"EDUCATION_YEAR_2\": \"\"\n}",
+        "options": {
+          "systemMessage": "You are a resume formatter for a staff augmentation company called ScaleupAlly.\nExtract and restructure resume content into strict JSON format.\nReturn ONLY valid JSON, no markdown, no explanation.\n\nRules:\n- CANDIDATE_NAME: all caps, first name only\n- CANDIDATE_ROLE: their current role\n- PROFESSIONAL_SUMMARY: 7-8 sophisticated sentences. Synthesise from full resume. \n  If a JD is provided, tailor to that role. Do not copy from resume — rewrite professionally.\n- If highlight_areas instructions given, prioritise those themes. If de-emphasis requested, reduce that content.\n- SKILL categories should match the candidate's actual domain\n- PROJECT_DESCRIPTION: 3-5 sentences on what the project was, its purpose, scale, candidate's contribution\n- PROJECT_RESPONSIBILITIES: Polished action sentences starting with ➛, separated by \\n. 4-5 minimum.\n- Fewer than 6 projects/skills? Leave remaining fields as empty strings.\n- Never fabricate. Only use what's in the resume."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1776,
+        352
+      ],
+      "id": "01b781f4-35db-43c2-90fd-5cd088e9040c",
+      "name": "Formatter"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst text = $json.text || \"\";\nconst lower = text.toLowerCase();\n\n// Check for resume-like keywords\nconst resumeKeywords = [\n  \"experience\", \"education\", \"skills\", \"project\", \n  \"work history\", \"employment\", \"qualification\",\n  \"responsibilities\", \"objective\", \"summary\",\n  \"bachelor\", \"master\", \"degree\", \"university\",\n  \"developer\", \"engineer\", \"manager\", \"analyst\"\n];\n\nconst matchCount = resumeKeywords.filter(kw => lower.includes(kw)).length;\n\nif (matchCount < 5) {\n  // Not a resume — flag it\n  return [{ json: { \n    is_resume: false, \n    text: $json.text,\n    reply: \"Hmm, that doesn't look like a resume to me 🤔 I can only work with candidate resumes — even a rough one works! Could you upload the right PDF?\"\n  }}];\n}\n\nreturn [{ json: { is_resume: true, text: $json.text } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        608
+      ],
+      "id": "8fd5ccbd-9d9c-474b-9fed-26b1e334d672",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0784fb1a-d1eb-44a8-867c-da1847708fd6",
+                    "leftValue": "={{ $json.is_resume }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0cddf87f-907e-4316-ba5e-0d61c9f09985",
+                    "leftValue": "={{ $json.is_resume }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "false",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1552,
+        608
+      ],
+      "id": "d5e924b8-6660-4af5-8799-cbdf31b4f105",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"reply\": \"{{ $json.reply }}\",\n  \"doc_url\": null,\n  \"stage\": \"chat\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1840,
+        752
+      ],
+      "id": "005bfcdb-fb3d-43a0-bac3-f817216c38e1",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=IMPORTANT: If no job description is provided or the job description field is empty/null, \ndo NOT attempt to calculate scores. Instead return this exact JSON:\n\n{\n  \"overall_fit\": null,\n  \"ats_score\": null,\n  \"matched_keywords\": [],\n  \"missing_keywords\": [],\n  \"strong_matches\": [\"Resume formatted successfully\"],\n  \"gaps\": [\"No job description provided — fit analysis unavailable\"]\n}\n\nHere is the job description:\n\n{{ $('Get Keys').item.json.job_description }}\n\n---\n\nHere is the final resume content:\n\n{{ JSON.stringify($('Webhook').item.json.body.approved_fields) }}\n\n---\n\nExtract keywords from both and return the result in the required JSON format.\n\nAlso, Calculate and Generate the Overall Fit and ATS evaluation based on the above.",
+        "options": {
+          "systemMessage": "You are an advanced ATS scoring and resume-job matching engine.\n\nYour job is to evaluate how well a resume matches a given job description.\n\nYou must perform structured keyword extraction, scoring, and recruiter-level analysis.\n\n---\n\nSTEP 1: KEYWORD EXTRACTION\n\nFrom Job Description:\n- Extract 15–30 important keywords\n- Include:\n  - tools (e.g., SQL, Power BI, Python)\n  - technologies\n  - frameworks\n  - responsibilities (short phrases like \"data modeling\")\n  - qualifications\n\nFrom Resume:\n- Extract relevant keywords\n- Normalize synonyms:\n  - \"Structured Query Language\" → SQL\n  - \"Power BI Desktop\" → Power BI\n  - \"MS Excel\" → Excel\n\n---\n\nSTEP 2: KEYWORD MATCHING\n\n- Identify matched_keywords (present in both)\n- Identify missing_keywords (present in JD but not in resume)\n\n---\n\nSTEP 3: OVERALL FIT CALCULATION\n\nCalculate:\n\noverall_fit = (number of matched_keywords / total jd_keywords) * 100\n\n- Must be a number between 0 and 100\n- Be strict and realistic\n- Do NOT inflate the score\n\n---\n\nSTEP 4: ATS SCORE\n\nGenerate ATS score (0–100) based on:\n- keyword coverage (overall_fit)\n- relevance of experience\n- role alignment\n- depth of projects\n\nRULES:\n- ATS score must be close to overall_fit (within ±15)\n- Increase score only if strong real alignment exists\n- Decrease score if critical skills are missing\n\n---\n\nSTEP 5: INSIGHTS\n\nGenerate:\n\nstrong_matches:\n- 3–5 meaningful strengths\n- Focus on real alignment, not just keyword overlap\n\ngaps:\n- 3–5 important missing areas\n- Focus on what reduces chances of shortlisting\n\n---\n\nOUTPUT FORMAT (STRICT JSON ONLY):\n\n{\n  \"overall_fit\": number,\n  \"ats_score\": number,\n  \"matched_keywords\": [\"...\"],\n  \"missing_keywords\": [\"...\"],\n  \"strong_matches\": [\"...\"],\n  \"gaps\": [\"...\"]\n}\n\n---\n\nRULES:\n\n- Do NOT hallucinate skills not present in input\n- Do NOT assume experience not mentioned\n- Keep keywords concise (1–3 words max)\n- Avoid duplicates\n- Be consistent and structured\n- Return ONLY valid JSON"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2560,
+        1280
+      ],
+      "id": "8b56d644-2d4d-4347-ae96-fb9f8807e7a1",
+      "name": "Scorekeeper"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2640,
+        1488
+      ],
+      "id": "cbbb35d4-58ef-4a67-93ea-4bef43746207",
+      "name": "Scorekeeper Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "GbPk6QT2A4KsVKRA",
+          "name": "resume_agent_workflow"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fdd78662-8fe8-46fb-92cd-47015905fc5e",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "UPDATE_DOC",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        848,
+        1312
+      ],
+      "id": "b727fe72-f2b7-488c-b65f-a62c949af06f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "1wIfqSIZTAc26-if8z0hEfBQJ-uA8NB2AcLQBtUtoXTs",
+          "mode": "list",
+          "cachedResultName": "Placeholders",
+          "cachedResultUrl": "https://docs.google.com/document/d/1wIfqSIZTAc26-if8z0hEfBQJ-uA8NB2AcLQBtUtoXTs/edit?usp=drivesdk"
+        },
+        "name": "={{ $('Webhook').item.json.body.approved_fields.CANDIDATE_NAME }}_{{ $('Webhook').item.json.body.approved_fields.CANDIDATE_ROLE }}",
+        "sameFolder": false,
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1zCZAKI8EzSI-t_s3RrF0i468T3hDGdyZ",
+          "mode": "list",
+          "cachedResultName": "Placeholder",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1zCZAKI8EzSI-t_s3RrF0i468T3hDGdyZ"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1632,
+        1280
+      ],
+      "id": "15350b74-504a-4ecb-9917-b94cc2ab31a9",
+      "name": "Make new copy file in Placeholders folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "BlvFpa0On2sc2kNI",
+          "name": "Staffing Scaleupally"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "19vW0oeYmG8ugRbz_dHsItRVaf2x-SCQD",
+          "mode": "list",
+          "cachedResultName": "Final Resumes(Agent)",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/19vW0oeYmG8ugRbz_dHsItRVaf2x-SCQD"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1872,
+        1280
+      ],
+      "id": "2f09b77d-c8a0-46d7-8649-c0c5a9f62bdc",
+      "name": "Move file to Final Resumes folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "BlvFpa0On2sc2kNI",
+          "name": "Staffing Scaleupally"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://docs.googleapis.com/v1/documents/{{ $json.docId }}:batchUpdate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json.body) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2384,
+        1280
+      ],
+      "id": "173e4e63-1e1e-42b9-bbe9-4303403e2529",
+      "name": "API request to populate our final file",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "IJ9GwsApNFaPgpOK",
+          "name": "Staffing Scaleupally"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.output;\nconst parsed = JSON.parse(raw);\n\nconst docUrl = $('Build Placeholder Requests').item.json.webViewLink;\n\nlet reply = `Your formatted resume is ready! 🎉 Click below to open it.\\n📄 Resume Link:\\n${docUrl}\\n`;\n\nif (parsed.overall_fit !== null) {\n  reply += `---\\n\\n📊 ATS ANALYSIS\\n\\nOverall Fit: ${parsed.overall_fit}%\\nATS Score: ${parsed.ats_score}%\\n\\n✅ Strong Matches:\\n- ${parsed.strong_matches.join('\\n- ')}\\n\\n⚠️ Gaps:\\n- ${parsed.gaps.join('\\n- ')}`;\n} else {\n  reply += 'No JD provided — ATS analysis skipped.';\n}\n\nreturn [{ json: { reply, doc_url: docUrl, stage: 'complete' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2912,
+        1280
+      ],
+      "id": "54eb7f6c-635d-4359-a570-0fc44d7069f1",
+      "name": "Get JSON for previous output and make body for Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{JSON.stringify({ reply: $json.reply, doc_url: $json.doc_url, stage: $json.stage })}}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        3136,
+        1280
+      ],
+      "id": "38d34cf5-b962-49ef-93c0-fb058692369f",
+      "name": "Respond to app"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst raw = $json.output;\nconst parsed = JSON.parse(raw);\nreturn [{ json: parsed }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        1104
+      ],
+      "id": "165b83b3-6320-4c66-b642-cdf51d794e90",
+      "name": "Get Keys"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Gatekeeper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Revision",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gatekeeper": {
+      "main": [
+        [
+          {
+            "node": "Get Keys",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Placeholder Requests": {
+      "main": [
+        [
+          {
+            "node": "API request to populate our final file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Revision": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatter model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Formatter",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Revision model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Revision",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gatekeeper model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Gatekeeper",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatter": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Formatter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scorekeeper": {
+      "main": [
+        [
+          {
+            "node": "Get JSON for previous output and make body for Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scorekeeper Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Scorekeeper",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Revision",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Make new copy file in Placeholders folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make new copy file in Placeholders folder": {
+      "main": [
+        [
+          {
+            "node": "Move file to Final Resumes folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move file to Final Resumes folder": {
+      "main": [
+        [
+          {
+            "node": "Build Placeholder Requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API request to populate our final file": {
+      "main": [
+        [
+          {
+            "node": "Scorekeeper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get JSON for previous output and make body for Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to app",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to app": {
+      "main": [
+        []
+      ]
+    },
+    "Get Keys": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 300
+  },
+  "staticData": {
+    "node:New File Trigger": {
+      "lastTimeChecked": "2026-03-19T04:51:07Z"
+    },
+    "node:Google Drive Trigger": {
+      "lastTimeChecked": "2026-03-20T05:37:49Z"
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "devscaleup.app.n8n.cloud",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+            "content-length": "32228",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "2401:4900:8845:a972:3587:9cd0:4755:d87e",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "IN",
+            "cf-ray": "9e451d67ea0ca6ed-DEL",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "origin": "https://preview--quixotic-resume-flow-pro.base44.app",
+            "priority": "u=1, i",
+            "referer": "https://preview--quixotic-resume-flow-pro.base44.app/",
+            "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "2401:4900:8845:a972:3587:9cd0:4755:d87e, 162.158.142.171",
+            "x-forwarded-host": "devscaleup.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-70-6d8d5988f7-lb5lj",
+            "x-is-trusted": "yes",
+            "x-real-ip": "2401:4900:8845:a972:3587:9cd0:4755:d87e"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "message": "looks good",
+            "file_url": null,
+            "file_type": null,
+            "resume_url": "https://base44.app/api/apps/69bbcee98fb7ee3b7aaa2965/files/mp/public/69bbcee98fb7ee3b7aaa2965/69c0268a2_ABHISHEK_GCPDataEngineer_Exp_5years2.pdf",
+            "is_new_file_upload": false,
+            "casual_ack_with_new_file": false,
+            "conversation_id": "14d535ba-5b60-48cf-a82f-717c5ea3b355",
+            "history": [
+              {
+                "role": "user",
+                "content": "📎 ABHISHEK_GCP Data Engineer_Exp_ 5+ years (2).pdf",
+                "file_url": "https://base44.app/api/apps/69bbcee98fb7ee3b7aaa2965/files/mp/public/69bbcee98fb7ee3b7aaa2965/69c0268a2_ABHISHEK_GCPDataEngineer_Exp_5years2.pdf"
+              },
+              {
+                "role": "assistant",
+                "content": "Got your file! Before I process it — do you have the JD for the role? Paste it here and I’ll tailor the reformatted resume. You can also add any focus areas (skills to highlight or downplay) or just type 'skip' to proceed as-is."
+              },
+              {
+                "role": "user",
+                "content": "Jd: NEW REQUIREMENT\n\nDesignation: GCP Data Engineer\n\nJob Description:\n\nWe are looking for an experienced GCP Data Warehouse Engineer to design, build, and optimize scalable data warehouse solutions on Google Cloud Platform (GCP). The ideal candidate should have strong expertise in BigQuery, ETL/ELT pipelines, data modeling, and cloud-based data architectures, SQL along with hands-on experience in handling large-scale data systems.\n\nExperience: 5+ Yrs into GCP Data Engineer\n\nBudget: 1.3 LPM + GST\n\nKey Responsibilities\nDesign and develop scalable data warehouse solutions using GCP services such as BigQuery, Cloud Storage, and Dataflow\nBuild and maintain ETL/ELT pipelines using Apache Beam, Dataflow, and Cloud Composer (Airflow)\nPerform data modeling (Star Schema, Snowflake Schema) for analytics and reporting\nOptimize BigQuery performance using partitioning, clustering, and query tuning\nMigrate data from on-premises systems (SQL Server, Oracle, etc.) to GCP\nDevelop and manage batch and real-time data pipelines using Pub/Sub\nEnsure data quality, governance, and security standards\nCollaborate with business and analytics teams to understand data requirements\nImplement monitoring, logging, and troubleshooting for data pipelines\nSupport CI/CD processes and infrastructure automation (Terraform preferred)\n\nRequired Skills & Qualifications\n5+ years of experience in Data Warehousing / ETL Development\nStrong hands-on experience with GCP services:\nBigQuery\nCloud Dataflow\nCloud Composer (Airflow)\nCloud Storage\nPub/Sub\nStrong proficiency in SQL and Python\nExperience with data modeling and warehouse design\nHands-on experience with large datasets and performance tuning\nExperience in data migration projects to cloud\nKnowledge of CI/CD tools (Git, Jenkins)\nStrong understanding of data security and governance\n\nPreferred Skills\nCertification: Google Cloud Professional Data Engineer\nExperience with Spark / Dataproc / Hadoop\nExposure to multi-cloud environments (Azure/AWS)\nExperience with BI tools such as Power BI, Tableau, or Looker\nKnowledge of DevOps and Infrastructure as Code (Terraform)\n\nSoft Skills\nStrong problem-solving and analytical skills\nExcellent communication and stakeholder management\nAbility to work in an agile and fast-paced environment\nLeadership and mentoring experience\n\nGood to Have\nExperience migrating on-prem or legacy ETL to Spark/Databricks-based platforms\nExposure to streaming or near–real-time data processing\nExperience with multi-cloud data architectures\nRelevant cloud or data platform certifications\n\nKey Deliverables / Success Metrics\nEfficient and scalable data pipelines\nOptimized query performance and cost management\nHigh data quality and reliability\nSuccessful cloud migration and modernization initiatives\n\nCertifications:\nRelevant certifications in SQL, BI-DW, or cloud platforms are highly desirable.\nMicrosoft Certified: Azure Data Fundamentals /Any Cloud Certifications (preferred)."
+              },
+              {
+                "role": "assistant",
+                "content": "## 👤 ABHISHEK — Senior GCP Data Engineer\n\n---\n\n### Professional Summary\n\nSenior GCP Data Engineer with over five years of experience designing and delivering cloud-native data platforms on Google Cloud. I specialize in building scalable data warehouses and hybrid batch/streaming ETL/ELT pipelines using BigQuery, Dataflow (Apache Beam), Pub/Sub and Cloud Composer. I have led migrations from on-premise SQL systems to BigQuery, implemented star and snowflake schemas for analytical workloads, and tuned query performance using partitioning and clustering strategies. I author production data transformation logic in Python and SQL and integrate CI/CD and monitoring practices to improve pipeline reliability and observability. I collaborate closely with analytics and product teams to translate KPIs into robust datasets and performant reporting models. I focus on operational excellence by implementing logging, retry/error handling, and pipeline troubleshooting processes. I deliver pragmatic, scalable solutions in Agile environments that balance performance, cost, and data quality.\n\n---\n\n### Skills\n\n**Cloud Platforms:** Google Cloud Platform (BigQuery, Cloud Dataflow, Cloud Composer/Airflow, Cloud Storage, Pub/Sub)\n**Data Engineering:** ETL/ELT Pipelines, Data Modeling (Star & Snowflake schemas), Data Warehousing, Streaming & Batch Processing\n**Programming & Querying:** Python, SQL, Apache Beam\n**Databases & Big Data:** PostgreSQL, MySQL, Spark (Basics), Hadoop (Exposure)\n**DevOps, Monitoring & BI:** Git, Jenkins, CI/CD Pipelines, Terraform (Basics), Logging, Pipeline Monitoring, Tableau, Looker\n**Methodologies:** Agile, Scrum\n\n---\n\n### Projects\n\n### Project 1: PolicyPro – Enterprise Data Warehouse Platform\nAn enterprise-level data warehouse built to centralize and serve analytics across the organization. The platform ingests both batch and streaming sources into BigQuery and provides governed datasets for downstream reporting. The candidate designed the BigQuery schema, built Dataflow/Apache Beam pipelines for transformation, and implemented Pub/Sub-based real-time ingestion. Emphasis was on scalability, query performance optimization, and ensuring end-to-end data quality and monitoring.\n\n**Responsibilities:**\n➛ Designed and implemented scalable BigQuery data warehouse structures for enterprise reporting\n➛ Built batch and streaming ETL/ELT using Apache Beam and Dataflow to unify diverse data sources\n➛ Implemented Pub/Sub-based real-time ingestion and ensured reliable processing\n➛ Tuned BigQuery performance via partitioning, clustering and query optimization\n➛ Established monitoring, data quality checks and governance across pipelines\n\n**Tech Stack:** BigQuery, Cloud Dataflow (Apache Beam), Cloud Storage, Pub/Sub, Python, SQL\n\n---\n### Project 2: ClaimsX – Data Migration & Processing Platform\nA migration project to move on-premise SQL Server data into a cloud-native BigQuery warehouse to enable faster reporting and analytics. The work included designing data models for reporting, creating scheduled ETL workflows, and optimizing pipelines for throughput and reliability. The candidate led migration activities and implemented orchestration, logging and troubleshooting mechanisms to maintain operational stability.\n\n**Responsibilities:**\n➛ Led end-to-end migration of on-prem SQL Server datasets to BigQuery\n➛ Developed and scheduled ETL workflows using Cloud Composer (Airflow)\n➛ Designed star and snowflake schema models to support reporting requirements\n➛ Optimized pipeline performance through parallelization and tuning\n➛ Implemented logging, monitoring and failure handling for operational resilience\n\n**Tech Stack:** BigQuery, Cloud Composer (Airflow), Dataflow, Cloud Storage, SQL\n\n---\n### Project 3: Customer360 – Analytics Data Platform\nA customer analytics platform that consolidates real-time and historical customer data to support analytics and KPI reporting. The project created streaming ingestion paths and curated BigQuery datasets for analytics teams. The candidate developed transformation logic, optimized queries for large datasets, and partnered with stakeholders to define KPIs and reporting needs.\n\n**Responsibilities:**\n➛ Built real-time ingestion pipelines using Pub/Sub and Dataflow for customer events\n➛ Designed BigQuery datasets and tables optimized for analytics and reporting\n➛ Implemented transformation and aggregation logic to generate business insights\n➛ Tuned queries and storage patterns for performant analytics on large datasets\n➛ Collaborated with analytics teams to define KPIs and reporting requirements\n\n**Tech Stack:** BigQuery, Pub/Sub, Dataflow, Python, SQL\n\n---\n### Project 4: Billing & Payments Data Warehouse\nA financial analytics warehouse to support billing and payment reporting and forecasting. The project focused on batch ETL pipelines to process transactional financial data into structured models for dashboards and forecasts. The candidate designed the warehouse schema, implemented batch processing pipelines, and ensured reconciliation and data validation across systems.\n\n**Responsibilities:**\n➛ Designed a data warehouse for billing and payment analytics and forecasting\n➛ Built batch ETL pipelines to process financial transaction data into BigQuery\n➛ Created structured data models to support reporting and forecasting workflows\n➛ Implemented data validation and reconciliation processes across sources\n➛ Supported dashboard reporting by preparing curated datasets for BI tools\n\n**Tech Stack:** BigQuery, Cloud Storage, Python, SQL\n\n---\n### Project 5: Agent Portal Data Platform\nA platform to capture and analyze user activity from an agent portal using streaming ingestion. The system collected user events for operational analytics and user behavior tracking. The candidate developed streaming pipelines, designed BigQuery tables for operational metrics, and improved system reliability through robust error handling.\n\n**Responsibilities:**\n➛ Developed streaming pipelines using Pub/Sub and Dataflow for user activity ingestion\n➛ Built scalable ingestion systems to capture high-volume event data\n➛ Designed BigQuery schemas to support operational analytics and reporting\n➛ Implemented error handling and retry mechanisms to improve pipeline resilience\n➛ Performed performance tuning to increase system reliability\n\n**Tech Stack:** Dataflow, Pub/Sub, BigQuery, Python\n\n---\n### Project 6: Intelligent Document Processing Data Pipeline\nAn early-stage pipeline to ingest and transform document-derived data into a structured warehouse for reporting. The project focused on ETL of document data, initial warehouse design and data quality activities to enable downstream analytics. The candidate contributed to pipeline development, SQL reporting queries, and monitoring support during initial rollout.\n\n**Responsibilities:**\n➛ Built ETL pipelines for document data ingestion and transformation\n➛ Assisted in designing initial data warehouse structures and schema\n➛ Authored SQL queries for extraction and reporting of processed data\n➛ Performed data validation and cleansing to ensure quality of ingested records\n➛ Supported pipeline monitoring and debugging activities during deployment\n\n**Tech Stack:** Python, SQL, Cloud Storage, ETL\n\n---\n\n### Education\n\n- Bachelor of Technology (B.Tech) — Rajiv Gandhi Proudyogiki Vishwavidyalaya, Bhopal (2020)\n\n---\n\nHere's the formatted content! Please review each section. You can ask me to make changes — for example: *'Make the summary more concise'* or *'Add Django to Project 2's tech stack'*. When you're happy, just say **'Looks good'** and I'll create the Google Doc."
+              },
+              {
+                "role": "user",
+                "content": "add EC2 in the tech stack of project 4"
+              },
+              {
+                "role": "assistant",
+                "content": "## 👤 ABHISHEK — Senior GCP Data Engineer\n\n---\n\n### Professional Summary\n\nSenior GCP Data Engineer with over five years of experience designing and delivering cloud-native data platforms on Google Cloud. I specialize in building scalable data warehouses and hybrid batch/streaming ETL/ELT pipelines using BigQuery, Dataflow (Apache Beam), Pub/Sub and Cloud Composer. I have led migrations from on-premise SQL systems to BigQuery, implemented star and snowflake schemas for analytical workloads, and tuned query performance using partitioning and clustering strategies. I author production data transformation logic in Python and SQL and integrate CI/CD and monitoring practices to improve pipeline reliability and observability. I collaborate closely with analytics and product teams to translate KPIs into robust datasets and performant reporting models. I focus on operational excellence by implementing logging, retry/error handling, and pipeline troubleshooting processes. I deliver pragmatic, scalable solutions in Agile environments that balance performance, cost, and data quality.\n\n---\n\n### Skills\n\n**Cloud Platforms:** Google Cloud Platform (BigQuery, Cloud Dataflow, Cloud Composer/Airflow, Cloud Storage, Pub/Sub)\n**Data Engineering:** ETL/ELT Pipelines, Data Modeling (Star & Snowflake schemas), Data Warehousing, Streaming & Batch Processing\n**Programming & Querying:** Python, SQL, Apache Beam\n**Databases & Big Data:** PostgreSQL, MySQL, Spark (Basics), Hadoop (Exposure)\n**DevOps, Monitoring & BI:** Git, Jenkins, CI/CD Pipelines, Terraform (Basics), Logging, Pipeline Monitoring, Tableau, Looker\n**Methodologies:** Agile, Scrum\n\n---\n\n### Projects\n\n### Project 1: PolicyPro – Enterprise Data Warehouse Platform\nAn enterprise-level data warehouse built to centralize and serve analytics across the organization. The platform ingests both batch and streaming sources into BigQuery and provides governed datasets for downstream reporting. The candidate designed the BigQuery schema, built Dataflow/Apache Beam pipelines for transformation, and implemented Pub/Sub-based real-time ingestion. Emphasis was on scalability, query performance optimization, and ensuring end-to-end data quality and monitoring.\n\n**Responsibilities:**\n➛ Designed and implemented scalable BigQuery data warehouse structures for enterprise reporting\n➛ Built batch and streaming ETL/ELT using Apache Beam and Dataflow to unify diverse data sources\n➛ Implemented Pub/Sub-based real-time ingestion and ensured reliable processing\n➛ Tuned BigQuery performance via partitioning, clustering and query optimization\n➛ Established monitoring, data quality checks and governance across pipelines\n\n**Tech Stack:** BigQuery, Cloud Dataflow (Apache Beam), Cloud Storage, Pub/Sub, Python, SQL\n\n---\n### Project 2: ClaimsX – Data Migration & Processing Platform\nA migration project to move on-premise SQL Server data into a cloud-native BigQuery warehouse to enable faster reporting and analytics. The work included designing data models for reporting, creating scheduled ETL workflows, and optimizing pipelines for throughput and reliability. The candidate led migration activities and implemented orchestration, logging and troubleshooting mechanisms to maintain operational stability.\n\n**Responsibilities:**\n➛ Led end-to-end migration of on-prem SQL Server datasets to BigQuery\n➛ Developed and scheduled ETL workflows using Cloud Composer (Airflow)\n➛ Designed star and snowflake schema models to support reporting requirements\n➛ Optimized pipeline performance through parallelization and tuning\n➛ Implemented logging, monitoring and failure handling for operational resilience\n\n**Tech Stack:** BigQuery, Cloud Composer (Airflow), Dataflow, Cloud Storage, SQL\n\n---\n### Project 3: Customer360 – Analytics Data Platform\nA customer analytics platform that consolidates real-time and historical customer data to support analytics and KPI reporting. The project created streaming ingestion paths and curated BigQuery datasets for analytics teams. The candidate developed transformation logic, optimized queries for large datasets, and partnered with stakeholders to define KPIs and reporting needs.\n\n**Responsibilities:**\n➛ Built real-time ingestion pipelines using Pub/Sub and Dataflow for customer events\n➛ Designed BigQuery datasets and tables optimized for analytics and reporting\n➛ Implemented transformation and aggregation logic to generate business insights\n➛ Tuned queries and storage patterns for performant analytics on large datasets\n➛ Collaborated with analytics teams to define KPIs and reporting requirements\n\n**Tech Stack:** BigQuery, Pub/Sub, Dataflow, Python, SQL\n\n---\n### Project 4: Billing & Payments Data Warehouse\nA financial analytics warehouse to support billing and payment reporting and forecasting. The project focused on batch ETL pipelines to process transactional financial data into structured models for dashboards and forecasts. The candidate designed the warehouse schema, implemented batch processing pipelines, and ensured reconciliation and data validation across systems.\n\n**Responsibilities:**\n➛ Designed a data warehouse for billing and payment analytics and forecasting\n➛ Built batch ETL pipelines to process financial transaction data into BigQuery\n➛ Created structured data models to support reporting and forecasting workflows\n➛ Implemented data validation and reconciliation processes across sources\n➛ Supported dashboard reporting by preparing curated datasets for BI tools\n\n**Tech Stack:** BigQuery, Cloud Storage, Python, SQL, EC2\n\n---\n### Project 5: Agent Portal Data Platform\nA platform to capture and analyze user activity from an agent portal using streaming ingestion. The system collected user events for operational analytics and user behavior tracking. The candidate developed streaming pipelines, designed BigQuery tables for operational metrics, and improved system reliability through robust error handling.\n\n**Responsibilities:**\n➛ Developed streaming pipelines using Pub/Sub and Dataflow for user activity ingestion\n➛ Built scalable ingestion systems to capture high-volume event data\n➛ Designed BigQuery schemas to support operational analytics and reporting\n➛ Implemented error handling and retry mechanisms to improve pipeline resilience\n➛ Performed performance tuning to increase system reliability\n\n**Tech Stack:** Dataflow, Pub/Sub, BigQuery, Python\n\n---\n### Project 6: Intelligent Document Processing Data Pipeline\nAn early-stage pipeline to ingest and transform document-derived data into a structured warehouse for reporting. The project focused on ETL of document data, initial warehouse design and data quality activities to enable downstream analytics. The candidate contributed to pipeline development, SQL reporting queries, and monitoring support during initial rollout.\n\n**Responsibilities:**\n➛ Built ETL pipelines for document data ingestion and transformation\n➛ Assisted in designing initial data warehouse structures and schema\n➛ Authored SQL queries for extraction and reporting of processed data\n➛ Performed data validation and cleansing to ensure quality of ingested records\n➛ Supported pipeline monitoring and debugging activities during deployment\n\n**Tech Stack:** Python, SQL, Cloud Storage, ETL\n\n---\n\n### Education\n\n- Bachelor of Technology (B.Tech) — Rajiv Gandhi Proudyogiki Vishwavidyalaya, Bhopal (2020)\n\n---\n\nHere's the formatted content! Please review each section. You can ask me to make changes — for example: *'Make the summary more concise'* or *'Add Django to Project 2's tech stack'*. When you're happy, just say **'Looks good'** and I'll create the Google Doc."
+              },
+              {
+                "role": "user",
+                "content": "looks good"
+              }
+            ],
+            "stage": "preview",
+            "approved_fields": {
+              "CANDIDATE_NAME": "ABHISHEK",
+              "CANDIDATE_ROLE": "Senior GCP Data Engineer",
+              "PROFESSIONAL_SUMMARY": "Senior GCP Data Engineer with over five years of experience designing and delivering cloud-native data platforms on Google Cloud. I specialize in building scalable data warehouses and hybrid batch/streaming ETL/ELT pipelines using BigQuery, Dataflow (Apache Beam), Pub/Sub and Cloud Composer. I have led migrations from on-premise SQL systems to BigQuery, implemented star and snowflake schemas for analytical workloads, and tuned query performance using partitioning and clustering strategies. I author production data transformation logic in Python and SQL and integrate CI/CD and monitoring practices to improve pipeline reliability and observability. I collaborate closely with analytics and product teams to translate KPIs into robust datasets and performant reporting models. I focus on operational excellence by implementing logging, retry/error handling, and pipeline troubleshooting processes. I deliver pragmatic, scalable solutions in Agile environments that balance performance, cost, and data quality.",
+              "SKILL_CATEGORY_1": "Cloud Platforms",
+              "SKILL_CONTENT_1": "Google Cloud Platform (BigQuery, Cloud Dataflow, Cloud Composer/Airflow, Cloud Storage, Pub/Sub)",
+              "SKILL_CATEGORY_2": "Data Engineering",
+              "SKILL_CONTENT_2": "ETL/ELT Pipelines, Data Modeling (Star & Snowflake schemas), Data Warehousing, Streaming & Batch Processing",
+              "SKILL_CATEGORY_3": "Programming & Querying",
+              "SKILL_CONTENT_3": "Python, SQL, Apache Beam",
+              "SKILL_CATEGORY_4": "Databases & Big Data",
+              "SKILL_CONTENT_4": "PostgreSQL, MySQL, Spark (Basics), Hadoop (Exposure)",
+              "SKILL_CATEGORY_5": "DevOps, Monitoring & BI",
+              "SKILL_CONTENT_5": "Git, Jenkins, CI/CD Pipelines, Terraform (Basics), Logging, Pipeline Monitoring, Tableau, Looker",
+              "SKILL_CATEGORY_6": "Methodologies",
+              "SKILL_CONTENT_6": "Agile, Scrum",
+              "PROJECT_TITLE_1": "PolicyPro – Enterprise Data Warehouse Platform",
+              "PROJECT_DESCRIPTION_1": "An enterprise-level data warehouse built to centralize and serve analytics across the organization. The platform ingests both batch and streaming sources into BigQuery and provides governed datasets for downstream reporting. The candidate designed the BigQuery schema, built Dataflow/Apache Beam pipelines for transformation, and implemented Pub/Sub-based real-time ingestion. Emphasis was on scalability, query performance optimization, and ensuring end-to-end data quality and monitoring.",
+              "PROJECT_RESPONSIBILITIES_1": "➛ Designed and implemented scalable BigQuery data warehouse structures for enterprise reporting\n➛ Built batch and streaming ETL/ELT using Apache Beam and Dataflow to unify diverse data sources\n➛ Implemented Pub/Sub-based real-time ingestion and ensured reliable processing\n➛ Tuned BigQuery performance via partitioning, clustering and query optimization\n➛ Established monitoring, data quality checks and governance across pipelines",
+              "PROJECT_TECHSTACK_1": "BigQuery, Cloud Dataflow (Apache Beam), Cloud Storage, Pub/Sub, Python, SQL",
+              "PROJECT_TITLE_2": "ClaimsX – Data Migration & Processing Platform",
+              "PROJECT_DESCRIPTION_2": "A migration project to move on-premise SQL Server data into a cloud-native BigQuery warehouse to enable faster reporting and analytics. The work included designing data models for reporting, creating scheduled ETL workflows, and optimizing pipelines for throughput and reliability. The candidate led migration activities and implemented orchestration, logging and troubleshooting mechanisms to maintain operational stability.",
+              "PROJECT_RESPONSIBILITIES_2": "➛ Led end-to-end migration of on-prem SQL Server datasets to BigQuery\n➛ Developed and scheduled ETL workflows using Cloud Composer (Airflow)\n➛ Designed star and snowflake schema models to support reporting requirements\n➛ Optimized pipeline performance through parallelization and tuning\n➛ Implemented logging, monitoring and failure handling for operational resilience",
+              "PROJECT_TECHSTACK_2": "BigQuery, Cloud Composer (Airflow), Dataflow, Cloud Storage, SQL",
+              "PROJECT_TITLE_3": "Customer360 – Analytics Data Platform",
+              "PROJECT_DESCRIPTION_3": "A customer analytics platform that consolidates real-time and historical customer data to support analytics and KPI reporting. The project created streaming ingestion paths and curated BigQuery datasets for analytics teams. The candidate developed transformation logic, optimized queries for large datasets, and partnered with stakeholders to define KPIs and reporting needs.",
+              "PROJECT_RESPONSIBILITIES_3": "➛ Built real-time ingestion pipelines using Pub/Sub and Dataflow for customer events\n➛ Designed BigQuery datasets and tables optimized for analytics and reporting\n➛ Implemented transformation and aggregation logic to generate business insights\n➛ Tuned queries and storage patterns for performant analytics on large datasets\n➛ Collaborated with analytics teams to define KPIs and reporting requirements",
+              "PROJECT_TECHSTACK_3": "BigQuery, Pub/Sub, Dataflow, Python, SQL",
+              "PROJECT_TITLE_4": "Billing & Payments Data Warehouse",
+              "PROJECT_DESCRIPTION_4": "A financial analytics warehouse to support billing and payment reporting and forecasting. The project focused on batch ETL pipelines to process transactional financial data into structured models for dashboards and forecasts. The candidate designed the warehouse schema, implemented batch processing pipelines, and ensured reconciliation and data validation across systems.",
+              "PROJECT_RESPONSIBILITIES_4": "➛ Designed a data warehouse for billing and payment analytics and forecasting\n➛ Built batch ETL pipelines to process financial transaction data into BigQuery\n➛ Created structured data models to support reporting and forecasting workflows\n➛ Implemented data validation and reconciliation processes across sources\n➛ Supported dashboard reporting by preparing curated datasets for BI tools",
+              "PROJECT_TECHSTACK_4": "BigQuery, Cloud Storage, Python, SQL, EC2",
+              "PROJECT_TITLE_5": "Agent Portal Data Platform",
+              "PROJECT_DESCRIPTION_5": "A platform to capture and analyze user activity from an agent portal using streaming ingestion. The system collected user events for operational analytics and user behavior tracking. The candidate developed streaming pipelines, designed BigQuery tables for operational metrics, and improved system reliability through robust error handling.",
+              "PROJECT_RESPONSIBILITIES_5": "➛ Developed streaming pipelines using Pub/Sub and Dataflow for user activity ingestion\n➛ Built scalable ingestion systems to capture high-volume event data\n➛ Designed BigQuery schemas to support operational analytics and reporting\n➛ Implemented error handling and retry mechanisms to improve pipeline resilience\n➛ Performed performance tuning to increase system reliability",
+              "PROJECT_TECHSTACK_5": "Dataflow, Pub/Sub, BigQuery, Python",
+              "PROJECT_TITLE_6": "Intelligent Document Processing Data Pipeline",
+              "PROJECT_DESCRIPTION_6": "An early-stage pipeline to ingest and transform document-derived data into a structured warehouse for reporting. The project focused on ETL of document data, initial warehouse design and data quality activities to enable downstream analytics. The candidate contributed to pipeline development, SQL reporting queries, and monitoring support during initial rollout.",
+              "PROJECT_RESPONSIBILITIES_6": "➛ Built ETL pipelines for document data ingestion and transformation\n➛ Assisted in designing initial data warehouse structures and schema\n➛ Authored SQL queries for extraction and reporting of processed data\n➛ Performed data validation and cleansing to ensure quality of ingested records\n➛ Supported pipeline monitoring and debugging activities during deployment",
+              "PROJECT_TECHSTACK_6": "Python, SQL, Cloud Storage, ETL",
+              "EDUCATION_DEGREE_1": "Bachelor of Technology (B.Tech)",
+              "EDUCATION_INSTITUTE_1": "Rajiv Gandhi Proudyogiki Vishwavidyalaya, Bhopal",
+              "EDUCATION_YEAR_1": "2020",
+              "EDUCATION_DEGREE_2": "",
+              "EDUCATION_INSTITUTE_2": "",
+              "EDUCATION_YEAR_2": ""
+            },
+            "raw_resume_text": "ABHISHEK\nGCP Data Engineer\nPROFESSIONAL SUMMARY\nGCP Data Engineer with 5+ years of experience in designing, building, and optimizing\nscalable data warehouse and data pipeline solutions on Google Cloud Platform. Strong\nexpertise in BigQuery, Cloud Dataflow, Cloud Composer (Airflow), and Pub/Sub for batch\nand real-time data processing. Experienced in ETL/ELT development, data modeling (Star &\nSnowflake schema), and large-scale data migration from on-prem systems to cloud. Proven\nability to optimize query performance, ensure data quality, and implement CI/CD pipelines in\nAgile environments.\nCORE TECHNICAL SKILLS\nCategory Skills\nGCP Services \nBigQuery, Cloud Dataflow, Cloud Composer (Airflow), Cloud Storage,\nPub/Sub\nProgramming \nPython, SQL\nData\nEngineering\nETL/ELT Pipelines, Data Modeling, Data Warehousing\nData Modeling \nStar Schema, Snowflake Schema, Reference Tables\nStreaming &\nBatch\nPub/Sub, Apache Beam, Real-time & Batch Processing\nDatabases \nPostgreSQL, MySQL\nDevOps & CI/CD \nGit, Jenkins, CI/CD Pipelines, Terraform (Basics)\n\nBig Data \nSpark (Basics), Hadoop (Exposure)\nMonitoring \nLogging, Debugging, Pipeline Monitoring\nBI Tools \nTableau, Looker\nMethodologies \nAgile, Scrum\nPROJECT EXPERIENCE\n1. PolicyPro – Enterprise Data Warehouse Platform\nRole: Senior GCP Data Engineer\nDuration: Apr 2025 – Present\nTech Stack: BigQuery, Dataflow, Cloud Storage, Pub/Sub, Python, SQL\nKey Contributions:\n● Designed and implemented scalable data warehouse solutions using BigQuery\n● Built ETL/ELT pipelines using Apache Beam and Dataflow for batch and streaming\ndata\n● Implemented Pub/Sub for real-time data ingestion from multiple sources\n● Optimized BigQuery queries using partitioning, clustering, and query tuning\n● Ensured data quality, monitoring, and governance across pipelines\n2. ClaimsX – Data Migration & Processing Platform\nRole: GCP Data Engineer\nDuration: Dec 2023 – Mar 2025\nTech Stack: BigQuery, Cloud Composer (Airflow), Dataflow, Cloud Storage, SQL\nKey Contributions:\n● Led migration of on-prem SQL Server data to BigQuery data warehouse\n● Developed and scheduled ETL workflows using Cloud Composer (Airflow)\n● Designed data models using star and snowflake schema for reporting\n● Improved pipeline performance through optimization and parallel processing\n● Implemented logging, monitoring, and troubleshooting for pipeline failures\n\n3. Customer360 – Analytics Data Platform\nRole: Data Engineer\nDuration: Oct 2022 – Nov 2023\nTech Stack: BigQuery, Pub/Sub, Dataflow, Python, SQL\nKey Contributions:\n● Built real-time data pipelines using Pub/Sub and Dataflow\n● Designed BigQuery datasets for customer analytics and reporting\n● Performed data transformation and aggregation for business insights\n● Optimized query performance for large-scale datasets\n● Collaborated with analytics teams to define KPIs and reporting requirements\n4. Billing & Payments Data Warehouse\nRole: Data Engineer\nDuration: Jan 2022 – Sep 2022\nTech Stack: BigQuery, Cloud Storage, Python, SQL\nKey Contributions:\n● Designed data warehouse for billing and payment analytics\n● Built batch ETL pipelines for financial data processing\n● Created structured data models for reporting and forecasting\n● Ensured data validation and reconciliation across systems\n● Supported dashboard reporting using BI tools\n5. Agent Portal Data Platform\nRole: Data Engineer\nDuration: Jul 2021 – Dec 2021\nTech Stack: Dataflow, Pub/Sub, BigQuery, Python\nKey Contributions:\n● Developed streaming pipelines using Pub/Sub and Dataflow\n● Built scalable data ingestion systems for user activity tracking\n● Designed BigQuery tables for operational analytics\n● Implemented error handling and retry mechanisms in pipelines\n● Improved system reliability and performance\n6. Intelligent Document Processing Data Pipeline\n\nRole: Junior Data Engineer\nDuration: Sep 2020 – Jun 2021\nTech Stack: Python, SQL, Cloud Storage, ETL\nKey Contributions:\n● Built ETL pipelines for document data ingestion and transformation\n● Assisted in designing initial data warehouse structures\n● Wrote SQL queries for data extraction and reporting\n● Performed data validation and cleansing\n● Supported pipeline monitoring and debugging activities\nEDUCATION\nBachelor of Technology (B.Tech) – Rajiv Gandhi Proudyogiki Vishwavidyalaya,\nBhopal\nGraduation: 2020"
+          },
+          "webhookUrl": "https://devscaleup.app.n8n.cloud/webhook/resume_agent",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Gatekeeper": [
+      {
+        "json": {
+          "output": "{\n  \"action\": \"CREATE_DOC\",\n  \"reply\": \"Love it — creating the Google Doc now. I’ll share the link when it’s ready 🙌\",\n  \"resume_url\": \"https://base44.app/api/apps/69bbcee98fb7ee3b7aaa2965/files/mp/public/69bbcee98fb7ee3b7aaa2965/69c0268a2_ABHISHEK_GCPDataEngineer_Exp_5years2.pdf\",\n  \"job_description\": \"Jd: NEW REQUIREMENT\\n\\nDesignation: GCP Data Engineer\\n\\nJob Description:\\n\\nWe are looking for an experienced GCP Data Warehouse Engineer to design, build, and optimize scalable data warehouse solutions on Google Cloud Platform (GCP). The ideal candidate should have strong expertise in BigQuery, ETL/ELT pipelines, data modeling, and cloud-based data architectures, SQL along with hands-on experience in handling large-scale data systems.\\n\\nExperience: 5+ Yrs into GCP Data Engineer\\n\\nBudget: 1.3 LPM + GST\\n\\nKey Responsibilities\\nDesign and develop scalable data warehouse solutions using GCP services such as BigQuery, Cloud Storage, and Dataflow\\nBuild and maintain ETL/ELT pipelines using Apache Beam, Dataflow, and Cloud Composer (Airflow)\\nPerform data modeling (Star Schema, Snowflake Schema) for analytics and reporting\\nOptimize BigQuery performance using partitioning, clustering, and query tuning\\nMigrate data from on-premises systems (SQL Server, Oracle, etc.) to GCP\\nDevelop and manage batch and real-time data pipelines using Pub/Sub\\nEnsure data quality, governance, and security standards\\nCollaborate with business and analytics teams to understand data requirements\\nImplement monitoring, logging, and troubleshooting for data pipelines\\nSupport CI/CD processes and infrastructure automation (Terraform preferred)\\n\\nRequired Skills & Qualifications\\n5+ years of experience in Data Warehousing / ETL Development\\nStrong hands-on experience with GCP services:\\nBigQuery\\nCloud Dataflow\\nCloud Composer (Airflow)\\nCloud Storage\\nPub/Sub\\nStrong proficiency in SQL and Python\\nExperience with data modeling and warehouse design\\nHands-on experience with large datasets and performance tuning\\nExperience in data migration projects to cloud\\nKnowledge of CI/CD tools (Git, Jenkins)\\nStrong understanding of data security and governance\\n\\nPreferred Skills\\nCertification: Google Cloud Professional Data Engineer\\nExperience with Spark / Dataproc / Hadoop\\nExposure to multi-cloud environments (Azure/AWS)\\nExperience with BI tools such as Power BI, Tableau, or Looker\\nKnowledge of DevOps and Infrastructure as Code (Terraform)\\n\\nSoft Skills\\nStrong problem-solving and analytical skills\\nExcellent communication and stakeholder management\\nAbility to work in an agile and fast-paced environment\\nLeadership and mentoring experience\\n\\nGood to Have\\nExperience migrating on-prem or legacy ETL to Spark/Databricks-based platforms\\nExposure to streaming or near–real-time data processing\\nExperience with multi-cloud data architectures\\nRelevant cloud or data platform certifications\\n\\nKey Deliverables / Success Metrics\\nEfficient and scalable data pipelines\\nOptimized query performance and cost management\\nHigh data quality and reliability\\nSuccessful cloud migration and modernization initiatives\\n\\nCertifications:\\nRelevant certifications in SQL, BI-DW, or cloud platforms are highly desirable.\\nMicrosoft Certified: Azure Data Fundamentals /Any Cloud Certifications (preferred).\",\n  \"highlight_areas\": \"Add EC2 to the tech stack of Project 4 (Billing & Payments Data Warehouse)\",\n  \"revision_request\": null\n}"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Build Placeholder Requests": [
+      {
+        "json": {
+          "docId": "1e2AlS-wnnts-mGx9Bshjzm46tG_21q-bHznVdp3dPYU",
+          "webViewLink": "https://docs.google.com/document/d/1e2AlS-wnnts-mGx9Bshjzm46tG_21q-bHznVdp3dPYU/edit",
+          "body": {
+            "requests": [
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{CANDIDATE_NAME}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "ABHISHEK"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROFESSIONAL_SUMMARY}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Senior GCP Data Engineer with over five years of experience designing and delivering cloud-native data platforms on Google Cloud. I specialize in building scalable data warehouses and hybrid batch/streaming ETL/ELT pipelines using BigQuery, Dataflow (Apache Beam), Pub/Sub and Cloud Composer. I have led migrations from on-premise SQL systems to BigQuery, implemented star and snowflake schemas for analytical workloads, and tuned query performance using partitioning and clustering strategies. I author production data transformation logic in Python and SQL and integrate CI/CD and monitoring practices to improve pipeline reliability and observability. I collaborate closely with analytics and product teams to translate KPIs into robust datasets and performant reporting models. I focus on operational excellence by implementing logging, retry/error handling, and pipeline troubleshooting processes. I deliver pragmatic, scalable solutions in Agile environments that balance performance, cost, and data quality."
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{SKILL_CATEGORY_1}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Cloud Platforms"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{SKILL_CONTENT_1}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Google Cloud Platform (BigQuery, Cloud Dataflow, Cloud Composer/Airflow, Cloud Storage, Pub/Sub)"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{SKILL_CATEGORY_2}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Data Engineering"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{SKILL_CONTENT_2}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "ETL/ELT Pipelines, Data Modeling (Star & Snowflake schemas), Data Warehousing, Streaming & Batch Processing"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{SKILL_CATEGORY_3}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Programming & Querying"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{SKILL_CONTENT_3}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Python, SQL, Apache Beam"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{SKILL_CATEGORY_4}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Databases & Big Data"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{SKILL_CONTENT_4}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "PostgreSQL, MySQL, Spark (Basics), Hadoop (Exposure)"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{SKILL_CATEGORY_5}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "DevOps, Monitoring & BI"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{SKILL_CONTENT_5}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Git, Jenkins, CI/CD Pipelines, Terraform (Basics), Logging, Pipeline Monitoring, Tableau, Looker"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{SKILL_CATEGORY_6}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Methodologies"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{SKILL_CONTENT_6}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Agile, Scrum"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_TITLE_1}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "PolicyPro – Enterprise Data Warehouse Platform"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_DESCRIPTION_1}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "An enterprise-level data warehouse built to centralize and serve analytics across the organization. The platform ingests both batch and streaming sources into BigQuery and provides governed datasets for downstream reporting. The candidate designed the BigQuery schema, built Dataflow/Apache Beam pipelines for transformation, and implemented Pub/Sub-based real-time ingestion. Emphasis was on scalability, query performance optimization, and ensuring end-to-end data quality and monitoring."
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_RESPONSIBILITIES_1}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "➛ Designed and implemented scalable BigQuery data warehouse structures for enterprise reporting\n➛ Built batch and streaming ETL/ELT using Apache Beam and Dataflow to unify diverse data sources\n➛ Implemented Pub/Sub-based real-time ingestion and ensured reliable processing\n➛ Tuned BigQuery performance via partitioning, clustering and query optimization\n➛ Established monitoring, data quality checks and governance across pipelines"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_TECHSTACK_1}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "BigQuery, Cloud Dataflow (Apache Beam), Cloud Storage, Pub/Sub, Python, SQL"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_TITLE_2}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "ClaimsX – Data Migration & Processing Platform"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_DESCRIPTION_2}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "A migration project to move on-premise SQL Server data into a cloud-native BigQuery warehouse to enable faster reporting and analytics. The work included designing data models for reporting, creating scheduled ETL workflows, and optimizing pipelines for throughput and reliability. The candidate led migration activities and implemented orchestration, logging and troubleshooting mechanisms to maintain operational stability."
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_RESPONSIBILITIES_2}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "➛ Led end-to-end migration of on-prem SQL Server datasets to BigQuery\n➛ Developed and scheduled ETL workflows using Cloud Composer (Airflow)\n➛ Designed star and snowflake schema models to support reporting requirements\n➛ Optimized pipeline performance through parallelization and tuning\n➛ Implemented logging, monitoring and failure handling for operational resilience"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_TECHSTACK_2}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "BigQuery, Cloud Composer (Airflow), Dataflow, Cloud Storage, SQL"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_TITLE_3}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Customer360 – Analytics Data Platform"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_DESCRIPTION_3}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "A customer analytics platform that consolidates real-time and historical customer data to support analytics and KPI reporting. The project created streaming ingestion paths and curated BigQuery datasets for analytics teams. The candidate developed transformation logic, optimized queries for large datasets, and partnered with stakeholders to define KPIs and reporting needs."
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_RESPONSIBILITIES_3}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "➛ Built real-time ingestion pipelines using Pub/Sub and Dataflow for customer events\n➛ Designed BigQuery datasets and tables optimized for analytics and reporting\n➛ Implemented transformation and aggregation logic to generate business insights\n➛ Tuned queries and storage patterns for performant analytics on large datasets\n➛ Collaborated with analytics teams to define KPIs and reporting requirements"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_TECHSTACK_3}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "BigQuery, Pub/Sub, Dataflow, Python, SQL"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_TITLE_4}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Billing & Payments Data Warehouse"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_DESCRIPTION_4}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "A financial analytics warehouse to support billing and payment reporting and forecasting. The project focused on batch ETL pipelines to process transactional financial data into structured models for dashboards and forecasts. The candidate designed the warehouse schema, implemented batch processing pipelines, and ensured reconciliation and data validation across systems."
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_RESPONSIBILITIES_4}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "➛ Designed a data warehouse for billing and payment analytics and forecasting\n➛ Built batch ETL pipelines to process financial transaction data into BigQuery\n➛ Created structured data models to support reporting and forecasting workflows\n➛ Implemented data validation and reconciliation processes across sources\n➛ Supported dashboard reporting by preparing curated datasets for BI tools"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_TECHSTACK_4}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "BigQuery, Cloud Storage, Python, SQL, EC2"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_TITLE_5}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Agent Portal Data Platform"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_DESCRIPTION_5}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "A platform to capture and analyze user activity from an agent portal using streaming ingestion. The system collected user events for operational analytics and user behavior tracking. The candidate developed streaming pipelines, designed BigQuery tables for operational metrics, and improved system reliability through robust error handling."
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_RESPONSIBILITIES_5}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "➛ Developed streaming pipelines using Pub/Sub and Dataflow for user activity ingestion\n➛ Built scalable ingestion systems to capture high-volume event data\n➛ Designed BigQuery schemas to support operational analytics and reporting\n➛ Implemented error handling and retry mechanisms to improve pipeline resilience\n➛ Performed performance tuning to increase system reliability"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_TECHSTACK_5}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Dataflow, Pub/Sub, BigQuery, Python"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_TITLE_6}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Intelligent Document Processing Data Pipeline"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_DESCRIPTION_6}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "An early-stage pipeline to ingest and transform document-derived data into a structured warehouse for reporting. The project focused on ETL of document data, initial warehouse design and data quality activities to enable downstream analytics. The candidate contributed to pipeline development, SQL reporting queries, and monitoring support during initial rollout."
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_RESPONSIBILITIES_6}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "➛ Built ETL pipelines for document data ingestion and transformation\n➛ Assisted in designing initial data warehouse structures and schema\n➛ Authored SQL queries for extraction and reporting of processed data\n➛ Performed data validation and cleansing to ensure quality of ingested records\n➛ Supported pipeline monitoring and debugging activities during deployment"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{PROJECT_TECHSTACK_6}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Python, SQL, Cloud Storage, ETL"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{EDUCATION_DEGREE_1}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Bachelor of Technology (B.Tech)"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{EDUCATION_INSTITUTE_1}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "Rajiv Gandhi Proudyogiki Vishwavidyalaya, Bhopal"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{EDUCATION_YEAR_1}}",
+                    "matchCase": true
+                  },
+                  "replaceText": "2020"
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{EDUCATION_DEGREE_2}}",
+                    "matchCase": true
+                  },
+                  "replaceText": ""
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{EDUCATION_INSTITUTE_2}}",
+                    "matchCase": true
+                  },
+                  "replaceText": ""
+                }
+              },
+              {
+                "replaceAllText": {
+                  "containsText": {
+                    "text": "{{EDUCATION_YEAR_2}}",
+                    "matchCase": true
+                  },
+                  "replaceText": ""
+                }
+              }
+            ]
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Scorekeeper": [
+      {
+        "json": {
+          "output": "{\n  \"overall_fit\": 89.3,\n  \"ats_score\": 88,\n  \"matched_keywords\": [\n    \"GCP\",\n    \"BigQuery\",\n    \"Cloud Dataflow\",\n    \"Cloud Composer\",\n    \"Cloud Storage\",\n    \"Pub/Sub\",\n    \"Apache Beam\",\n    \"ETL/ELT\",\n    \"Data modeling\",\n    \"Star Schema\",\n    \"Snowflake Schema\",\n    \"SQL\",\n    \"Python\",\n    \"Data migration\",\n    \"CI/CD\",\n    \"Git\",\n    \"Jenkins\",\n    \"Terraform\",\n    \"Data governance\",\n    \"Performance tuning\",\n    \"Streaming\",\n    \"Monitoring\",\n    \"Airflow\",\n    \"Spark/Dataproc\",\n    \"BI tools\"\n  ],\n  \"missing_keywords\": [\n    \"Data security\",\n    \"Google Cloud Professional Data Engineer\",\n    \"Multi-cloud\"\n  ],\n  \"strong_matches\": [\n    \"Extensive hands-on BigQuery design and performance tuning (partitioning, clustering, query optimization)\",\n    \"Proven implementation of batch and streaming ETL/ELT using Dataflow (Apache Beam) and Pub/Sub\",\n    \"Led on-premise to BigQuery migrations and designed star/snowflake schemas for analytics\",\n    \"Solid engineering practices: Python + SQL for transformations, CI/CD (Git/Jenkins), monitoring and observability\"\n  ],\n  \"gaps\": [\n    \"No explicit mention of data security/compliance controls (encryption, IAM, policies)\",\n    \"Absence of Google Cloud Professional Data Engineer certification\",\n    \"Terraform listed as 'Basics' — IaC/automation competency may be limited for infrastructure-heavy roles\",\n    \"Spark/Dataproc experience appears limited/basic (resume indicates 'Basics' / 'Exposure'), potentially weak for heavy Spark workloads\"\n  ]\n}"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Make new copy file in Placeholders folder": [
+      {
+        "json": {
+          "kind": "drive#file",
+          "id": "1e2AlS-wnnts-mGx9Bshjzm46tG_21q-bHznVdp3dPYU",
+          "name": "ABHISHEK_Senior GCP Data Engineer",
+          "mimeType": "application/vnd.google-apps.document"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Move file to Final Resumes folder": [
+      {
+        "json": {
+          "kind": "drive#file",
+          "id": "1e2AlS-wnnts-mGx9Bshjzm46tG_21q-bHznVdp3dPYU",
+          "name": "ABHISHEK_Senior GCP Data Engineer",
+          "mimeType": "application/vnd.google-apps.document"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "API request to populate our final file": [
+      {
+        "json": {
+          "replies": [
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            },
+            {
+              "replaceAllText": {
+                "occurrencesChanged": 1
+              }
+            }
+          ],
+          "writeControl": {
+            "requiredRevisionId": "AIxLkSu-abbogmC35UAES6dIbOGIyILRBvBt2hxo5owCqE4xFkcgkmZnNXvvdTKUCnST3WPRA5RsRRNNcxAE_HQFFe42apJq7BMlDVGF9ffb"
+          },
+          "documentId": "1e2AlS-wnnts-mGx9Bshjzm46tG_21q-bHznVdp3dPYU"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Get Keys": [
+      {
+        "json": {
+          "action": "CREATE_DOC",
+          "reply": "Love it — creating the Google Doc now. I’ll share the link when it’s ready 🙌",
+          "resume_url": "https://base44.app/api/apps/69bbcee98fb7ee3b7aaa2965/files/mp/public/69bbcee98fb7ee3b7aaa2965/69c0268a2_ABHISHEK_GCPDataEngineer_Exp_5years2.pdf",
+          "job_description": "Jd: NEW REQUIREMENT\n\nDesignation: GCP Data Engineer\n\nJob Description:\n\nWe are looking for an experienced GCP Data Warehouse Engineer to design, build, and optimize scalable data warehouse solutions on Google Cloud Platform (GCP). The ideal candidate should have strong expertise in BigQuery, ETL/ELT pipelines, data modeling, and cloud-based data architectures, SQL along with hands-on experience in handling large-scale data systems.\n\nExperience: 5+ Yrs into GCP Data Engineer\n\nBudget: 1.3 LPM + GST\n\nKey Responsibilities\nDesign and develop scalable data warehouse solutions using GCP services such as BigQuery, Cloud Storage, and Dataflow\nBuild and maintain ETL/ELT pipelines using Apache Beam, Dataflow, and Cloud Composer (Airflow)\nPerform data modeling (Star Schema, Snowflake Schema) for analytics and reporting\nOptimize BigQuery performance using partitioning, clustering, and query tuning\nMigrate data from on-premises systems (SQL Server, Oracle, etc.) to GCP\nDevelop and manage batch and real-time data pipelines using Pub/Sub\nEnsure data quality, governance, and security standards\nCollaborate with business and analytics teams to understand data requirements\nImplement monitoring, logging, and troubleshooting for data pipelines\nSupport CI/CD processes and infrastructure automation (Terraform preferred)\n\nRequired Skills & Qualifications\n5+ years of experience in Data Warehousing / ETL Development\nStrong hands-on experience with GCP services:\nBigQuery\nCloud Dataflow\nCloud Composer (Airflow)\nCloud Storage\nPub/Sub\nStrong proficiency in SQL and Python\nExperience with data modeling and warehouse design\nHands-on experience with large datasets and performance tuning\nExperience in data migration projects to cloud\nKnowledge of CI/CD tools (Git, Jenkins)\nStrong understanding of data security and governance\n\nPreferred Skills\nCertification: Google Cloud Professional Data Engineer\nExperience with Spark / Dataproc / Hadoop\nExposure to multi-cloud environments (Azure/AWS)\nExperience with BI tools such as Power BI, Tableau, or Looker\nKnowledge of DevOps and Infrastructure as Code (Terraform)\n\nSoft Skills\nStrong problem-solving and analytical skills\nExcellent communication and stakeholder management\nAbility to work in an agile and fast-paced environment\nLeadership and mentoring experience\n\nGood to Have\nExperience migrating on-prem or legacy ETL to Spark/Databricks-based platforms\nExposure to streaming or near–real-time data processing\nExperience with multi-cloud data architectures\nRelevant cloud or data platform certifications\n\nKey Deliverables / Success Metrics\nEfficient and scalable data pipelines\nOptimized query performance and cost management\nHigh data quality and reliability\nSuccessful cloud migration and modernization initiatives\n\nCertifications:\nRelevant certifications in SQL, BI-DW, or cloud platforms are highly desirable.\nMicrosoft Certified: Azure Data Fundamentals /Any Cloud Certifications (preferred).",
+          "highlight_areas": "Add EC2 to the tech stack of Project 4 (Billing & Payments Data Warehouse)",
+          "revision_request": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "11c94f6f-6740-47e0-b06f-9032f92ddbee",
+  "activeVersionId": "11c94f6f-6740-47e0-b06f-9032f92ddbee",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-23T07:16:56.115Z",
+      "createdAt": "2026-03-23T07:16:56.115Z",
+      "role": "workflow:owner",
+      "workflowId": "Zinia9sYTgMvpkn0",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-03-30T08:03:06.000Z",
+    "createdAt": "2026-03-30T08:03:01.254Z",
+    "versionId": "11c94f6f-6740-47e0-b06f-9032f92ddbee",
+    "workflowId": "Zinia9sYTgMvpkn0",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "resume_agent",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -272,
+          1104
+        ],
+        "id": "45e89c00-dddc-4d1d-9072-7d1864693009",
+        "name": "Webhook",
+        "webhookId": "cf7fd5d4-9a46-4f90-a12f-e7892817bd13"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\n  \"reply\": \"{{ $json.reply }}\",\n  \"doc_url\": null,\n  \"stage\": \"chat\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          752,
+          1520
+        ],
+        "id": "c70bf0b4-06d7-4d05-8afd-1622dd06af73",
+        "name": "Respond to Webhook"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "PROCESS",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "e214478b-f2c6-4896-902d-aa201b0d4a43"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "process_branch"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "2a30edfb-0cc3-4eae-9c58-b493e30f2358",
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "REVISE",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "revise_branch"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "b9cac7dd-5807-4cef-8c4a-7d4ec981fb3f",
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "CREATE_DOC",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "create_branch"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "86de8df3-417d-4518-bb60-ace9b32eda84",
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "string",
+                        "operation": "exists",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "chat_branch"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          528,
+          1072
+        ],
+        "id": "d6f8280b-8807-47b0-b4e8-e10f70ef5bc4",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.resume_url }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          752,
+          608
+        ],
+        "id": "798ecbb5-8e2a-4399-84f7-8570b4f3ca86",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "operation": "pdf",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.extractFromFile",
+        "typeVersion": 1.1,
+        "position": [
+          1040,
+          608
+        ],
+        "id": "77f98515-8a86-46e4-9481-3334efde54db",
+        "name": "Extract from File"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst raw = $json.output;\nconst d = JSON.parse(raw);\n\nconst skillRows = [];\nfor (let i = 1; i <= 6; i++) {\n  if (d[`SKILL_CATEGORY_${i}`]) {\n    skillRows.push(`**${d[`SKILL_CATEGORY_${i}`]}:** ${d[`SKILL_CONTENT_${i}`]}`);\n  }\n}\n\nconst projectBlocks = [];\nfor (let i = 1; i <= 6; i++) {\n  if (d[`PROJECT_TITLE_${i}`]) {\n    projectBlocks.push(\n      `### Project ${i}: ${d[`PROJECT_TITLE_${i}`]}\\n` +\n      `${d[`PROJECT_DESCRIPTION_${i}`]}\\n\\n` +\n      `**Responsibilities:**\\n${d[`PROJECT_RESPONSIBILITIES_${i}`]}\\n\\n` +\n      `**Tech Stack:** ${d[`PROJECT_TECHSTACK_${i}`]}`\n    );\n  }\n}\n\nconst eduRows = [];\nfor (let i = 1; i <= 2; i++) {\n  if (d[`EDUCATION_DEGREE_${i}`]) {\n    eduRows.push(`- ${d[`EDUCATION_DEGREE_${i}`]} — ${d[`EDUCATION_INSTITUTE_${i}`]} (${d[`EDUCATION_YEAR_${i}`]})`);\n  }\n}\n\nconst preview = [\n  `## 👤 ${d.CANDIDATE_NAME} — ${d.CANDIDATE_ROLE}`,\n  `---`,\n  `### Professional Summary`,\n  d.PROFESSIONAL_SUMMARY,\n  `---`,\n  `### Skills`,\n  skillRows.join('\\n'),\n  `---`,\n  `### Projects`,\n  projectBlocks.join('\\n\\n---\\n'),\n  `---`,\n  `### Education`,\n  eduRows.join('\\n')\n].join('\\n\\n');\n\nreturn [{ json: { \n  fields: d,\n  preview: preview + \"\\n\\n---\\n\\nHere's the formatted content! Please review each section. You can ask me to make changes — for example: *'Make the summary more concise'* or *'Add Django to Project 2's tech stack'*. When you're happy, just say **'Looks good'** and I'll create the Google Doc.\",\n  raw_resume_text: $('Extract from File').item.json.text\n}}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2128,
+          464
+        ],
+        "id": "bb1747ac-c6c6-4d7c-9ff0-4920d83a4bbe",
+        "name": "Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "respondWith": "text",
+          "responseBody": "={{JSON.stringify({\n  reply: $json.preview,\n  fields: $json.fields,\n  raw_resume_text: $json.raw_resume_text,\n  stage: \"preview\",\n  doc_url: null\n})}}",
+          "options": {
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            }
+          }
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          2352,
+          688
+        ],
+        "id": "f01201db-0ae8-44a6-9faf-c9db22bc35c2",
+        "name": "Respond to Webhook1"
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForEachItem",
+          "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst raw = $json.output;\nconst d = JSON.parse(raw);\n\nconst skillRows = [];\nfor (let i = 1; i <= 6; i++) {\n  if (d[`SKILL_CATEGORY_${i}`]) {\n    skillRows.push(`**${d[`SKILL_CATEGORY_${i}`]}:** ${d[`SKILL_CONTENT_${i}`]}`);\n  }\n}\n\nconst projectBlocks = [];\nfor (let i = 1; i <= 6; i++) {\n  if (d[`PROJECT_TITLE_${i}`]) {\n    projectBlocks.push(\n      `### Project ${i}: ${d[`PROJECT_TITLE_${i}`]}\\n` +\n      `${d[`PROJECT_DESCRIPTION_${i}`]}\\n\\n` +\n      `**Responsibilities:**\\n${d[`PROJECT_RESPONSIBILITIES_${i}`]}\\n\\n` +\n      `**Tech Stack:** ${d[`PROJECT_TECHSTACK_${i}`]}`\n    );\n  }\n}\n\nconst eduRows = [];\nfor (let i = 1; i <= 2; i++) {\n  if (d[`EDUCATION_DEGREE_${i}`]) {\n    eduRows.push(`- ${d[`EDUCATION_DEGREE_${i}`]} — ${d[`EDUCATION_INSTITUTE_${i}`]} (${d[`EDUCATION_YEAR_${i}`]})`);\n  }\n}\n\nconst preview = [\n  `## 👤 ${d.CANDIDATE_NAME} — ${d.CANDIDATE_ROLE}`,\n  `---`,\n  `### Professional Summary`,\n  d.PROFESSIONAL_SUMMARY,\n  `---`,\n  `### Skills`,\n  skillRows.join('\\n'),\n  `---`,\n  `### Projects`,\n  projectBlocks.join('\\n\\n---\\n'),\n  `---`,\n  `### Education`,\n  eduRows.join('\\n')\n].join('\\n\\n');\n\nreturn { json: { \n  fields: d,\n  preview: preview + \"\\n\\n---\\n\\nHere's the formatted content! Please review each section. You can ask me to make changes — for example: *'Make the summary more concise'* or *'Add Django to Project 2's tech stack'*. When you're happy, just say **'Looks good'** and I'll create the Google Doc.\"\n}};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2128,
+          896
+        ],
+        "id": "62485229-9d94-4690-9390-125b8247f96d",
+        "name": "Code in JavaScript2"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=Here is the incoming data from the chat app:\n\nMessage: {{ $json.body.message }}\nFile URL: {{ $json.body.file_url }}\nFile Type: {{ $json.body.file_type }}\nApproved Fields (if in revision stage): {{ $json.body.approved_fields }}\n\nConversation history so far:\nHistory as of now - {{ JSON.stringify($json.body.history) }}",
+          "options": {
+            "systemMessage": "=You are Resu, the ScaleupAlly Resume Formatter Agent 🤝\nYou help the ScaleupAlly team quickly reformat candidate resumes into the company's polished standard template.\nYou're sharp, warm, and efficient — like a great colleague who just happens to be really good at this.\n\nYou receive messages from team members through a chat interface. Your job is to read the conversation,\nfigure out where things stand, and move things forward naturally — like you're actually paying attention.\n\n---\n\nWHAT YOU'RE GATHERING (in this general order — but stay flexible):\n1. resume_url — a PDF link (you can't do anything without this)\n2. job_description — the JD for the role they're hiring for (nice to have, ask once, can be optional)\n3. highlight_areas — anything to push forward or dial back in the resume (ask once, totally optional)\n\n---\n\nHOW TO HANDLE EACH SITUATION:\n\n→ No resume shared yet?\n   action: NEED_RESUME\n   Be welcoming. Let them know you're ready when they are.\n   Example vibe: \"Hey! Drop the candidate's resume PDF whenever you're ready and we'll get started 🚀\"\n\n→ A new file_url appears in the current message AND no JD exists \n  anywhere in the conversation history?\n   action: NEED_JD\n   Acknowledge the upload with energy, then ask naturally — don't make it feel like a form.\n   Do NOT say \"Got the resume\" or confirm it's a resume.\n   Just acknowledge a file was received and ask for the JD neutrally.\n   Example vibe: \"Got your file! Before I process it — do you have a JD for the role? \n   Paste it here and I'll tailor the output. You can also add any focus areas or just \n   type 'skip' to proceed as-is.\"\n\n→ Resume exists AND user has explicitly pasted actual JD text (job title, \n  requirements, responsibilities etc.) in any message in the history?\n   action: PROCESS\n   Extract that JD from history and use it.\n   Example vibe: \"Perfect, got the JD too — give me a moment ✨\"\n\n→ Resume exists AND user explicitly said \"skip\", \"no jd\", \"proceed without\", \n  \"go ahead without it\"?\n   action: PROCESS\n   Proceed without JD.\n   Example vibe: \"Got it, rolling without a JD — give me a sec ✨\"\n\n→ A new file_url appears in the current message AND a JD was already shared \n  earlier in the conversation history (even alongside a previously rejected PDF)?\n   action: PROCESS\n   Do NOT ask for JD again. Extract it from history and use it directly.\n   Example vibe: \"Got it — I already have your JD, processing now ✨\"\n\n→ A preview has already been shared (approved_fields is not null) AND user wants a change?\n   action: REVISE\n   Be responsive and specific. Acknowledge what they want changed.\n   Example vibe: \"On it — let me tighten that up for you.\"\n\n→ User is just chatting, asking something general, or saying hi?\n   action: CHAT\n   Be human. Respond naturally and briefly. Don't over-explain.\n\n→ A preview has been shared (approved_fields is not null) AND the user is \n  explicitly approving the document with clear intent — saying things like \n  \"looks good\", \"approved\", \"go ahead\", \"create it\", \"yes\", \"perfect\", \n  \"thank you this is great\", \"thanks looks good\"?\n   action: CREATE_DOC\n   Only fire this if the approval is clearly about the resume preview itself.\n   Do NOT fire if the user is just making casual conversation, saying thanks \n   for a general reply, or wrapping up the chat (e.g. \"its fine\", \"no need\", \n   \"we'll connect later\", \"thanks bye\").\n   Do NOT fire if the user is acknowledging receipt of the final Google Doc \n   (e.g. \"got the resume\", \"received it\", \"got it\", \"got the doc\", \"I have it\").\n   These mean the doc was already delivered — respond with CHAT instead.\n   Example vibe: \"Love it! Creating the doc now — back in a sec 🙌\"\n\n→ User has received the resume docs link shared by you but wants the resume to have a greater Overall Fit or ATS score Eg. Messages like \"I want the resume to have at least 80% overall fit and 70% ATS score\" or \"Update this resume such that it has 96% ATS score\"?\n  action: UPDATE_DOC\n  Reply with \"Sure! Reprocessing the resume. One moment please...\"\n\n→ User is thanking you or wrapping up casually AND approved_fields is null, \n  OR user is saying goodbye/wrapping up regardless of stage?\n   action: CHAT\n   Reply warmly and briefly.\n   Example vibe: \"Happy to help! Catch you later 😊\"\n\n\nOne important point to remember: If the user asks you whether they can upload it in that format or not, clearly and politely specify to them that you won't be able to process it and that a pdf or google docs link is a must.\n\n---\n\nRESPONSE FORMAT:\nReturn ONLY a valid JSON object. No markdown. No explanation. Just JSON.\n\n{\n  \"action\": \"NEED_RESUME\" | \"NEED_JD\" | \"CHAT\" | \"PROCESS\" | \"REVISE\" | \"CREATE_DOC\" | \"UPDATE_DOC\",\n  \"reply\": \"Your message to the user — warm, natural, never stiff\",\n  \"resume_url\": \"PDF URL from history, or null\",\n  \"job_description\": \"JD text from history, or null\",\n  \"highlight_areas\": \"focus instructions from history, or null\",\n  \"revision_request\": \"what the user wants changed, or null\"\n}\n\n---\n\nPERSONALITY RULES:\n- Sound like a sharp, friendly team member — not a bot\n- Use light energy (occasional emoji is fine, don't overdo it)\n- Never repeat a question you've already asked\n- If someone skips something, just roll with it — no nudging\n- Keep replies short unless you're showing the formatted content\n- Always feel like you're one step ahead, making their life easier"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          -48,
+          1104
+        ],
+        "id": "43de1f07-b2e4-45f7-8994-7397fd5fa4f0",
+        "name": "Gatekeeper"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst data = $('Webhook').item.json.body.approved_fields;\nconst docId = $json.id;\nconst webViewLink = `https://docs.google.com/document/d/${docId}/edit`;\n\nconst keys = [\n  \"CANDIDATE_NAME\", \"PROFESSIONAL_SUMMARY\",\n  \"SKILL_CATEGORY_1\", \"SKILL_CONTENT_1\",\n  \"SKILL_CATEGORY_2\", \"SKILL_CONTENT_2\",\n  \"SKILL_CATEGORY_3\", \"SKILL_CONTENT_3\",\n  \"SKILL_CATEGORY_4\", \"SKILL_CONTENT_4\",\n  \"SKILL_CATEGORY_5\", \"SKILL_CONTENT_5\",\n  \"SKILL_CATEGORY_6\", \"SKILL_CONTENT_6\",\n  \"PROJECT_TITLE_1\", \"PROJECT_DESCRIPTION_1\", \"PROJECT_RESPONSIBILITIES_1\", \"PROJECT_TECHSTACK_1\",\n  \"PROJECT_TITLE_2\", \"PROJECT_DESCRIPTION_2\", \"PROJECT_RESPONSIBILITIES_2\", \"PROJECT_TECHSTACK_2\",\n  \"PROJECT_TITLE_3\", \"PROJECT_DESCRIPTION_3\", \"PROJECT_RESPONSIBILITIES_3\", \"PROJECT_TECHSTACK_3\",\n  \"PROJECT_TITLE_4\", \"PROJECT_DESCRIPTION_4\", \"PROJECT_RESPONSIBILITIES_4\", \"PROJECT_TECHSTACK_4\",\n  \"PROJECT_TITLE_5\", \"PROJECT_DESCRIPTION_5\", \"PROJECT_RESPONSIBILITIES_5\", \"PROJECT_TECHSTACK_5\",\n  \"PROJECT_TITLE_6\", \"PROJECT_DESCRIPTION_6\", \"PROJECT_RESPONSIBILITIES_6\", \"PROJECT_TECHSTACK_6\",\n  \"EDUCATION_DEGREE_1\", \"EDUCATION_INSTITUTE_1\", \"EDUCATION_YEAR_1\",\n  \"EDUCATION_DEGREE_2\", \"EDUCATION_INSTITUTE_2\", \"EDUCATION_YEAR_2\"\n];\n\nconst requests = keys.map(key => ({\n  replaceAllText: {\n    containsText: { text: `{{${key}}}`, matchCase: true },\n    replaceText: data[key] || \"\"\n  }\n}));\n\nreturn [{ json: { docId, webViewLink, body: { requests } } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2128,
+          1280
+        ],
+        "id": "c6d62078-fa68-4dfb-94ec-ae313bb7f7af",
+        "name": "Build Placeholder Requests"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=Here are the current resume fields (JSON):\n{{ JSON.stringify($('Webhook').item.json.body.approved_fields) }}\n\nHere is the original raw resume text for reference:\n{{ $('Webhook').item.json.body.raw_resume_text }}\n\nThe user wants the following change:\n{{ $json.revision_request }}\n\nApply the requested change to the relevant field(s) only.\nReturn the COMPLETE updated fields JSON with the same structure.\nReturn ONLY valid JSON. No explanation.",
+          "options": {
+            "systemMessage": "=You are a resume editor for ScaleupAlly. \nYou receive a full set of structured resume fields and a plain-language edit request.\nApply only the requested change. Keep everything else exactly the same.\nReturn the full updated fields object as valid JSON only."
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          1184,
+          960
+        ],
+        "id": "a7e55eef-5f01-4a19-80fc-c53ea9cf21d1",
+        "name": "Revision"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-5-mini"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          1856,
+          576
+        ],
+        "id": "6964d3ce-821a-48be-8d49-c5d79a779a2a",
+        "name": "Formatter model",
+        "credentials": {
+          "openAiApi": {
+            "id": "GbPk6QT2A4KsVKRA",
+            "name": "resume_agent_workflow"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-5-mini"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          1184,
+          1168
+        ],
+        "id": "92bfb53c-c24a-450b-86df-4ebb31c781ac",
+        "name": "Revision model",
+        "credentials": {
+          "openAiApi": {
+            "id": "GbPk6QT2A4KsVKRA",
+            "name": "resume_agent_workflow"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-5-mini"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          32,
+          1328
+        ],
+        "id": "3b3658be-2830-4cc1-b90d-fb6c4253d2f8",
+        "name": "Gatekeeper model",
+        "credentials": {
+          "openAiApi": {
+            "id": "GbPk6QT2A4KsVKRA",
+            "name": "resume_agent_workflow"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=Here is the raw resume text:\n{{ $json.text }}\n\n{% if $('Gatekeeper').item.json.job_description %}\nJob Description:\n{{ $('Gatekeeper').item.json.job_description }}\n{% endif %}\n\n{% if $('Gatekeeper').item.json.highlight_areas %}\nFocus Instructions:\n{{ $('Gatekeeper').item.json.highlight_areas }}\n{% endif %}\n\nReturn a JSON object with exactly these keys:\n{\n  \"CANDIDATE_NAME\": \"\",\n  \"CANDIDATE_ROLE\": \"\",\n  \"PROFESSIONAL_SUMMARY\": \"\",\n  \"SKILL_CATEGORY_1\": \"\", \"SKILL_CONTENT_1\": \"\",\n  \"SKILL_CATEGORY_2\": \"\", \"SKILL_CONTENT_2\": \"\",\n  \"SKILL_CATEGORY_3\": \"\", \"SKILL_CONTENT_3\": \"\",\n  \"SKILL_CATEGORY_4\": \"\", \"SKILL_CONTENT_4\": \"\",\n  \"SKILL_CATEGORY_5\": \"\", \"SKILL_CONTENT_5\": \"\",\n  \"SKILL_CATEGORY_6\": \"\", \"SKILL_CONTENT_6\": \"\",\n  \"PROJECT_TITLE_1\": \"\", \"PROJECT_DESCRIPTION_1\": \"\", \"PROJECT_RESPONSIBILITIES_1\": \"\", \"PROJECT_TECHSTACK_1\": \"\",\n  \"PROJECT_TITLE_2\": \"\", \"PROJECT_DESCRIPTION_2\": \"\", \"PROJECT_RESPONSIBILITIES_2\": \"\", \"PROJECT_TECHSTACK_2\": \"\",\n  \"PROJECT_TITLE_3\": \"\", \"PROJECT_DESCRIPTION_3\": \"\", \"PROJECT_RESPONSIBILITIES_3\": \"\", \"PROJECT_TECHSTACK_3\": \"\",\n  \"PROJECT_TITLE_4\": \"\", \"PROJECT_DESCRIPTION_4\": \"\", \"PROJECT_RESPONSIBILITIES_4\": \"\", \"PROJECT_TECHSTACK_4\": \"\",\n  \"PROJECT_TITLE_5\": \"\", \"PROJECT_DESCRIPTION_5\": \"\", \"PROJECT_RESPONSIBILITIES_5\": \"\", \"PROJECT_TECHSTACK_5\": \"\",\n  \"PROJECT_TITLE_6\": \"\", \"PROJECT_DESCRIPTION_6\": \"\", \"PROJECT_RESPONSIBILITIES_6\": \"\", \"PROJECT_TECHSTACK_6\": \"\",\n  \"EDUCATION_DEGREE_1\": \"\", \"EDUCATION_INSTITUTE_1\": \"\", \"EDUCATION_YEAR_1\": \"\",\n  \"EDUCATION_DEGREE_2\": \"\", \"EDUCATION_INSTITUTE_2\": \"\", \"EDUCATION_YEAR_2\": \"\"\n}",
+          "options": {
+            "systemMessage": "You are a resume formatter for a staff augmentation company called ScaleupAlly.\nExtract and restructure resume content into strict JSON format.\nReturn ONLY valid JSON, no markdown, no explanation.\n\nRules:\n- CANDIDATE_NAME: all caps, first name only\n- CANDIDATE_ROLE: their current role\n- PROFESSIONAL_SUMMARY: 7-8 sophisticated sentences. Synthesise from full resume. \n  If a JD is provided, tailor to that role. Do not copy from resume — rewrite professionally.\n- If highlight_areas instructions given, prioritise those themes. If de-emphasis requested, reduce that content.\n- SKILL categories should match the candidate's actual domain\n- PROJECT_DESCRIPTION: 3-5 sentences on what the project was, its purpose, scale, candidate's contribution\n- PROJECT_RESPONSIBILITIES: Polished action sentences starting with ➛, separated by \\n. 4-5 minimum.\n- Fewer than 6 projects/skills? Leave remaining fields as empty strings.\n- Never fabricate. Only use what's in the resume."
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          1776,
+          352
+        ],
+        "id": "01b781f4-35db-43c2-90fd-5cd088e9040c",
+        "name": "Formatter"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst text = $json.text || \"\";\nconst lower = text.toLowerCase();\n\n// Check for resume-like keywords\nconst resumeKeywords = [\n  \"experience\", \"education\", \"skills\", \"project\", \n  \"work history\", \"employment\", \"qualification\",\n  \"responsibilities\", \"objective\", \"summary\",\n  \"bachelor\", \"master\", \"degree\", \"university\",\n  \"developer\", \"engineer\", \"manager\", \"analyst\"\n];\n\nconst matchCount = resumeKeywords.filter(kw => lower.includes(kw)).length;\n\nif (matchCount < 5) {\n  // Not a resume — flag it\n  return [{ json: { \n    is_resume: false, \n    text: $json.text,\n    reply: \"Hmm, that doesn't look like a resume to me 🤔 I can only work with candidate resumes — even a rough one works! Could you upload the right PDF?\"\n  }}];\n}\n\nreturn [{ json: { is_resume: true, text: $json.text } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1328,
+          608
+        ],
+        "id": "8fd5ccbd-9d9c-474b-9fed-26b1e334d672",
+        "name": "Code in JavaScript3"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "0784fb1a-d1eb-44a8-867c-da1847708fd6",
+                      "leftValue": "={{ $json.is_resume }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "0cddf87f-907e-4316-ba5e-0d61c9f09985",
+                      "leftValue": "={{ $json.is_resume }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "false",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          1552,
+          608
+        ],
+        "id": "d5e924b8-6660-4af5-8799-cbdf31b4f105",
+        "name": "Switch1"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\n  \"reply\": \"{{ $json.reply }}\",\n  \"doc_url\": null,\n  \"stage\": \"chat\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          1840,
+          752
+        ],
+        "id": "005bfcdb-fb3d-43a0-bac3-f817216c38e1",
+        "name": "Respond to Webhook3"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=IMPORTANT: If no job description is provided or the job description field is empty/null, \ndo NOT attempt to calculate scores. Instead return this exact JSON:\n\n{\n  \"overall_fit\": null,\n  \"ats_score\": null,\n  \"matched_keywords\": [],\n  \"missing_keywords\": [],\n  \"strong_matches\": [\"Resume formatted successfully\"],\n  \"gaps\": [\"No job description provided — fit analysis unavailable\"]\n}\n\nHere is the job description:\n\n{{ $('Get Keys').item.json.job_description }}\n\n---\n\nHere is the final resume content:\n\n{{ JSON.stringify($('Webhook').item.json.body.approved_fields) }}\n\n---\n\nExtract keywords from both and return the result in the required JSON format.\n\nAlso, Calculate and Generate the Overall Fit and ATS evaluation based on the above.",
+          "options": {
+            "systemMessage": "You are an advanced ATS scoring and resume-job matching engine.\n\nYour job is to evaluate how well a resume matches a given job description.\n\nYou must perform structured keyword extraction, scoring, and recruiter-level analysis.\n\n---\n\nSTEP 1: KEYWORD EXTRACTION\n\nFrom Job Description:\n- Extract 15–30 important keywords\n- Include:\n  - tools (e.g., SQL, Power BI, Python)\n  - technologies\n  - frameworks\n  - responsibilities (short phrases like \"data modeling\")\n  - qualifications\n\nFrom Resume:\n- Extract relevant keywords\n- Normalize synonyms:\n  - \"Structured Query Language\" → SQL\n  - \"Power BI Desktop\" → Power BI\n  - \"MS Excel\" → Excel\n\n---\n\nSTEP 2: KEYWORD MATCHING\n\n- Identify matched_keywords (present in both)\n- Identify missing_keywords (present in JD but not in resume)\n\n---\n\nSTEP 3: OVERALL FIT CALCULATION\n\nCalculate:\n\noverall_fit = (number of matched_keywords / total jd_keywords) * 100\n\n- Must be a number between 0 and 100\n- Be strict and realistic\n- Do NOT inflate the score\n\n---\n\nSTEP 4: ATS SCORE\n\nGenerate ATS score (0–100) based on:\n- keyword coverage (overall_fit)\n- relevance of experience\n- role alignment\n- depth of projects\n\nRULES:\n- ATS score must be close to overall_fit (within ±15)\n- Increase score only if strong real alignment exists\n- Decrease score if critical skills are missing\n\n---\n\nSTEP 5: INSIGHTS\n\nGenerate:\n\nstrong_matches:\n- 3–5 meaningful strengths\n- Focus on real alignment, not just keyword overlap\n\ngaps:\n- 3–5 important missing areas\n- Focus on what reduces chances of shortlisting\n\n---\n\nOUTPUT FORMAT (STRICT JSON ONLY):\n\n{\n  \"overall_fit\": number,\n  \"ats_score\": number,\n  \"matched_keywords\": [\"...\"],\n  \"missing_keywords\": [\"...\"],\n  \"strong_matches\": [\"...\"],\n  \"gaps\": [\"...\"]\n}\n\n---\n\nRULES:\n\n- Do NOT hallucinate skills not present in input\n- Do NOT assume experience not mentioned\n- Keep keywords concise (1–3 words max)\n- Avoid duplicates\n- Be consistent and structured\n- Return ONLY valid JSON"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          2560,
+          1280
+        ],
+        "id": "8b56d644-2d4d-4347-ae96-fb9f8807e7a1",
+        "name": "Scorekeeper"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-5-mini"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          2640,
+          1488
+        ],
+        "id": "cbbb35d4-58ef-4a67-93ea-4bef43746207",
+        "name": "Scorekeeper Model",
+        "credentials": {
+          "openAiApi": {
+            "id": "GbPk6QT2A4KsVKRA",
+            "name": "resume_agent_workflow"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "fdd78662-8fe8-46fb-92cd-47015905fc5e",
+                "leftValue": "={{ $json.action }}",
+                "rightValue": "UPDATE_DOC",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          848,
+          1312
+        ],
+        "id": "b727fe72-f2b7-488c-b65f-a62c949af06f",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "operation": "copy",
+          "fileId": {
+            "__rl": true,
+            "value": "1wIfqSIZTAc26-if8z0hEfBQJ-uA8NB2AcLQBtUtoXTs",
+            "mode": "list",
+            "cachedResultName": "Placeholders",
+            "cachedResultUrl": "https://docs.google.com/document/d/1wIfqSIZTAc26-if8z0hEfBQJ-uA8NB2AcLQBtUtoXTs/edit?usp=drivesdk"
+          },
+          "name": "={{ $('Webhook').item.json.body.approved_fields.CANDIDATE_NAME }}_{{ $('Webhook').item.json.body.approved_fields.CANDIDATE_ROLE }}",
+          "sameFolder": false,
+          "driveId": {
+            "__rl": true,
+            "value": "My Drive",
+            "mode": "list",
+            "cachedResultName": "My Drive",
+            "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1zCZAKI8EzSI-t_s3RrF0i468T3hDGdyZ",
+            "mode": "list",
+            "cachedResultName": "Placeholder",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1zCZAKI8EzSI-t_s3RrF0i468T3hDGdyZ"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          1632,
+          1280
+        ],
+        "id": "15350b74-504a-4ecb-9917-b94cc2ab31a9",
+        "name": "Make new copy file in Placeholders folder",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "BlvFpa0On2sc2kNI",
+            "name": "Staffing Scaleupally"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "move",
+          "fileId": {
+            "__rl": true,
+            "value": "={{ $json.id }}",
+            "mode": "id"
+          },
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "19vW0oeYmG8ugRbz_dHsItRVaf2x-SCQD",
+            "mode": "list",
+            "cachedResultName": "Final Resumes(Agent)",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/19vW0oeYmG8ugRbz_dHsItRVaf2x-SCQD"
+          }
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          1872,
+          1280
+        ],
+        "id": "2f09b77d-c8a0-46d7-8649-c0c5a9f62bdc",
+        "name": "Move file to Final Resumes folder",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "BlvFpa0On2sc2kNI",
+            "name": "Staffing Scaleupally"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://docs.googleapis.com/v1/documents/{{ $json.docId }}:batchUpdate",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify($json.body) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2384,
+          1280
+        ],
+        "id": "173e4e63-1e1e-42b9-bbe9-4303403e2529",
+        "name": "API request to populate our final file",
+        "credentials": {
+          "oAuth2Api": {
+            "id": "IJ9GwsApNFaPgpOK",
+            "name": "Staffing Scaleupally"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $json.output;\nconst parsed = JSON.parse(raw);\n\nconst docUrl = $('Build Placeholder Requests').item.json.webViewLink;\n\nlet reply = `Your formatted resume is ready! 🎉 Click below to open it.\\n📄 Resume Link:\\n${docUrl}\\n`;\n\nif (parsed.overall_fit !== null) {\n  reply += `---\\n\\n📊 ATS ANALYSIS\\n\\nOverall Fit: ${parsed.overall_fit}%\\nATS Score: ${parsed.ats_score}%\\n\\n✅ Strong Matches:\\n- ${parsed.strong_matches.join('\\n- ')}\\n\\n⚠️ Gaps:\\n- ${parsed.gaps.join('\\n- ')}`;\n} else {\n  reply += 'No JD provided — ATS analysis skipped.';\n}\n\nreturn [{ json: { reply, doc_url: docUrl, stage: 'complete' } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2912,
+          1280
+        ],
+        "id": "54eb7f6c-635d-4359-a570-0fc44d7069f1",
+        "name": "Get JSON for previous output and make body for Webhook"
+      },
+      {
+        "parameters": {
+          "respondWith": "text",
+          "responseBody": "={{JSON.stringify({ reply: $json.reply, doc_url: $json.doc_url, stage: $json.stage })}}",
+          "options": {
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            }
+          }
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          3136,
+          1280
+        ],
+        "id": "38d34cf5-b962-49ef-93c0-fb058692369f",
+        "name": "Respond to app"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst raw = $json.output;\nconst parsed = JSON.parse(raw);\nreturn [{ json: parsed }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          304,
+          1104
+        ],
+        "id": "165b83b3-6320-4c66-b642-cdf51d794e90",
+        "name": "Get Keys"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Gatekeeper",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Revision",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Extract from File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract from File": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript2": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gatekeeper": {
+        "main": [
+          [
+            {
+              "node": "Get Keys",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Placeholder Requests": {
+        "main": [
+          [
+            {
+              "node": "API request to populate our final file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Revision": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Formatter model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Formatter",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Revision model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Revision",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gatekeeper model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Gatekeeper",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Formatter": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript3": {
+        "main": [
+          [
+            {
+              "node": "Switch1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch1": {
+        "main": [
+          [
+            {
+              "node": "Formatter",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond to Webhook3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Scorekeeper": {
+        "main": [
+          [
+            {
+              "node": "Get JSON for previous output and make body for Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Scorekeeper Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Scorekeeper",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Revision",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Make new copy file in Placeholders folder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Make new copy file in Placeholders folder": {
+        "main": [
+          [
+            {
+              "node": "Move file to Final Resumes folder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Move file to Final Resumes folder": {
+        "main": [
+          [
+            {
+              "node": "Build Placeholder Requests",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "API request to populate our final file": {
+        "main": [
+          [
+            {
+              "node": "Scorekeeper",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get JSON for previous output and make body for Webhook": {
+        "main": [
+          [
+            {
+              "node": "Respond to app",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Respond to app": {
+        "main": [
+          []
+        ]
+      },
+      "Get Keys": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dev Scaleupally",
+    "name": "Version 11c94f6f",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

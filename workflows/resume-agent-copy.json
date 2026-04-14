@@ -1,0 +1,264 @@
+{
+  "updatedAt": "2026-03-23T12:12:45.000Z",
+  "createdAt": "2026-03-19T06:48:36.948Z",
+  "id": "I2ZOxUK06OObdjkW",
+  "name": "resume agent copy",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the raw resume text:\n{{ $json.text }}\n\nReturn a JSON object with exactly these keys:\n{\n  \"CANDIDATE_NAME\": \"\",\n  \"CANDIDATE_ROLE\": \"\",\n  \"PROFESSIONAL_SUMMARY\": \"\",\n  \"SKILL_CATEGORY_1\": \"\", \"SKILL_CONTENT_1\": \"\",\n  \"SKILL_CATEGORY_2\": \"\", \"SKILL_CONTENT_2\": \"\",\n  \"SKILL_CATEGORY_3\": \"\", \"SKILL_CONTENT_3\": \"\",\n  \"SKILL_CATEGORY_4\": \"\", \"SKILL_CONTENT_4\": \"\",\n  \"SKILL_CATEGORY_5\": \"\", \"SKILL_CONTENT_5\": \"\",\n  \"SKILL_CATEGORY_6\": \"\", \"SKILL_CONTENT_6\": \"\",\n  \"PROJECT_TITLE_1\": \"\",\n  \"PROJECT_DESCRIPTION_1\": \"\", \"PROJECT_RESPONSIBILITIES_1\": \"\", \"PROJECT_TECHSTACK_1\": \"\",\n  \"PROJECT_TITLE_2\": \"\",\n  \"PROJECT_DESCRIPTION_2\": \"\", \"PROJECT_RESPONSIBILITIES_2\": \"\", \"PROJECT_TECHSTACK_2\": \"\",\n  \"PROJECT_TITLE_3\": \"\",\n  \"PROJECT_DESCRIPTION_3\": \"\", \"PROJECT_RESPONSIBILITIES_3\": \"\", \"PROJECT_TECHSTACK_3\": \"\",\n  \"PROJECT_TITLE_4\": \"\",\n  \"PROJECT_DESCRIPTION_4\": \"\", \"PROJECT_RESPONSIBILITIES_4\": \"\", \"PROJECT_TECHSTACK_4\": \"\",\n  \"PROJECT_TITLE_5\": \"\",\n  \"PROJECT_DESCRIPTION_5\": \"\", \"PROJECT_RESPONSIBILITIES_5\": \"\", \"PROJECT_TECHSTACK_5\": \"\",\n  \"PROJECT_TITLE_6\": \"\",\n  \"PROJECT_DESCRIPTION_6\": \"\", \"PROJECT_RESPONSIBILITIES_6\": \"\", \"PROJECT_TECHSTACK_6\": \"\",\n  \"EDUCATION_DEGREE_1\": \"\", \"EDUCATION_INSTITUTE_1\": \"\", \"EDUCATION_YEAR_1\": \"\",\n  \"EDUCATION_DEGREE_2\": \"\", \"EDUCATION_INSTITUTE_2\": \"\", \"EDUCATION_YEAR_2\": \"\"\n}",
+        "options": {
+          "systemMessage": "=You are a resume formatter for a staff augmentation company called ScaleupAlly.\nYou will receive raw resume text and must extract and restructure the content\ninto a strict JSON format. Do not invent or assume any information.\nOnly use what is present in the resume.\nReturn ONLY valid JSON, no markdown, no explanation.\n\nRules:\n- CANDIDATE_NAME should be in all upper case and should just contain the first name of the person.\n- CANDIDATE_ROLE should be the role the person is working.\n- PROFESSIONAL_SUMMARY should be sophisticated, polished and comprehensive — synthesized from the entire resume including skills, projects and experience. It should be 7-8 sentences long, highlight the candidate's core strengths, domain expertise, notable achievements and the value they bring. Do not copy lines directly from the resume, rewrite in ScaleupAlly's professional tone.\n- SKILL categories should match the candidate's actual domain (e.g. for a frontend dev: Languages & Frameworks, Frontend Technologies etc.)\n- If a candidate has fewer than 6 projects, leave remaining PROJECT fields as empty strings\n- If a candidate has fewer than 6 skill categories, leave remaining SKILL fields as empty strings\n- PROJECT_DESCRIPTION should be a detailed 3-5 sentence paragraph explaining what the project was, its purpose, the problem it solved, the scale of the platform and the candidate's overall contribution to it. Polish the language but do not add anything not present in the resume.\n- PROJECT_RESPONSIBILITIES should be written as complete, polished action sentences — not fragments. Each responsibility should clearly describe what the candidate did, how they did it and what it achieved where possible. Separate each responsibility with a newline character \\n. Start each with ➛. Do not invent responsibilities, only polish what exists. There should be at least 4-5 bullet points.\n- All content should be professionally polished and sophisticated in language — elevated but accurate. Never fabricate facts, numbers, tools or outcomes that are not present in the raw resume."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        800,
+        0
+      ],
+      "id": "c4ab351a-2833-44be-854d-3a361868d966",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        256
+      ],
+      "id": "819ee536-8a1e-48f8-92ac-5d7128c6e29a",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        256,
+        0
+      ],
+      "id": "539a6b5a-0f2a-40be-bbcd-600b1087e2be",
+      "name": "Download  resp. file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "BlvFpa0On2sc2kNI",
+          "name": "Staffing Scaleupally"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "e9c597e4-8428-4032-a370-011301ddd220",
+      "name": "Extract Text from File"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const raw = $json.output;\n// Parse the JSON stringconst\nconst parsed = JSON.parse(raw);\n\nreturn parsed;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        0
+      ],
+      "id": "bdfa1b4d-c473-45a3-8a8a-e093eac4e2f4",
+      "name": "Parse JSON code"
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "19vW0oeYmG8ugRbz_dHsItRVaf2x-SCQD",
+          "mode": "list",
+          "cachedResultName": "Final Resumes(Agent)",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/19vW0oeYmG8ugRbz_dHsItRVaf2x-SCQD"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1744,
+        0
+      ],
+      "id": "6ec37f34-8baa-4ce3-908c-c93a806762e2",
+      "name": "Move file to Output Folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "BlvFpa0On2sc2kNI",
+          "name": "Staffing Scaleupally"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "resume_agent_path",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        80,
+        0
+      ],
+      "id": "47c131c0-87e3-4661-9d02-20ea7661d536",
+      "name": "Webhook",
+      "webhookId": "05e944ae-e8e7-42b4-8331-6af617edb82b"
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download  resp. file": {
+      "main": [
+        [
+          {
+            "node": "Extract Text from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Text from File": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse JSON code": {
+      "main": [
+        [
+          {
+            "node": "Move file to Output Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move file to Output Folder": {
+      "main": [
+        []
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Download  resp. file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:New File Trigger": {
+      "lastTimeChecked": "2026-03-19T04:51:07Z"
+    },
+    "node:Google Drive Trigger": {
+      "lastTimeChecked": "2026-03-19T06:47:51Z"
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "bbe9e86b-f785-463c-b659-4e01ac955cae",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-19T06:48:36.950Z",
+      "createdAt": "2026-03-19T06:48:36.950Z",
+      "role": "workflow:owner",
+      "workflowId": "I2ZOxUK06OObdjkW",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

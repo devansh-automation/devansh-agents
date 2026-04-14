@@ -1,0 +1,347 @@
+{
+  "updatedAt": "2025-07-14T06:21:50.000Z",
+  "createdAt": "2025-07-08T10:59:20.563Z",
+  "id": "Dt2xPaLz9cwjsWcz",
+  "name": "Interview_analysis_agent",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "3d5f4caa-d094-4513-be42-c46431370424",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "transcript",
+              "value": "00:00 I don't know what I'm doing. 01:22 Doing fine, Imran. 10:08 Thanks for asking. What about you? Let me tell you about my thing. 10:30 So, as you know, my name is Naza Baklita, right? And I have a total of 8 years of experience in building web-based applications in Microsoft Technologies Tech. 10:38 and I have worked on a development and maintenance of a web application, which is written using the SP.NET. Majorly, my experience is in a MVC and .NET Core on the API side. 10:52 But I do have working experience in Angular as well as React. So, this is the Technologies Tech I have worked on. 11:00 And on the domain side, I have worked with the healthcare domain, e-commerce domain, ERM, ERP, and education domain, right? So, my recent clients were actually UP teams and Yonder1, which was actually US and UK-based clients. 11:18 Hello, Indra, am I audible or? Okay, okay, So, my recent project was UP Team. 11:43 Actually, this is a US-based client and it has 65 locations on US. So, we have created a centralized application for UP. 11:52 and in this application yeah recently we have created a kiosk application for particularly UPGYM and it was actually, ah, helped to manage the members, ah, member check-ins and, ah, some guest passes and, ah, ah, prospect check-ins, right? 12:07 So, that was the, ah, purpose of, ah, this kiosk application. Other than that, we can actually, ah, sign up for, ah, new guests, right? 12:23 And, ah, they can actually upgrade their membership or new members can actually buy the membership and PT sessions and all that stuff through this kiosk application. 12:32 And this application is built on .NET Core in the backend and Angular as a frontend. And we have used, ah, SQL Server for database and, ah, ORM as an entity framework. 12:46 Yeah. So, ReactJS, actually, I have very little experience in ReactJS, right? Ah, two, yeah, yeah, two years ago, I have worked on React application. That was only one application that I worked on. Yeah, yeah, sure. 13:22 So, repository pattern has been used in this, ah, EufyGym, ah, project. And, ah, we have used repository pattern using, ah, unit of work and, ah, ah, using the unit of work and implemented using the data dependence injection, right. 13:43 Other than that, I am, ah, well aware of clean architecture and sorry yes yes yes so I'm aware of this In Singleton and Factory Pattern, but, ah, ah, never actually deeply worked on these two patterns, right. 14:07 I, I know that how these things works. In Singleton, actually, it is, ah, the whole purpose of actually creating one-to-one instance and using that instance throughout the application lifecycle. 14:17 And in the Factory Pattern, it is nothing much but actually how to, how actually object creation has been handled, ah, ah, from the third party, right, not by, ah, ah, any instance. 14:35 Yes, in not this project, but earlier in the competition. We have used Revit IQ, ah, Revit, ah, MQ, and, ah, ah, yeah, yeah, yeah, yeah, yeah, I'm, I'm just actually explaining. 14:46 Yes, yes, yes, I'm, I'm, oh, okay, okay, okay. 15:04 And, ah, in, in this, in previous project, right, I have used a casing mechanism. But with the RabbitMQ, that is, I know that this is a messaging verse, so yeah, that is fine. 15:17 But along with that, there was a, Oh, what was the name? It is a very popular casing. 15:29 Sorry, I actually forgot that name. It was in my mind, I worked on this one, but, Yeah, in-memory casing, that is also there, but we have used a third-party casing sir radius casing yeah sorry it was actually two years ago that's why I forgot the name okay yeah but correct correct correct we can actually 16:08 create a memory case and output case and all this from our side right with that using a third party but radius is radius was actually used because it handles all the type of all these casing mechanism it in their own right so that was the decision of management to actually use the radius case instead 16:29 of we are creating for our project, for us, right, different mechanism. Correct, correct, yeah, yeah, that's what I said, right, actually, so, to, if we just want to actually, uh, uh, partially interact with the data, right, database, then we, that's why we are using the radius case but why particularly 17:08 radius case or anything, nothing, uh, or anything else right not not anything else steps yeah yeah yeah the security and the mechanism and all that stuff, right, because radius provide all of these, uh, pre-built-in functionalities that we don't have to actually take and care at our side. 17:28 The fast, it is faster, right, so, either, or, if we are just creating it on our side, then we need to actually think about all these memories and, uh, stuff that we don't have to actually think about if we are just going service lifetime of? 17:51 I didn't understand your question okay what is the service lifeline I'm not sure I am following that question okay yeah the dependence injection three types right okay I understand so once a request there are three types right a singleton transient and, uh, scope so if we are just going with singleton 18:24 the service lifetime will be through, uh, this instance will be created only once throughout the application lifetime right and if we are just going with the scope then if suppose we are actually injecting our dependency inside our controller or service then through, uh, within this controller or service 18:44 we can actually, uh, we can use this use this instance otherwise if we are actually using, uh, and now next is transient right if within the controller if we are in injecting two times the same dependency then, uh, the both will be actually different both instance will be different from each other yeah 19:17 okay suppose we are actually creating some something, uh, in, in the normal, uh, normal applications right we mostly use a scope because we don't want to actually inject multiple dependencies inside a very same controller or service so at that time we use a scope which is mostly used but in transient 19:40 right if we are actually, uh, dedicating some tasks to particular instance of our dependency or object at that time and within the same scope we are going to actually use anything we are going to use the very same dependency for different purpose at that time this is the simple uh, language I am explaining 20:02 you, explaining to you, uh, Imran so that case we have to use transient yes for authentication purpose or logging purpose we have created a custom, uh, default mechanism yeah yeah yes yes yeah correct but suppose if we want to to, uh, like, in the recent, uh, in the recent project, uh, for ufit we have 20:48 created an API which was actually, uh, open API and, uh, we was, uh, facing a bot attack on that one so at that time we needed to see that if it is a bot attack or if it is actually we if we need to, we needed to add a few extra headers in our API, API equals. 21:10 At that time, we have created this custom JWT mostly I have used. 21:25 JWT is actually very non-authentication mechanism for REST APIs, right? So, and, uh, I don't think any particular reason for JWT, why to use JWT, but it provides, uh, pretty much secure, uh, secure authentication and it is pretty much easy to actually use also with the claim base and all that. 21:56 So, claim is nothing but a value, we can say, for the claim. Uh, parameter, which we are passing within the token authentication token, uh, while we are calling an API, right? 22:07 So suppose if you want to pass some employee ID or user ID, right? Within your request. So you don't have to actually pass it on the payload because it will be authenticated, uh, it will be already authenticated when you are logged in, right? 22:23 If we are talking about the login, uh, employee login, right? so we can actually create a claim for that one and pass it on using the authentication token within the authentication token. 22:35 So, uh, what, as far as my knowledge, it was for authentication means a role. 22:49 If we are just doing a role-based authentication or, uh, uh, rights-based authentication, right, at that time, uh, it is mostly used for authenticate, uh, whether it is, whether the user or the token is authenticated to, uh, perform this action or access this code or not. 23:13 Yes. Okay, yeah. 23:27 So, when we do the authorization, right, in the, in StartupFile, we mentioned that, uh, what claims we are actually, uh, what claims we are going to create at the time of generating the token. 23:39 So, now, in that, we have a role, particular, uh, predefined role claim name, right? So, if we are just passing that role name, and after that, uh, on the controller side, when we are authorizing, at that time, we can just pass the role name and if there are multiple roles right then we can just pass 24:00 one role name and if the, uh, the role match or we can say the keyword match with the authentication token and this authorized filter, right, then it will actually, it will, uh, let's say it is the right, uh, right, uh, authentication token to access this feature. 24:21 it. Okay, so we can actually do the course for browser, cross-browser pings, right? 24:36 Then authentication then authorization then we can actually secure it, uh, with, uh, uh, we are talking about, uh, uh, REST APIs only. 24:52 You are in view, Timran, if you're talking, yes, actually. Uh, so basically the idea of pagination is to fetch the data, whichever we need to display, right, and don't fetch all the records and then do the pagination at the front side. 25:21 Particularly, uh, yeah, with the predicate and take and skip, right. We can actually do that, uh, if we are, if we can just say on the, uh, entity framework site, so we can use predicate and projection as well as, uh, take and skip for, uh, uh, for paging or fetching the data, which we need only. 25:58 Okay. How, how we can make sure that our API is restful, right? 26:11 It is actually restful. I don't see an answer to that one, but it is stateless, right? If it is stateless, then we can say it is restful. 26:25 And, uh, in the older web APIs, yes. Uh, when we are doing any code from frontend to backend or, uh, inside our application of our API right at that time we pass some context for session or state to actually, uh, uh, have the idea of what type of request it is. 26:48 And, uh, what will be, uh, what data it contains in the request, right? So in the restful, it is stateless because there are no context of that one. 26:58 That's why it is actually, uh, very light, uh, for, uh, in compared to the web API code, uh, uh, uh, the old web API is called, right? 27:08 Okay, so. I think of it, the middleware we can actually do that one, uh, we can identify the client on the middleware. 27:38 And when, when, why we are actually, uh, requesting back or responsing the very same client, we can actually, uh, differentiate between, uh, JSON or XML responses. 27:50 This is my assumption, I have never actually done this type of scenario. Okay. No, no worries. 28:07 In, I'm not sure if it is mentioned in my resume or not, but, uh, when we are, yeah, yeah, yeah, yes, yes, yes, yeah. 28:41 So, I was previously working with Portec, uh, for Yandere applications. I, at that time, at very last of, uh, last two months of my, uh, contract, we was building the microservice, yeah. 28:53 But, uh, it was not completed or we have not created a bus or anything, but we just separated the infrastructure In the .NET Core, parameter binding, you are saying or? 29:11 Okay. Parameter binding means I have the knowledge, but I can actually answer it in technical terms. But. What is the parameter binding means? 29:23 Either we can actually paste the parameter of API from the body, right? Or the payload, uh, in the request and, uh, whichever the same, uh, object or same, we can say the key, key value pairs, right? 29:37 We will receive from this payload. It automatically binds on our API endpoint. Yeah, I understand. 30:08 So basically, uh, we need, if we want to actually create a, uh, uh, effective link query, right? Then we need to use the select. 30:20 That is more important because, uh, we cannot, we can't select, uh, means, uh, uh, projects. And right. We need to use the project. 30:30 Yeah. Projects. And because, uh, whatever data we need, we need to actually select only that part of data from our application from our database table right so that is a major, uh, vector. 30:44 The second, we have to actually either, uh, sorry. So second, uh, we need to actually, uh, we can actually do the uh, advantage when we are, uh, just, uh, coping the data from our database. 31:03 We do not want to actually trail this data in in in the next request sorry about that yeah yeah so these two things and as I said the predicates right, uh, that is also a monster, uh, could see, uh, critical, critical, uh, parameter to improve the query because we need proper predicates to actually fetch 31:38 from our database. I think these three, if we are just doing these three, right. predicate. The predicate is very close. 31:57 But in the entity framework, it is called a predicate. It is on nothing but a WHERE clause, but it, it, it improves right in, uh, the traditional .NET, then .NET, uh, very improved predicate and, uh, management of predicate. 32:18 So you can actually just predefined your WHERE clause, create that WHERE clause and then, uh, in an object, yeah, and send it to query. 32:25 ok delegate yeah yeah yeah correct what is difference no no no yeah it is nothing but an object yeah predicate is nothing but a object which you can actually fire, uh, uh, where we can pass on when we are doing the SELECT statement yes so tuple is actually if suppose if you want to actually return two 33:12 values right from your function at that time dotnet dot does not provide a function facility to return two different values in one function so you can actually do what what you can do you can actually create a tuple and send it out to, uh, send it out in your response so that yeah yeah so read-only is 33:42 suppose suppose we are creating a object right which is read only then you can actually modify this into your controller only sorry I think my headphone died. 33:54 Am I audible? still audible? wait a second let me adjust Hello? Yes, I can hear you Ok, sorry, my headphone just died this way Ok Yeah So, read-only is, uh, we are creating an object, right? 34:29 And we need to, if we need to actually change or assign something in this object we can do it only from the constructor Uh, no outside the constructor, it cannot be changed and Static is something we cannot create an object for So, suppose if you are Sorry? Static variable, So, which is, which is also 34:55 the same, right? You cannot actually Uh, create an object or Sorry? If we are, suppose we have a class And inside that we are doing anything for static variables, right? 35:09 Memory allocation will be applied when we are running the application no after that Integer is important too I want to change the value of a Static, right? 35:26 Yes And it is inside the class or, ah, function or how? That's inside the class That's inside the class So, we cannot actually change that one because it is already assigned Like the constant, we are, we can actually assign at the run time only What is the difference between static and constant? 35:52 You cannot change the value of constant and the static as So why static and why constant? There should be a obvious I think you are right There must be some reason that, ah, I am not aware of. 36:10 I will definitely look into that one We cannot change the value of read only. We can actually do that, right? I am not sure of that one. I am sorry. 36:34 Over the chat, I have given you, ah, some examples. 36:45 Can you open the chat? Yes, I can see. Ok, let me share. Yeah, I got it. And we are ready to go to work. 37:21 So, you, you want me to write the logic here? 37:53 You can open the notepad and you can write, you know, in any language you want. Okay. Anything in java, javascript."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f6ddc65b-0bbf-4dcf-a1d5-eab2036fc8f6",
+      "name": "Upload Transcript (Text)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "binaryData": true,
+        "name": "Naza_Interview_Report.pdf",
+        "options": {}
+      },
+      "id": "d996a896-5a42-4766-a8b7-280cd9bb7369",
+      "name": "Upload to Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [
+        1720,
+        0
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "n0CvjchLHfx5S5wR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdf.co/v1/pdf/convert/to/text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "mis.scaleupally@gmail.com_qSw4yXtkZP1LFfpnTGKvZDVwf12tDYnbOJv2p8ShQkdDCQexAK3Q9GiFRpx7wTI6"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"url\": \"{{$json[\"jd_url\"]}}\",\n  \"inline\": true,\n  \"pages\": \"\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "id": "23a24b76-20c6-4330-a158-f0ca2655235f",
+      "name": "Extract JD Text (PDF.co)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b11e4725-401e-4a9b-8aba-054a92043d3d",
+              "name": "jd_url",
+              "value": "https://drive.google.com/file/d/133VFeTHDqIKxFy2ZRqbsKU0ObNeSZHmR",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        0
+      ],
+      "id": "0d433eaa-9723-4fc7-a994-b1ea5773eaa6",
+      "name": "JD PDF Link"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert interview coach.\n\nYou will evaluate an interview **transcript** (with timestamps) from the perspective of the **interviewee**. Also consider the provided **job description (JD)**. DO NOT clean or alter the transcript — retain all timestamps and speaking quirks as is.\n\n### Output Structure:\n\n---\n\n## 🧾 Summary (Human-style)\n\nWrite a brief, 2–3 paragraph summary of the interviewee’s performance.\nMention:\n\n- Overall tone, confidence, and fluency\n- Any patterns of stammering, hesitation, long pauses\n- Poor sentence construction, run-ons, or awkward phrasing\n- Notable shifts in confidence across topics\n- General impression of job fit based on answers\n\n---\n\n## 📊 Parameter-wise Evaluation\n\nFor each of the following 8 parameters:\n- Give a **score (1 to 5)**\n- Write a **3–5 sentence comment**\n- Add **timestamped examples** (max 3–5) that justify your score\n\n### 1. Understanding the Question and Answering\n### 2. Active Listening\n### 3. Past Experience / Project Articulation\n### 4. Unanswered or Dodged Questions\n### 5. Communication Fillers & Clarity\n### 6. Confidence and Tone\n### 7. Job Relevance Alignment\n### 8. Behavioral/STAR Response Quality\n\n---\n\n## ❌ Unanswered or Vague Questions\nList all questions that were:\n- Not answered clearly\n- Ignored or misunderstood\nInclude timestamps\n\n---\n\n## ✅ Recommendations (for Improvement)\nList 4–6 clear, constructive tips to improve the candidate's performance in future interviews.\n\n---\n\n### Interview Transcript:\n{{$node[\"Upload Transcript (Text)\"].json[\"transcript\"]}}\n\n---\n\n### Job Description:\n{{$node[\"Extract JD Text (PDF.co)\"].json[\"body\"]}}\n",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an expert interview coach. You will evaluate an interview transcript from the candidate's perspective. Return your output in HTML format using <h2>, <ul>, <li>, <p>, <strong> tags only."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        880,
+        0
+      ],
+      "id": "f358205e-6cd6-4a29-a133-aab5801929b1",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "chatgpt-4o-latest"
+        },
+        "options": {
+          "frequencyPenalty": 0,
+          "maxTokens": 6000,
+          "responseFormat": "text",
+          "presencePenalty": 0,
+          "temperature": 0.5,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        980,
+        220
+      ],
+      "id": "20581c73-15c7-4048-9591-7f0ba65889b5",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "310caafc-15b5-46b3-86c1-4a0b04cd4db6",
+              "name": "data",
+              "value": "=={{$json[\"text\"]}}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1260,
+        0
+      ],
+      "id": "ee3361e6-db7a-4e5e-9faf-11a75212cca0",
+      "name": "Wrap HTML for PDF"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdfshift.io/v3/convert/pdf",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "source",
+              "value": "={{'<!DOCTYPE html>' + $(\"Wrap HTML for PDF\").item.json[\"data\"]}}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1480,
+        0
+      ],
+      "id": "c8760074-e3a1-4073-9836-4e2a111d023d",
+      "name": "Convert HTML to PDF",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "RFDhx1OxMPOo4KN3",
+          "name": "mis credentials"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Upload Transcript (Text)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Transcript (Text)": {
+      "main": [
+        [
+          {
+            "node": "JD PDF Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JD PDF Link": {
+      "main": [
+        [
+          {
+            "node": "Extract JD Text (PDF.co)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract JD Text (PDF.co)": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Wrap HTML for PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wrap HTML for PDF": {
+      "main": [
+        [
+          {
+            "node": "Convert HTML to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert HTML to PDF": {
+      "main": [
+        [
+          {
+            "node": "Upload to Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "0e033d51-48e8-4ee4-8e7b-9bc1bfc76682",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-07-08T10:59:20.567Z",
+      "createdAt": "2025-07-08T10:59:20.567Z",
+      "role": "workflow:owner",
+      "workflowId": "Dt2xPaLz9cwjsWcz",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [
+    {
+      "updatedAt": "2025-07-14T06:22:00.853Z",
+      "createdAt": "2025-07-14T06:21:42.741Z",
+      "id": "o0gqDTGMQjrNvQzK",
+      "name": "Devansh workflow"
+    }
+  ]
+}

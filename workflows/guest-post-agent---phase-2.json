@@ -1,0 +1,4073 @@
+{
+  "updatedAt": "2026-02-05T13:07:19.579Z",
+  "createdAt": "2025-09-12T10:54:06.273Z",
+  "id": "IrwUcpN1W9ZTuWTe",
+  "name": "Guest Post Agent - Phase 2",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Utility: Decode base64 safely\nfunction decodeBase64(data) {\n  if (!data) return \"\";\n  const cleaned = data.replace(/-/g, '+').replace(/_/g, '/');\n  const padded = cleaned + \"=\".repeat((4 - cleaned.length % 4) % 4);\n  return Buffer.from(padded, \"base64\").toString(\"utf-8\");\n}\n\n// Utility: Extract full plain text recursively from Gmail payload\nfunction extractPlainText(payload) {\n  if (!payload) return \"\";\n\n  if (payload.mimeType === \"text/plain\" && payload.body?.data) {\n    return decodeBase64(payload.body.data);\n  }\n\n  if (payload.parts && Array.isArray(payload.parts)) {\n    for (const part of payload.parts) {\n      const text = extractPlainText(part);\n      if (text) return text;\n    }\n  }\n\n  // Fallback\n  if (payload.body?.data) {\n    return decodeBase64(payload.body.data);\n  }\n\n  return \"\";\n}\n\n// === Keywords to match ===\nconst literalKeywords = [\n  \"guest post\",\n  \"guest-post\",\n  \"guestpost\",\n  \"link exchange\",\n  \"link building\",\n  \"submit article\",\n  \"write for us\",\n  \"contribute\",\n  \"contributing\",\n  \"sponsored post\",\n  \"paid link\",\n  \"blog exchange\",\n  \"link insertion\",\n  \"guest posting\",\n  \"backlink exchange\"\n];\n\nconst regexKeywords = [\n  \"insert.*link\"\n];\n\n// === MAIN MATCH LOGIC ===\nconst inputItems = $(\"Pull thread\").all();\nconst results = [];\n\nfor (const item of inputItems) {\n  const message = item.json.messages?.[0] || item.json;\n  if (!message) {\n    results.push({ json: { guestPostMatch: false } });\n    continue;\n  }\n\n  // Extract subject\n  const headers = Object.fromEntries((message.payload?.headers || []).map(h => [h.name, h.value]));\n  const subject = (headers[\"Subject\"] || \"\").toLowerCase();\n\n  // Extract full plain text body\n  const bodyText = extractPlainText(message.payload).toLowerCase();\n\n  // Combine subject + body\n  const combinedText = subject + \" \" + bodyText;\n\n  let matchedKeyword = null;\n  // First try literal matches\n  const isLiteralMatch = literalKeywords.some(keyword => {\n    const pattern = new RegExp(`\\\\b${keyword.replace(/\\s+/g, '\\\\s+')}\\\\b`, 'i');\n    if (pattern.test(combinedText)) {\n      matchedKeyword = keyword;\n      return true;\n    }\n    return false;\n  });\n  // Then try regex patterns only if no literal match\n  const isRegexMatch = !isLiteralMatch && regexKeywords.some(regex => {\n    const pattern = new RegExp(regex, 'i');\n    if (pattern.test(combinedText)) {\n      matchedKeyword = regex;\n      return true;\n    }\n    return false;\n  });\n  const isMatch = isLiteralMatch || isRegexMatch;\n  results.push({\n    json: {\n      guestPostMatch: isMatch,\n      matchedKeyword,\n      matchedTextPreview: combinedText.slice(0, 500)\n    }\n  });\n}\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6816,
+        -320
+      ],
+      "id": "2446a787-4f65-418d-9e09-300e3210bf04",
+      "name": "Check for Guest Post Keywords"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d99c746e-7997-437d-9ff8-fec982adef85",
+              "leftValue": "={{ $json.guestPostMatch }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -6592,
+        -320
+      ],
+      "id": "0d2ac33f-7ea4-4d52-bcf2-b24e4f2763a8",
+      "name": "Guest Post Keyword Filter"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "threadId",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "id": "6ac6f882-416e-45c4-ae4f-ee0731ec8ed4",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -7264,
+        -320
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -6368,
+        -224
+      ],
+      "id": "366a9ab4-c4a1-4212-9b54-2ab814a2cb76",
+      "name": "Not a Guest Post"
+    },
+    {
+      "parameters": {
+        "tableId": "email_thread",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "thread_id",
+              "fieldValue": "={{ $('Pull thread').last().json.threadId }}"
+            },
+            {
+              "fieldId": "last_message_id",
+              "fieldValue": "={{ $(\"Pull thread\").last().json[\"id\"] }}"
+            },
+            {
+              "fieldId": "human_handover",
+              "fieldValue": "False"
+            },
+            {
+              "fieldId": "last_replied",
+              "fieldValue": "={{ $now }}"
+            },
+            {
+              "fieldId": "sender_email",
+              "fieldValue": "={{ $('Pull thread').first().json.From.match(/<([^>]+)>/) ? $('Pull thread').first().json.From.match(/<([^>]+)>/)[1] : '' }}"
+            },
+            {
+              "fieldId": "received_at",
+              "fieldValue": "={{ $('Pull thread').first().json.Date }}"
+            },
+            {
+              "fieldId": "client_id",
+              "fieldValue": "={{ $('check_exists').item.json.id }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "new_lead"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -5024,
+        -320
+      ],
+      "id": "6995f2b4-bcc4-4df6-b324-a313963b90ff",
+      "name": "Create a  row in email_thread",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.threadSummary }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "need_reply",
+              "description": "Select this category when you feel the threads latest message needs a reply. We need to tell them about pricing, reply to any of their questions or answer to the mail."
+            },
+            {
+              "category": "follow_up_later",
+              "description": "Select this category when you feel the threads latest message does not need a reply but we need to send them follow-up in future asking about their requirement or when the client says something similar to \"I am taking this up with my team/management\"."
+            },
+            {
+              "category": "won",
+              "description": "Select this category when you feel the threads latest message signals that we have agreed upon a price and the client is ready to do business with us. In this case we will loop the thread to human"
+            },
+            {
+              "category": "lost",
+              "description": "The prospect did not agree on price or does not want to do business with us for any reason."
+            },
+            {
+              "category": "Spam",
+              "description": "Spam mails."
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "Please classify the text provided by the user into one of the following categories: {categories}, and use the provided formatting instructions below. "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        -3680,
+        -608
+      ],
+      "id": "1656aaee-7706-4f0f-8c0c-54e7a3cfa6a9",
+      "name": "Classify into categories"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -3616,
+        -288
+      ],
+      "id": "dcf4572d-3f0c-44b1-8ad3-62d62749670c",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2896,
+        -384
+      ],
+      "id": "8d85fc2b-6ac0-4785-b518-869092465f06",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "wXqOixbEbb7kpnQc",
+          "name": "Devansh_Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"title\": \"LeadUpdate\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\"state\", \"comment\", \"reason\", \"human_handover\"],\n  \"properties\": {\n    \"state\": {\n      \"type\": \"string\",\n      \"enum\": [\"new_lead\", \"negotiating\", \"won\", \"lost\",\"conversation_going_on\",\"handover\"],\n      \"description\": \"Lead state\"\n    },\n    \"reply_body\": {\n      \"type\": \"string\",\n      \"description\": \"HTML body or null\"\n    },\n    \"comment\": {\n      \"type\": \"string\",\n      \"description\": \"Note regarding the mail\"\n    },\n    \"reason\": {\n      \"type\": \"string\",\n      \"description\": \"Reason for the chosen state\"\n    },\n    \"human_handover\": {\n      \"type\": \"boolean\",\n      \"description\": \"Loop in a human\"\n    }\n  }\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -2976,
+        -592
+      ],
+      "id": "62cee79d-1461-45ba-9d48-0673cd9e82d5",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -2976,
+        -1008
+      ],
+      "id": "fbf32761-d909-446d-afdd-f0917573ffec",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('parse_forwarded_mails').item.json.originalSenderEmail }}",
+        "subject": "=Re: {{ $('parse_forwarded_mails').item.json.subject }}",
+        "message": "={{ $node[\"fix_reply\"].json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -2160,
+        -608
+      ],
+      "id": "d5dde121-bb85-46d6-9703-e8aa56d2f3cc",
+      "name": "Send a message",
+      "webhookId": "ceb6cdf8-2c0f-4742-98d4-ab490eb1f789",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('AI Agent').item.json.output.human_handover }}",
+                    "rightValue": "neha\\s+rana",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "db544b86-b66c-4e3b-b091-f2fe11f4c8be"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Human intervention"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a60c2095-e220-4521-bca9-d65404a9ebb5",
+                    "leftValue": "={{ $('parse_forwarded_mails').first().json.isForwarded }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Forwarded Mail"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "54700546-e90f-45dd-8768-e7f0ec6f166d",
+                    "leftValue": "={{ $('AI Agent').item.json.output.reply_body }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Normal email"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -2384,
+        -624
+      ],
+      "id": "5a42c800-631e-4d1f-a40c-9d0d7d3bc680",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "get",
+        "threadId": "={{ $('Pull thread').first().json.threadId }}",
+        "simple": false,
+        "options": {
+          "returnOnlyMessages": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -4576,
+        -608
+      ],
+      "id": "b059796f-1c75-4314-b537-1357e2d73d08",
+      "name": "Get a thread",
+      "webhookId": "767bf392-c89d-42e0-9a55-53416875f8d3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function findPartWithMimeType(parts, type) {\n  for (const part of parts) {\n    if (part.mimeType === type && part.body?.data) {\n      return part.body.data;\n    } else if (part.parts) {\n      const nested = findPartWithMimeType(part.parts, type);\n      if (nested) return nested;\n    }\n  }\n  return null;\n}\n\nreturn $input.all()\n  .map(item => {\n    const msgs = item.json.messages || [item.json];  // thread or single message\n\n    return msgs.map(msg => {\n      const parts = msg.payload?.parts || [];\n\n      // Try decoding from most preferred to fallback\n      const html = findPartWithMimeType(parts, 'text/html');\n      const plain = findPartWithMimeType(parts, 'text/plain');\n      const fallback = msg.payload?.body?.data;\n\n      const bodyBase64 = html || plain || fallback || '';\n      const decodedBody = bodyBase64\n        ? Buffer.from(bodyBase64, 'base64').toString('utf8')\n        : '[No content found]';\n\n      return {\n        json: {\n          subject: msg.payload?.headers?.find(h => h.name === 'Subject')?.value || '',\n          from: msg.payload?.headers?.find(h => h.name === 'From')?.value || '',\n          body: decodedBody,\n          threadId: msg.threadId,\n          id: msg.id,\n          date: msg.internalDate\n        }\n      };\n    });\n  })\n  .flat();  // flatten nested message list\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4352,
+        -608
+      ],
+      "id": "9ce159a9-7bbe-4d39-b2d5-4fc2dc51174c",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You’ve been assigned to handle the following email thread with a potential client:\n{{ $node[\"format_email_thread_for_agent\"].json[\"threadSummary\"] }}\n\nWrite a concise, professional, and persuasive reply to the latest message, incorporating relevant details from earlier messages when necessary.\n\nAvoid repeating questions already answered earlier in the thread.\n\nMaintain a persuasive and forward-moving tone that encourages the next step.\n\nReturn only the email reply text — no markdown, no formatting, no extra commentary.\n\nPlease find below thread ID for CRM filling:\n- Thread ID - {{ $('Get a thread').first().json.id }}\n- Latest Message ID - {{ $('Get a thread').first().json.messages[$('Get a thread').first().json.messages.length - 1].id }}\n- From - {{ $('Get a thread').first().json.messages[0].From }}\n- Subject - {{ $('Get a thread').first().json.messages[0].Subject }}\n- Providing you the date also so you can update latest date column in CRM sheet (DD-MMM-YYYY) -{{ $now }}\n  ",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=\n# 🏷️ ScaleupAlly Sales Assistant Playbook\n\nYou are a skilled sales assistant for **ScaleupAlly.io**, responsible for negotiating service prices with potential clients while maintaining professionalism and strategic adaptability.\n\n---\n\n## 💰 Services Offered\n\n### Sponsored Guest Posts\n\n* **1500 words:** \\$115\n* **2500 words:** \\$180\n* *(For ranges in between, smartly set a price above this to allow room for negotiation)*\n\n### Backlink Insertions\n\n* **1 placement:** \\$50\n* **2 placements:** \\$45 each\n* **3 placements:** \\$40 each\n* **5+ placements:** \\$30 each\n\nEncourage clients to consider **multiple placements** for better value.\n\n---\n\n## 📊 Negotiation Strategy\n\n* Always quote **10–25% above floor prices** initially.\n* Handle counteroffers as follows:\n\n  1. **Too low:** Suggest a middle ground above their offer but not below floor.\n\n     > \"The best we can offer while maintaining quality is \\$X.\"\n  2. **Reasonable:** Close the deal promptly.\n  3. **Absolute floor prices:**\n\n     * Guest Post (1500 words) → **\\$100**\n     * Guest Post (2500 words) → **\\$150**\n     * Link Insertion → **\\$35** (only in medium-performing blogs)\n\nIf client insists near floor price and is polite, accept strategically.\n\n* **Escalation Protocol:**\n\n  * If the counteroffer is within **\\$20 or 10%** of your quote and client is polite → escalate to **Devansh Agarwal**.\n  * Once escalated, you stop negotiating.\n  * If deal is converted → loop in Devansh Agarwal for execution.\n\n---\n\n## 📌 Link Insertion Guidelines\n\n1. Links must **not** point to commercial, product, or service landing pages.\n2. Only **one link per insertion** allowed.\n3. **Branded anchor texts are not permitted.**\n4. Minor edits may be made to ensure anchor text flows naturally.\n5. Links only allowed within **blog posts**, not homepage or other sections.\n\n**Example – Branded Anchor Text Case:**\nIf client requests anchor text *“freepik”*, reply politely:\n\n> \"Thanks for sharing, but branded anchor texts like *‘freepik’* are not permitted as per our guidelines. Could you please provide a more natural, non-branded anchor text instead? For example, something descriptive like *‘free design resources’* would work.\"\n\n---\n\n## 📌 Sponsored Guest Post Guidelines\n\n* **Stay On-Topic:** Must align with Technology, SaaS, AI, Data Services, or Business Tech.\n* **Original & SEO-Friendly:** 100% unique, human-written, optimized content.\n* **No AI or Repurposed Content.**\n* **Editorial Fit:** Insightful, well-structured, aligned with blog tone.\n* **Key Takeaways:** 3–4 bullet points under the introduction.\n* **Strong Conclusion:** Wrap up with value.\n* **Cite Sources:** Credible links for data/statistics (no brand promotion).\n* **FAQs (Optional):** 3–5 relevant FAQs allowed.\n* **Restricted Topics:** Gambling, Adult, CBD, Crypto, or non-compliant niches.\n\n---\n\n## 📏 Backlink Policy\n\n* **1500 words guest post → 1 do-follow link**\n* **2200–2500 words guest post → 2 do-follow links**\n* No spammy or spun content.\n\n---\n\n## 🚦 Client Engagement Rules\n\n* Address all inquiries from their **latest message**.\n\n* For unclear requests → clarify politely, but **never ask proactively for URL/anchor text**.\n\n* Payment before publishing:\n\n  > \"We follow a policy of receiving payment before taking a link or post live. I hope that works for you.\"\n\n* If niche is non-compliant → politely request compliant content.\n\n* If client is rude, repeatedly lowballs, or insists on non-compliant content → conclude conversation.\n\n---\n\n## ⏱️ Turnaround Time\n\n**24–96 hours** after payment via PayPal/credit card.\n\n---\n\n## 📋 CRM Logging\n\n* New client → create row.\n* Existing client → update row.\n* Converted deal → mark as **Human Handover (won)** and update sales stage to **Decision**.\n\n---\n\n💳 Payment Instructions (PayPal)\n\nWhen the client is payting by Paypal, kindly request the client to provide the following details:\n- Business Name\n- Billing Address\n- Email ID (for PayPal invoice)\n- Amount (as agreed in negotiation)\n\n---\n\n### 📬 Response Handling Guidelines\n\n1. **Specific Requests (for Guest Posts or Link Insertions):**\n\n   * If the email is focused on only **one item** (e.g., guest post or backlink insertion), the AI agent should **quote and handle only the requested service**.\n   * Example:\n\n     * If the client asks specifically about a **guest post**, quote the price for that and guide the conversation accordingly.\n     * If the client inquires about **link insertions**, quote the price for that and direct the conversation to the specifics of link placement.\n\n2. **General Requests (Both Guest Post and Link Insertion):**\n\n   * If the email is **general** or mentions both services, the AI agent should **handle both offerings** and provide prices for both guest posts and link insertions, as per the standard negotiation process.\n\n---\n\n### Signature block\n* The signature must always be of Scaleupally Team and never include a personal name/ individual sign-off"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -3072,
+        -816
+      ],
+      "id": "260ce580-bcb3-4ec3-af84-ea51683f6659",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5",
+          "mode": "list",
+          "cachedResultName": "gpt-5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -3104,
+        -592
+      ],
+      "id": "5bea98f3-1dca-49ce-bece-963ec8f4605a",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wXqOixbEbb7kpnQc",
+          "name": "Devansh_Key"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -3328,
+        -624
+      ],
+      "id": "bf92129d-c813-40fb-a8e2-df45c454ac38",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d8dc0751-fdad-4e2d-a3c8-f8ce1f17c6a8",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -6144,
+        -416
+      ],
+      "id": "0a8afb8c-7f9f-4e95-9bc8-c27e29cce44e",
+      "name": "check_exists"
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "get",
+        "threadId": "={{ $json.threadId }}",
+        "simple": false,
+        "options": {
+          "returnOnlyMessages": true
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -7040,
+        -320
+      ],
+      "id": "2dcc7787-5c1f-420e-bf37-a26f69b5cee2",
+      "name": "Pull thread",
+      "webhookId": "ce95e811-c8e3-45b1-bd4f-f424af0207a3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "client",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $('Pull thread').all()[0].json.From.match(/<([^>]+)>/) ? $('Pull thread').all()[0].json.From.match(/<([^>]+)>/)[1] : '' }}"
+            },
+            {
+              "fieldId": "converted",
+              "fieldValue": "False"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -5248,
+        -704
+      ],
+      "id": "06191297-92be-4dfc-90d1-3b2a66bddbe8",
+      "name": "create_new_client",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "client",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "condition": "eq",
+              "keyValue": "={{ $('Pull thread').all()[0].json.From.match(/<([^>]+)>/) ? $('Pull thread').all()[0].json.From.match(/<([^>]+)>/)[1] : '' }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -6368,
+        -416
+      ],
+      "id": "30ab04ca-4be7-4d2e-9001-d8de57f08b2b",
+      "name": "filter_clients_in_db",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "email_thread",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "thread_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Pull thread').item.json.threadId }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -5920,
+        -320
+      ],
+      "id": "0ae9a728-0d66-431c-bd8d-f196dcb7f998",
+      "name": "filter_threads_in_db",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "email_thread",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "thread_id",
+              "fieldValue": "={{ $('Pull thread').last().json.threadId }}"
+            },
+            {
+              "fieldId": "last_message_id",
+              "fieldValue": "={{ $('Pull thread').all()[$('Pull thread').all().length - 1].json.id }}\n"
+            },
+            {
+              "fieldId": "human_handover",
+              "fieldValue": "False"
+            },
+            {
+              "fieldId": "last_replied",
+              "fieldValue": "={{ $now }}"
+            },
+            {
+              "fieldId": "sender_email",
+              "fieldValue": "={{ $('Pull thread').first().json.From.match(/<([^>]+)>/) ? $('Pull thread').first().json.From.match(/<([^>]+)>/)[1] : '' }}"
+            },
+            {
+              "fieldId": "received_at",
+              "fieldValue": "={{ $('Pull thread').first().json.Date }}"
+            },
+            {
+              "fieldId": "client_id",
+              "fieldValue": "={{ $json.id }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "new_lead"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -5024,
+        -704
+      ],
+      "id": "fd2e7672-b96b-45d0-8b1d-d8726ad75f6c",
+      "name": "create_new_email_thread",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "thread_messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "message_id",
+              "fieldValue": "={{ $(\"Pull thread\").last().json[\"id\"] }}"
+            },
+            {
+              "fieldId": "email_thread",
+              "fieldValue": "={{ $json.thread_id }}"
+            },
+            {
+              "fieldId": "is_reminder",
+              "fieldValue": "False"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.status }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -4800,
+        -704
+      ],
+      "id": "7ab0a358-0f31-496b-8450-948bc9c91515",
+      "name": "create_thread_message",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ee7d38e4-28a9-4986-a237-ac7d83d2318b",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -5696,
+        -320
+      ],
+      "id": "dd29be26-c603-4434-945d-bad670e538ec",
+      "name": "check_thread_exists"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "email_thread",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "thread_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Pull thread').item.json.threadId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "last_message_id",
+              "fieldValue": "={{ $('Pull thread').all()[$('Pull thread').all().length - 1].json.id }}\n"
+            },
+            {
+              "fieldId": "last_replied",
+              "fieldValue": "={{ $now.toISO().split('T')[0] }}\n"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "conversation_going_on"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -4800,
+        -512
+      ],
+      "id": "5ffc1970-74f3-4b1e-a370-4c081439b339",
+      "name": "update_email_thread",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function pick(s, re){ const m = s && s.match(re); return m ? m[1].trim() : \"\"; }\nfunction emailOf(s){ const m = s && s.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/i); return m ? m[0] : \"\"; }\n\nconst items = $input.all();\nif (!items.length) return items;\n\nconst out = items.map(i => {\n  const last = i.json;\n\n  // 1) Convert HTML -> plain-ish text so regex can see markers/headers\n  const bodyHtml = String(last.body || \"\");\n  const bodyText = bodyHtml\n    .replace(/\\r/g, \"\")\n    .replace(/<br\\s*\\/?>/gi, \"\\n\")\n    .replace(/<\\/(div|p|tr|li|table|tbody|td|th)>/gi, \"\\n\")\n    .replace(/<[^>]+>/g, \"\")\n    .trim();\n\n  // 2) Find a \"forwarded\" marker (-----, =====, “Begin forwarded message:”)\n  const markers = [\n    /[-=–—]{3,}\\s*forwarded message\\s*[-=–—]{3,}/i,\n    /begin forwarded message\\s*:/i,\n    /forwarded message\\s*:/i\n  ];\n  let fwdStart = -1;\n  for (const re of markers) {\n    const idx = bodyText.search(re);\n    if (idx >= 0) { fwdStart = (fwdStart === -1) ? idx : Math.min(fwdStart, idx); }\n  }\n\n  const block = fwdStart >= 0 ? bodyText.slice(fwdStart) : \"\";\n\n  // 3) Extract fields from the forwarded block if found\n  let originalSenderEmail = \"\";\n  let cleanSubject = (last.subject || \"\").replace(/^fwd:\\s*/i, \"\").trim();\n\n  if (block) {\n    const fromLine = pick(block, /From:\\s*(.+)/i);\n    originalSenderEmail = emailOf(fromLine) || emailOf(block) || \"\";\n    const subjLine = pick(block, /Subject:\\s*(.+)/i);\n    if (subjLine) cleanSubject = subjLine.replace(/^fwd:\\s*/i, \"\").trim();\n  }\n\n  // 4) Who forwarded it (the visible \"from\" of the last message)\n  const forwardedByEmail = emailOf(last.from) || \"\";\n\n  // 5) Final detection flag\n  const isForwarded =\n    !!block ||\n    /forwarded message/i.test(bodyText) ||\n    /^fwd\\s*:/i.test(last.subject || \"\");\n\n  // 6) Attach results\n  return {\n    json: {\n      ...last,\n      isForwarded,\n      originalSenderEmail,\n      forwardedByEmail,\n      cleanSubject\n      // _debug: bodyText.slice(Math.max(0, fwdStart - 80), fwdStart + 160) // uncomment to inspect\n    }\n  };\n});\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4128,
+        -608
+      ],
+      "id": "09011bb0-095c-41cc-8d3d-2152912294d7",
+      "name": "parse_forwarded_mails"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prefer items from \"Parse forward\" (has isForwarded/originalSenderEmail fields),\n// otherwise fall back to \"Code2\" (decoded Gmail parts). If both missing, use $input.\nconst debug = [];\nlet sourceItems = [];\n\nlet parseForwardItems, code2Items;\ntry {\n  parseForwardItems = $items('parse_forwarded_mails');\n} catch(e) {\n  debug.push(\"Error accessing 'Parse forward': \" + e.message);\n  parseForwardItems = undefined;\n}\nif (Array.isArray(parseForwardItems) && parseForwardItems.length) {\n  sourceItems = parseForwardItems;\n  debug.push(`Using items from 'Parse forward': ${parseForwardItems.length} items.`);\n} else {\n  try {\n    code2Items = $items('Code2');\n  } catch(e) {\n    debug.push(\"Error accessing 'Code2': \" + e.message);\n    code2Items = undefined;\n  }\n  if (Array.isArray(code2Items) && code2Items.length) {\n    sourceItems = code2Items;\n    debug.push(`Using items from 'Code2': ${code2Items.length} items.`);\n  } else {\n    sourceItems = $input.all();\n    debug.push('Using $input.all(), count: ' + sourceItems.length);\n  }\n}\n\n// Helpers\nfunction htmlToText(html) {\n  return String(html || \"\")\n    .replace(/\\r/g, \"\")\n    .replace(/<br\\s*\\/?>/gi, \"\\n\")\n    .replace(/<\\/(div|p|tr|li|table|tbody|td|th|ul|ol)>/gi, \"\\n\")\n    .replace(/<[^>]+>/g, \"\")\n    .replace(/\\u00A0/g, \" \")\n    .replace(/[ \\t]+\\n/g, \"\\n\")\n    .trim();\n}\n\n// Extract content *below* the forwarded headers block\nfunction extractForwardedContent(text) {\n  if (!text) return \"\";\n\n  // Split on common forwarded markers (handles =====, -----, en/em dashes)\n  const parts = text.split(/(?:[-=–—]{3,})\\s*Forwarded message\\s*(?:[-=–—]{3,})/i);\n  if (parts.length >= 3) {\n    // parts[1] is headers, parts[2] is the body after the second marker\n    return parts[2].trim();\n  }\n\n  // Fallback: \"Begin forwarded message:\" then skip headers until first blank line\n  const idx = text.search(/Begin forwarded message\\s*:/i);\n  if (idx >= 0) {\n    const rest = text.slice(idx);\n    const blank = rest.search(/\\n\\s*\\n/); // first blank line after headers\n    if (blank >= 0) return rest.slice(blank).trim();\n  }\n\n  // Fallback: try to find headers (From:/To:/Date:/Subject:) and then first blank line\n  const headersRe = /From:.*\\n(?:.*\\n){0,6}?Subject:.*\\n/i;\n  const m = text.match(headersRe);\n  if (m) {\n    const after = text.slice((m.index || 0) + m[0].length);\n    const blank = after.search(/\\n\\s*\\n/);\n    if (blank >= 0) return after.slice(blank).trim();\n  }\n\n  return \"\"; // nothing extracted\n}\n\n// Normalize to an array of plain JSONs\nconst msgs = Array.isArray(sourceItems)\n  ? sourceItems.map(i => i && typeof i === \"object\" && \"json\" in i ? i.json : null).filter(Boolean)\n  : [];\ndebug.push('Messages found: ' + msgs.length);\n\n// Sort by Gmail internalDate if present\nmsgs.sort((a, b) => (parseInt(a.date || 0) - parseInt(b.date || 0)));\n\n// De-duplicate by message id (fallback to body)\nconst seen = new Set();\nconst unique = msgs.filter(m => {\n  const key = m.id || m.body || '';\n  if (seen.has(key)) return false;\n  seen.add(key);\n  return true;\n});\n\n// Build normal formatted thread (fallback)\nconst formattedMessages = unique.map(m => {\n  const from = m.from || '';\n  const to = m.to || '';\n  const subject = m.subject || '';\n  const date = m.date ? new Date(parseInt(m.date)).toLocaleString('en-IN') : 'Unknown Date';\n  const body = m.body || '[No body found]';\n  return `From: ${from}\\nTo: ${to}\\nDate: ${date}\\nSubject: ${subject}\\n\\n${body}\\n\\n---`;\n});\nconst fullThreadText = formattedMessages.join('\\n');\n\n// Latest item\nconst last = unique.length ? unique[unique.length - 1] : {};\n\n// If forwarded: build a special body that starts *below* the forwarded headers\nlet aiBody = fullThreadText;\nif (last.isForwarded) {\n  const lastBodyText = htmlToText(last.body);\n  const forwardedOnly = extractForwardedContent(lastBodyText);\n  if (forwardedOnly) {\n    aiBody = forwardedOnly;\n    debug.push('Forwarded content extracted length: ' + forwardedOnly.length);\n  } else {\n    debug.push('Forwarded markers found, but content extraction failed; falling back to full thread.');\n  }\n}\n\n// Stop-reply heuristic (same as before)\nconst threadTextLower = (aiBody || fullThreadText).toLowerCase();\nconst stopReply =\n  threadTextLower.includes('neha rana') ||\n  threadTextLower.includes('looped in a senior') ||\n  threadTextLower.includes('escalate');\n\nreturn [\n  {\n    json: {\n      threadSummary: aiBody || '',\n      latestSubject: last?.cleanSubject || last?.subject || '',\n      latestFrom: last?.originalSenderEmail || last?.from || '',\n      isForwarded: !!last?.isForwarded,\n      originalSenderEmail: last?.originalSenderEmail || '',\n      forwardedByEmail: last?.forwardedByEmail || '',\n      stopReply,\n      debug,\n      threadId: last?.threadId || ''\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3904,
+        -608
+      ],
+      "id": "816a8b05-1000-4084-b09e-317b7b7ab19c",
+      "name": "format_email_thread_for_agent"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "email_thread",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "thread_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Pull thread').item.json.threadId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "lost"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3328,
+        -208
+      ],
+      "id": "cee7716a-5ebc-4108-bc91-7723d7d7fd35",
+      "name": "update_status_to_lost",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "email_thread",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "thread_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Pull thread').last().json.threadId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "spam"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3328,
+        -16
+      ],
+      "id": "a6a825f8-40bc-4cc0-8f9a-6afd9d51c2f2",
+      "name": "update_status_to_spam",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "thread_messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "message_id",
+              "fieldValue": "={{ $('Pull thread').all()[$('Pull thread').all().length - 1].json.id }}"
+            },
+            {
+              "fieldId": "email_thread",
+              "fieldValue": "={{ $('Pull thread').last().json.threadId }}"
+            },
+            {
+              "fieldId": "is_reminder",
+              "fieldValue": "FALSE"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "lost"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2976,
+        -208
+      ],
+      "id": "d49080fe-bc18-4435-8956-0678d2bf9903",
+      "name": "create_new_row_as_lost_in_db",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "thread_messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "message_id",
+              "fieldValue": "={{ $('Pull thread').all()[$('Pull thread').all().length - 1].json.id }}"
+            },
+            {
+              "fieldId": "email_thread",
+              "fieldValue": "={{ $('Pull thread').last().json.threadId }}"
+            },
+            {
+              "fieldId": "is_reminder",
+              "fieldValue": "FALSE"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "spam"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2976,
+        -16
+      ],
+      "id": "08647016-f483-42bf-98f4-40788d9536f1",
+      "name": "create_new_row_as_lost_in_db1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://gmail.googleapis.com/gmail/v1/users/me/threads/{{ $('Pull thread').last().json.threadId }}/modify\n",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gmailOAuth2",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"removeLabelIds\": [\"UNREAD\"] }\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2608,
+        -208
+      ],
+      "id": "589e9fa2-459f-47d6-82a5-6abd3be06aff",
+      "name": "mark_thread_read",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://gmail.googleapis.com/gmail/v1/users/me/threads/{{ $('Pull thread').last().json.threadId }}/modify\n",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gmailOAuth2",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"removeLabelIds\": [\"UNREAD\"] }\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2608,
+        -16
+      ],
+      "id": "40253d48-b0e5-416b-96f5-8e0bd959295f",
+      "name": "mark_thread_as_read",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "reply",
+        "threadId": "={{ $('Pull thread').all()[0].json.id }}\n",
+        "messageId": "={{ $('Pull thread').all()[0].json.threadId || $('Pull thread').all()[0].json.thread_id }}\n",
+        "emailType": "html",
+        "message": "={{ $node[\"fix_reply\"].json.html }}",
+        "options": {
+          "ccList": "devansh.agarwal@scaleupally.io"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -2160,
+        -800
+      ],
+      "id": "4be917b1-810e-4b12-bf5b-e9dde5077844",
+      "name": "loop_human",
+      "webhookId": "90ea93d9-ac89-4f9e-b87f-fb466e774ed8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "reply",
+        "threadId": "={{ $('Pull thread').all()[0].json.id }}\n",
+        "messageId": "={{ $('Pull thread').all()[0].json.threadId || $('Pull thread').all()[0].json.thread_id }}\n",
+        "emailType": "html",
+        "message": "={{ $node[\"fix_reply\"].json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -2160,
+        -416
+      ],
+      "id": "5797415b-b275-46c8-b1ed-03f67ae1e5a5",
+      "name": "reply_to_message",
+      "webhookId": "a2b221e0-a079-4d8e-abe7-e13a4cee73ff",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "thread_messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "message_id",
+              "fieldValue": "={{ $json.id }}"
+            },
+            {
+              "fieldId": "email_thread",
+              "fieldValue": "={{ $json.threadId }}"
+            },
+            {
+              "fieldId": "is_reminder",
+              "fieldValue": "False"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "=handover"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1936,
+        -800
+      ],
+      "id": "6112d673-9037-4133-aac4-35823f0d5098",
+      "name": "create_new_entry_in_thread_message_of_reply",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "thread_messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "message_id",
+              "fieldValue": "={{ $json.id }}"
+            },
+            {
+              "fieldId": "email_thread",
+              "fieldValue": "={{ $json.threadId }}"
+            },
+            {
+              "fieldId": "is_reminder",
+              "fieldValue": "False"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "=negotiating"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1936,
+        -416
+      ],
+      "id": "8118df38-c710-4605-84a8-1a37701370c6",
+      "name": "create_new_entry_in_thread_message_of_reply1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "email_thread",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "thread_id",
+              "condition": "eq",
+              "keyValue": "={{ $('reply_to_message').item.json.threadId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $('AI Agent').item.json.output.state }}"
+            },
+            {
+              "fieldId": "meta",
+              "fieldValue": "={ \n\"comment\": \"{{ $('AI Agent').item.json.output.comment }}\", \"reason\": \"{{ $('AI Agent').item.json.output.reason }}\"\n}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1712,
+        -416
+      ],
+      "id": "92da7bf0-9a99-4b10-a78a-5a5e8c552157",
+      "name": "update_email_thread_after_reply",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://gmail.googleapis.com/gmail/v1/users/me/threads/{{ $('reply_to_message').item.json.threadId }}/modify\n",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gmailOAuth2",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"removeLabelIds\": [\"UNREAD\"] }\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1488,
+        -416
+      ],
+      "id": "7be9cd00-eb4e-49af-b9d6-e6182a817fb9",
+      "name": "mark_message_as_read",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "email_thread",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "thread_id",
+              "condition": "eq",
+              "keyValue": "={{ $('loop_human').item.json.threadId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $('AI Agent').item.json.output.state }}"
+            },
+            {
+              "fieldId": "human_handover",
+              "fieldValue": "TRUE"
+            },
+            {
+              "fieldId": "meta",
+              "fieldValue": "={\n\"comment\": \"{{ $('AI Agent').item.json.output.comment }}\",\n\"reason\": \"{{ $('AI Agent').item.json.output.reason }}\"\n}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1712,
+        -800
+      ],
+      "id": "51804fb8-93d3-47aa-a7bf-fb10f66f29d2",
+      "name": "update_thread_status_to_handover",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "client",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "condition": "eq",
+              "keyValue": "={{ $('Pull thread').all()[0].json.From.match(/<([^>]+)>/) ? $('Pull thread').all()[0].json.From.match(/<([^>]+)>/)[1] : '' }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "converted",
+              "fieldValue": "TRUE"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1488,
+        -800
+      ],
+      "id": "7d955d21-727c-4b72-92de-09598ed485af",
+      "name": "update_client_status",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://gmail.googleapis.com/gmail/v1/users/me/threads/{{ $('loop_human').item.json.threadId }}/modify\n",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gmailOAuth2",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"removeLabelIds\": [\"UNREAD\"] }\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1264,
+        -800
+      ],
+      "id": "6245cf42-cad6-4714-8b79-15438bb45bae",
+      "name": "mark_message_read",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const plainText = $input.first().json.output.reply_body\n\nif (!plainText) {\n  return [\n    {\n      json: {\n        html: `<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n                 <p><i>No reply generated.</i></p>\n                 <br>\n                 <p>Best regards,<br>ScaleupAlly Team</p>\n               </div>`\n      }\n    }\n  ];\n}\n\n// Convert line breaks to <p> tags and bold words between ****\nconst formatted = plainText\n  .split('\\n')\n  .map(line => {\n    // Bold the content between ****\n    line = line.replace(/\\*\\*(.*?)\\*\\*/g, '<b>$1</b>'); // Matches text between ** and replaces it with <b></b> tags\n    return `<p>${line.trim()}</p>`;\n  })\n  .join('');\n\n// Check if signature already exists\nconst lowerText = plainText.toLowerCase();\nconst hasSignature = lowerText.includes(\"best regards\") || lowerText.includes(\"scaleupally.io\");\n\nconst signatureBlock = hasSignature\n  ? ''  // skip if already present\n  : `<p>Best regards,<br>ScaleupAlly Team</p>`;\n\nconst htmlFormatted = `\n  <div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n    ${formatted}\n    ${signatureBlock}\n  </div>\n`;\n\nreturn [\n  {\n    json: {\n      html: htmlFormatted\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2608,
+        -608
+      ],
+      "id": "727adeee-8633-4f92-b85e-b626ab45cc12",
+      "name": "fix_reply"
+    },
+    {
+      "parameters": {
+        "tableId": "thread_messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "message_id",
+              "fieldValue": "={{ $(\"Pull thread\").last().json[\"id\"] }}"
+            },
+            {
+              "fieldId": "email_thread",
+              "fieldValue": "={{ $json.thread_id }}"
+            },
+            {
+              "fieldId": "is_reminder",
+              "fieldValue": "False"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.status }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -4800,
+        -320
+      ],
+      "id": "2d306d5c-f13f-49dc-83a5-35a03c6d912a",
+      "name": "create_new_thread_message_for_existing_client",
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "client",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "condition": "eq",
+              "keyValue": "={{ $('Pull thread').all()[0].json.From.match(/<([^>]+)>/) ? $('Pull thread').all()[0].json.From.match(/<([^>]+)>/)[1] : '' }}"
+            },
+            {
+              "keyName": "converted",
+              "condition": "eq",
+              "keyValue": "TRUE"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -5472,
+        -224
+      ],
+      "id": "54c39a8e-91c0-407e-9c84-dafbe5e7b599",
+      "name": "check_client_won_or_not",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "veIjgdLs1qKGvH4p",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "14cd405b-52a2-49a1-9464-da10f1a18526",
+              "leftValue": "={{ $json.converted }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -5248,
+        -224
+      ],
+      "id": "7cee3456-a4c1-451c-92b9-15cedafa5523",
+      "name": "If_won"
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "reply",
+        "threadId": "={{ $('Pull thread').all()[0].json.id }}\n",
+        "messageId": "={{ $('Pull thread').all()[0].json.threadId || $('Pull thread').all()[0].json.thread_id }}\n",
+        "message": "=Hi,\nFollowing up on our earlier conversation regarding the pricing. I’m looping in Devansh Agarwal (devansh.agarwal@scaleupally.io), who will take this forward.",
+        "options": {
+          "bccList": "devansh.agarwal@scaleupally.io"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -5024,
+        -128
+      ],
+      "id": "00956777-29cf-48b1-99a4-c3884b451ec2",
+      "name": "loop_human1",
+      "webhookId": "90ea93d9-ac89-4f9e-b87f-fb466e774ed8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f456d8d1-7554-4e04-9e2f-91ea73ebafbb",
+              "leftValue": "={{ $json.stopReply }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3472,
+        -928
+      ],
+      "id": "3c6562f8-4f06-47c7-9eae-81aeb76a9c91",
+      "name": "Check reply status"
+    }
+  ],
+  "connections": {
+    "Check for Guest Post Keywords": {
+      "main": [
+        [
+          {
+            "node": "Guest Post Keyword Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guest Post Keyword Filter": {
+      "main": [
+        [
+          {
+            "node": "filter_clients_in_db",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Not a Guest Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Pull thread",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a  row in email_thread": {
+      "main": [
+        [
+          {
+            "node": "create_new_thread_message_for_existing_client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classify into categories",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify into categories": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "update_status_to_lost",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "update_status_to_spam",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "loop_human",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "reply_to_message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a thread": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "parse_forwarded_mails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "fix_reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_exists": {
+      "main": [
+        [
+          {
+            "node": "create_new_client",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "filter_threads_in_db",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pull thread": {
+      "main": [
+        [
+          {
+            "node": "Check for Guest Post Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_new_client": {
+      "main": [
+        [
+          {
+            "node": "create_new_email_thread",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter_clients_in_db": {
+      "main": [
+        [
+          {
+            "node": "check_exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter_threads_in_db": {
+      "main": [
+        [
+          {
+            "node": "check_thread_exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_new_email_thread": {
+      "main": [
+        [
+          {
+            "node": "create_thread_message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_thread_message": {
+      "main": [
+        [
+          {
+            "node": "Get a thread",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_thread_exists": {
+      "main": [
+        [
+          {
+            "node": "update_email_thread",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "check_client_won_or_not",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_email_thread": {
+      "main": [
+        [
+          {
+            "node": "Get a thread",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse_forwarded_mails": {
+      "main": [
+        [
+          {
+            "node": "format_email_thread_for_agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "format_email_thread_for_agent": {
+      "main": [
+        [
+          {
+            "node": "Classify into categories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_status_to_lost": {
+      "main": [
+        [
+          {
+            "node": "create_new_row_as_lost_in_db",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_status_to_spam": {
+      "main": [
+        [
+          {
+            "node": "create_new_row_as_lost_in_db1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_new_row_as_lost_in_db": {
+      "main": [
+        [
+          {
+            "node": "mark_thread_read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_new_row_as_lost_in_db1": {
+      "main": [
+        [
+          {
+            "node": "mark_thread_as_read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "loop_human": {
+      "main": [
+        [
+          {
+            "node": "create_new_entry_in_thread_message_of_reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "reply_to_message": {
+      "main": [
+        [
+          {
+            "node": "create_new_entry_in_thread_message_of_reply1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_new_entry_in_thread_message_of_reply": {
+      "main": [
+        [
+          {
+            "node": "update_thread_status_to_handover",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_new_entry_in_thread_message_of_reply1": {
+      "main": [
+        [
+          {
+            "node": "update_email_thread_after_reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_email_thread_after_reply": {
+      "main": [
+        [
+          {
+            "node": "mark_message_as_read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mark_message_as_read": {
+      "main": [
+        []
+      ]
+    },
+    "update_thread_status_to_handover": {
+      "main": [
+        [
+          {
+            "node": "update_client_status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_client_status": {
+      "main": [
+        [
+          {
+            "node": "mark_message_read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fix_reply": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_new_thread_message_for_existing_client": {
+      "main": [
+        [
+          {
+            "node": "Get a thread",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_client_won_or_not": {
+      "main": [
+        [
+          {
+            "node": "If_won",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If_won": {
+      "main": [
+        [
+          {
+            "node": "loop_human1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a  row in email_thread",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check reply status": {
+      "main": [
+        [],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Start": [
+      {
+        "json": {
+          "threadId": "19afd5c98c570bf2"
+        }
+      }
+    ]
+  },
+  "versionId": "ed15977e-d717-4e50-97d4-5d1add566903",
+  "activeVersionId": "ed15977e-d717-4e50-97d4-5d1add566903",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-09-12T10:54:06.277Z",
+      "createdAt": "2025-09-12T10:54:06.277Z",
+      "role": "workflow:owner",
+      "workflowId": "IrwUcpN1W9ZTuWTe",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-02-05T13:07:19.581Z",
+    "createdAt": "2026-02-05T13:07:19.581Z",
+    "versionId": "ed15977e-d717-4e50-97d4-5d1add566903",
+    "workflowId": "IrwUcpN1W9ZTuWTe",
+    "nodes": [
+      {
+        "parameters": {
+          "jsCode": "// Utility: Decode base64 safely\nfunction decodeBase64(data) {\n  if (!data) return \"\";\n  const cleaned = data.replace(/-/g, '+').replace(/_/g, '/');\n  const padded = cleaned + \"=\".repeat((4 - cleaned.length % 4) % 4);\n  return Buffer.from(padded, \"base64\").toString(\"utf-8\");\n}\n\n// Utility: Extract full plain text recursively from Gmail payload\nfunction extractPlainText(payload) {\n  if (!payload) return \"\";\n\n  if (payload.mimeType === \"text/plain\" && payload.body?.data) {\n    return decodeBase64(payload.body.data);\n  }\n\n  if (payload.parts && Array.isArray(payload.parts)) {\n    for (const part of payload.parts) {\n      const text = extractPlainText(part);\n      if (text) return text;\n    }\n  }\n\n  // Fallback\n  if (payload.body?.data) {\n    return decodeBase64(payload.body.data);\n  }\n\n  return \"\";\n}\n\n// === Keywords to match ===\nconst literalKeywords = [\n  \"guest post\",\n  \"guest-post\",\n  \"guestpost\",\n  \"link exchange\",\n  \"link building\",\n  \"submit article\",\n  \"write for us\",\n  \"contribute\",\n  \"contributing\",\n  \"sponsored post\",\n  \"paid link\",\n  \"blog exchange\",\n  \"link insertion\",\n  \"guest posting\",\n  \"backlink exchange\"\n];\n\nconst regexKeywords = [\n  \"insert.*link\"\n];\n\n// === MAIN MATCH LOGIC ===\nconst inputItems = $(\"Pull thread\").all();\nconst results = [];\n\nfor (const item of inputItems) {\n  const message = item.json.messages?.[0] || item.json;\n  if (!message) {\n    results.push({ json: { guestPostMatch: false } });\n    continue;\n  }\n\n  // Extract subject\n  const headers = Object.fromEntries((message.payload?.headers || []).map(h => [h.name, h.value]));\n  const subject = (headers[\"Subject\"] || \"\").toLowerCase();\n\n  // Extract full plain text body\n  const bodyText = extractPlainText(message.payload).toLowerCase();\n\n  // Combine subject + body\n  const combinedText = subject + \" \" + bodyText;\n\n  let matchedKeyword = null;\n  // First try literal matches\n  const isLiteralMatch = literalKeywords.some(keyword => {\n    const pattern = new RegExp(`\\\\b${keyword.replace(/\\s+/g, '\\\\s+')}\\\\b`, 'i');\n    if (pattern.test(combinedText)) {\n      matchedKeyword = keyword;\n      return true;\n    }\n    return false;\n  });\n  // Then try regex patterns only if no literal match\n  const isRegexMatch = !isLiteralMatch && regexKeywords.some(regex => {\n    const pattern = new RegExp(regex, 'i');\n    if (pattern.test(combinedText)) {\n      matchedKeyword = regex;\n      return true;\n    }\n    return false;\n  });\n  const isMatch = isLiteralMatch || isRegexMatch;\n  results.push({\n    json: {\n      guestPostMatch: isMatch,\n      matchedKeyword,\n      matchedTextPreview: combinedText.slice(0, 500)\n    }\n  });\n}\nreturn results;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -6816,
+          -320
+        ],
+        "id": "2446a787-4f65-418d-9e09-300e3210bf04",
+        "name": "Check for Guest Post Keywords"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "d99c746e-7997-437d-9ff8-fec982adef85",
+                "leftValue": "={{ $json.guestPostMatch }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -6592,
+          -320
+        ],
+        "id": "0d2ac33f-7ea4-4d52-bcf2-b24e4f2763a8",
+        "name": "Guest Post Keyword Filter"
+      },
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "threadId",
+                "type": "any"
+              }
+            ]
+          }
+        },
+        "id": "6ac6f882-416e-45c4-ae4f-ee0731ec8ed4",
+        "typeVersion": 1.1,
+        "name": "Start",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "position": [
+          -7264,
+          -320
+        ]
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          -6368,
+          -224
+        ],
+        "id": "366a9ab4-c4a1-4212-9b54-2ab814a2cb76",
+        "name": "Not a Guest Post"
+      },
+      {
+        "parameters": {
+          "tableId": "email_thread",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "thread_id",
+                "fieldValue": "={{ $('Pull thread').last().json.threadId }}"
+              },
+              {
+                "fieldId": "last_message_id",
+                "fieldValue": "={{ $(\"Pull thread\").last().json[\"id\"] }}"
+              },
+              {
+                "fieldId": "human_handover",
+                "fieldValue": "False"
+              },
+              {
+                "fieldId": "last_replied",
+                "fieldValue": "={{ $now }}"
+              },
+              {
+                "fieldId": "sender_email",
+                "fieldValue": "={{ $('Pull thread').first().json.From.match(/<([^>]+)>/) ? $('Pull thread').first().json.From.match(/<([^>]+)>/)[1] : '' }}"
+              },
+              {
+                "fieldId": "received_at",
+                "fieldValue": "={{ $('Pull thread').first().json.Date }}"
+              },
+              {
+                "fieldId": "client_id",
+                "fieldValue": "={{ $('check_exists').item.json.id }}"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "new_lead"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -5024,
+          -320
+        ],
+        "id": "6995f2b4-bcc4-4df6-b324-a313963b90ff",
+        "name": "Create a  row in email_thread",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "inputText": "={{ $json.threadSummary }}",
+          "categories": {
+            "categories": [
+              {
+                "category": "need_reply",
+                "description": "Select this category when you feel the threads latest message needs a reply. We need to tell them about pricing, reply to any of their questions or answer to the mail."
+              },
+              {
+                "category": "follow_up_later",
+                "description": "Select this category when you feel the threads latest message does not need a reply but we need to send them follow-up in future asking about their requirement or when the client says something similar to \"I am taking this up with my team/management\"."
+              },
+              {
+                "category": "won",
+                "description": "Select this category when you feel the threads latest message signals that we have agreed upon a price and the client is ready to do business with us. In this case we will loop the thread to human"
+              },
+              {
+                "category": "lost",
+                "description": "The prospect did not agree on price or does not want to do business with us for any reason."
+              },
+              {
+                "category": "Spam",
+                "description": "Spam mails."
+              }
+            ]
+          },
+          "options": {
+            "systemPromptTemplate": "Please classify the text provided by the user into one of the following categories: {categories}, and use the provided formatting instructions below. "
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.textClassifier",
+        "typeVersion": 1.1,
+        "position": [
+          -3680,
+          -608
+        ],
+        "id": "1656aaee-7706-4f0f-8c0c-54e7a3cfa6a9",
+        "name": "Classify into categories"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-5-mini",
+            "mode": "list",
+            "cachedResultName": "gpt-5-mini"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          -3616,
+          -288
+        ],
+        "id": "dcf4572d-3f0c-44b1-8ad3-62d62749670c",
+        "name": "OpenAI Chat Model2",
+        "credentials": {
+          "openAiApi": {
+            "id": "2SN6l7TZaVixYAzM",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-5-mini",
+            "mode": "list",
+            "cachedResultName": "gpt-5-mini"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          -2896,
+          -384
+        ],
+        "id": "8d85fc2b-6ac0-4785-b518-869092465f06",
+        "name": "OpenAI Chat Model1",
+        "credentials": {
+          "openAiApi": {
+            "id": "wXqOixbEbb7kpnQc",
+            "name": "Devansh_Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "schemaType": "manual",
+          "inputSchema": "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"title\": \"LeadUpdate\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\"state\", \"comment\", \"reason\", \"human_handover\"],\n  \"properties\": {\n    \"state\": {\n      \"type\": \"string\",\n      \"enum\": [\"new_lead\", \"negotiating\", \"won\", \"lost\",\"conversation_going_on\",\"handover\"],\n      \"description\": \"Lead state\"\n    },\n    \"reply_body\": {\n      \"type\": \"string\",\n      \"description\": \"HTML body or null\"\n    },\n    \"comment\": {\n      \"type\": \"string\",\n      \"description\": \"Note regarding the mail\"\n    },\n    \"reason\": {\n      \"type\": \"string\",\n      \"description\": \"Reason for the chosen state\"\n    },\n    \"human_handover\": {\n      \"type\": \"boolean\",\n      \"description\": \"Loop in a human\"\n    }\n  }\n}",
+          "autoFix": true
+        },
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.3,
+        "position": [
+          -2976,
+          -592
+        ],
+        "id": "62cee79d-1461-45ba-9d48-0673cd9e82d5",
+        "name": "Structured Output Parser"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          -2976,
+          -1008
+        ],
+        "id": "fbf32761-d909-446d-afdd-f0917573ffec",
+        "name": "No Operation, do nothing"
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $('parse_forwarded_mails').item.json.originalSenderEmail }}",
+          "subject": "=Re: {{ $('parse_forwarded_mails').item.json.subject }}",
+          "message": "={{ $node[\"fix_reply\"].json.html }}",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          -2160,
+          -608
+        ],
+        "id": "d5dde121-bb85-46d6-9703-e8aa56d2f3cc",
+        "name": "Send a message",
+        "webhookId": "ceb6cdf8-2c0f-4742-98d4-ab490eb1f789",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $('AI Agent').item.json.output.human_handover }}",
+                      "rightValue": "neha\\s+rana",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "id": "db544b86-b66c-4e3b-b091-f2fe11f4c8be"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Human intervention"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "a60c2095-e220-4521-bca9-d65404a9ebb5",
+                      "leftValue": "={{ $('parse_forwarded_mails').first().json.isForwarded }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Forwarded Mail"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "54700546-e90f-45dd-8768-e7f0ec6f166d",
+                      "leftValue": "={{ $('AI Agent').item.json.output.reply_body }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "string",
+                        "operation": "exists",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Normal email"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          -2384,
+          -624
+        ],
+        "id": "5a42c800-631e-4d1f-a40c-9d0d7d3bc680",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "resource": "thread",
+          "operation": "get",
+          "threadId": "={{ $('Pull thread').first().json.threadId }}",
+          "simple": false,
+          "options": {
+            "returnOnlyMessages": false
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          -4576,
+          -608
+        ],
+        "id": "b059796f-1c75-4314-b537-1357e2d73d08",
+        "name": "Get a thread",
+        "webhookId": "767bf392-c89d-42e0-9a55-53416875f8d3",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "function findPartWithMimeType(parts, type) {\n  for (const part of parts) {\n    if (part.mimeType === type && part.body?.data) {\n      return part.body.data;\n    } else if (part.parts) {\n      const nested = findPartWithMimeType(part.parts, type);\n      if (nested) return nested;\n    }\n  }\n  return null;\n}\n\nreturn $input.all()\n  .map(item => {\n    const msgs = item.json.messages || [item.json];  // thread or single message\n\n    return msgs.map(msg => {\n      const parts = msg.payload?.parts || [];\n\n      // Try decoding from most preferred to fallback\n      const html = findPartWithMimeType(parts, 'text/html');\n      const plain = findPartWithMimeType(parts, 'text/plain');\n      const fallback = msg.payload?.body?.data;\n\n      const bodyBase64 = html || plain || fallback || '';\n      const decodedBody = bodyBase64\n        ? Buffer.from(bodyBase64, 'base64').toString('utf8')\n        : '[No content found]';\n\n      return {\n        json: {\n          subject: msg.payload?.headers?.find(h => h.name === 'Subject')?.value || '',\n          from: msg.payload?.headers?.find(h => h.name === 'From')?.value || '',\n          body: decodedBody,\n          threadId: msg.threadId,\n          id: msg.id,\n          date: msg.internalDate\n        }\n      };\n    });\n  })\n  .flat();  // flatten nested message list\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -4352,
+          -608
+        ],
+        "id": "9ce159a9-7bbe-4d39-b2d5-4fc2dc51174c",
+        "name": "Code2"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=You’ve been assigned to handle the following email thread with a potential client:\n{{ $node[\"format_email_thread_for_agent\"].json[\"threadSummary\"] }}\n\nWrite a concise, professional, and persuasive reply to the latest message, incorporating relevant details from earlier messages when necessary.\n\nAvoid repeating questions already answered earlier in the thread.\n\nMaintain a persuasive and forward-moving tone that encourages the next step.\n\nReturn only the email reply text — no markdown, no formatting, no extra commentary.\n\nPlease find below thread ID for CRM filling:\n- Thread ID - {{ $('Get a thread').first().json.id }}\n- Latest Message ID - {{ $('Get a thread').first().json.messages[$('Get a thread').first().json.messages.length - 1].id }}\n- From - {{ $('Get a thread').first().json.messages[0].From }}\n- Subject - {{ $('Get a thread').first().json.messages[0].Subject }}\n- Providing you the date also so you can update latest date column in CRM sheet (DD-MMM-YYYY) -{{ $now }}\n  ",
+          "hasOutputParser": true,
+          "options": {
+            "systemMessage": "=\n# 🏷️ ScaleupAlly Sales Assistant Playbook\n\nYou are a skilled sales assistant for **ScaleupAlly.io**, responsible for negotiating service prices with potential clients while maintaining professionalism and strategic adaptability.\n\n---\n\n## 💰 Services Offered\n\n### Sponsored Guest Posts\n\n* **1500 words:** \\$115\n* **2500 words:** \\$180\n* *(For ranges in between, smartly set a price above this to allow room for negotiation)*\n\n### Backlink Insertions\n\n* **1 placement:** \\$50\n* **2 placements:** \\$45 each\n* **3 placements:** \\$40 each\n* **5+ placements:** \\$30 each\n\nEncourage clients to consider **multiple placements** for better value.\n\n---\n\n## 📊 Negotiation Strategy\n\n* Always quote **10–25% above floor prices** initially.\n* Handle counteroffers as follows:\n\n  1. **Too low:** Suggest a middle ground above their offer but not below floor.\n\n     > \"The best we can offer while maintaining quality is \\$X.\"\n  2. **Reasonable:** Close the deal promptly.\n  3. **Absolute floor prices:**\n\n     * Guest Post (1500 words) → **\\$100**\n     * Guest Post (2500 words) → **\\$150**\n     * Link Insertion → **\\$35** (only in medium-performing blogs)\n\nIf client insists near floor price and is polite, accept strategically.\n\n* **Escalation Protocol:**\n\n  * If the counteroffer is within **\\$20 or 10%** of your quote and client is polite → escalate to **Devansh Agarwal**.\n  * Once escalated, you stop negotiating.\n  * If deal is converted → loop in Devansh Agarwal for execution.\n\n---\n\n## 📌 Link Insertion Guidelines\n\n1. Links must **not** point to commercial, product, or service landing pages.\n2. Only **one link per insertion** allowed.\n3. **Branded anchor texts are not permitted.**\n4. Minor edits may be made to ensure anchor text flows naturally.\n5. Links only allowed within **blog posts**, not homepage or other sections.\n\n**Example – Branded Anchor Text Case:**\nIf client requests anchor text *“freepik”*, reply politely:\n\n> \"Thanks for sharing, but branded anchor texts like *‘freepik’* are not permitted as per our guidelines. Could you please provide a more natural, non-branded anchor text instead? For example, something descriptive like *‘free design resources’* would work.\"\n\n---\n\n## 📌 Sponsored Guest Post Guidelines\n\n* **Stay On-Topic:** Must align with Technology, SaaS, AI, Data Services, or Business Tech.\n* **Original & SEO-Friendly:** 100% unique, human-written, optimized content.\n* **No AI or Repurposed Content.**\n* **Editorial Fit:** Insightful, well-structured, aligned with blog tone.\n* **Key Takeaways:** 3–4 bullet points under the introduction.\n* **Strong Conclusion:** Wrap up with value.\n* **Cite Sources:** Credible links for data/statistics (no brand promotion).\n* **FAQs (Optional):** 3–5 relevant FAQs allowed.\n* **Restricted Topics:** Gambling, Adult, CBD, Crypto, or non-compliant niches.\n\n---\n\n## 📏 Backlink Policy\n\n* **1500 words guest post → 1 do-follow link**\n* **2200–2500 words guest post → 2 do-follow links**\n* No spammy or spun content.\n\n---\n\n## 🚦 Client Engagement Rules\n\n* Address all inquiries from their **latest message**.\n\n* For unclear requests → clarify politely, but **never ask proactively for URL/anchor text**.\n\n* Payment before publishing:\n\n  > \"We follow a policy of receiving payment before taking a link or post live. I hope that works for you.\"\n\n* If niche is non-compliant → politely request compliant content.\n\n* If client is rude, repeatedly lowballs, or insists on non-compliant content → conclude conversation.\n\n---\n\n## ⏱️ Turnaround Time\n\n**24–96 hours** after payment via PayPal/credit card.\n\n---\n\n## 📋 CRM Logging\n\n* New client → create row.\n* Existing client → update row.\n* Converted deal → mark as **Human Handover (won)** and update sales stage to **Decision**.\n\n---\n\n💳 Payment Instructions (PayPal)\n\nWhen the client is payting by Paypal, kindly request the client to provide the following details:\n- Business Name\n- Billing Address\n- Email ID (for PayPal invoice)\n- Amount (as agreed in negotiation)\n\n---\n\n### 📬 Response Handling Guidelines\n\n1. **Specific Requests (for Guest Posts or Link Insertions):**\n\n   * If the email is focused on only **one item** (e.g., guest post or backlink insertion), the AI agent should **quote and handle only the requested service**.\n   * Example:\n\n     * If the client asks specifically about a **guest post**, quote the price for that and guide the conversation accordingly.\n     * If the client inquires about **link insertions**, quote the price for that and direct the conversation to the specifics of link placement.\n\n2. **General Requests (Both Guest Post and Link Insertion):**\n\n   * If the email is **general** or mentions both services, the AI agent should **handle both offerings** and provide prices for both guest posts and link insertions, as per the standard negotiation process.\n\n---\n\n### Signature block\n* The signature must always be of Scaleupally Team and never include a personal name/ individual sign-off"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 2,
+        "position": [
+          -3072,
+          -816
+        ],
+        "id": "260ce580-bcb3-4ec3-af84-ea51683f6659",
+        "name": "AI Agent"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-5",
+            "mode": "list",
+            "cachedResultName": "gpt-5"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          -3104,
+          -592
+        ],
+        "id": "5bea98f3-1dca-49ce-bece-963ec8f4605a",
+        "name": "OpenAI Chat Model",
+        "credentials": {
+          "openAiApi": {
+            "id": "wXqOixbEbb7kpnQc",
+            "name": "Devansh_Key"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          -3328,
+          -624
+        ],
+        "id": "bf92129d-c813-40fb-a8e2-df45c454ac38",
+        "name": "No Operation, do nothing1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "d8dc0751-fdad-4e2d-a3c8-f8ce1f17c6a8",
+                "leftValue": "={{ $json }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "object",
+                  "operation": "empty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -6144,
+          -416
+        ],
+        "id": "0a8afb8c-7f9f-4e95-9bc8-c27e29cce44e",
+        "name": "check_exists"
+      },
+      {
+        "parameters": {
+          "resource": "thread",
+          "operation": "get",
+          "threadId": "={{ $json.threadId }}",
+          "simple": false,
+          "options": {
+            "returnOnlyMessages": true
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          -7040,
+          -320
+        ],
+        "id": "2dcc7787-5c1f-420e-bf37-a26f69b5cee2",
+        "name": "Pull thread",
+        "webhookId": "ce95e811-c8e3-45b1-bd4f-f424af0207a3",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "client",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "email",
+                "fieldValue": "={{ $('Pull thread').all()[0].json.From.match(/<([^>]+)>/) ? $('Pull thread').all()[0].json.From.match(/<([^>]+)>/)[1] : '' }}"
+              },
+              {
+                "fieldId": "converted",
+                "fieldValue": "False"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -5248,
+          -704
+        ],
+        "id": "06191297-92be-4dfc-90d1-3b2a66bddbe8",
+        "name": "create_new_client",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "client",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "email",
+                "condition": "eq",
+                "keyValue": "={{ $('Pull thread').all()[0].json.From.match(/<([^>]+)>/) ? $('Pull thread').all()[0].json.From.match(/<([^>]+)>/)[1] : '' }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -6368,
+          -416
+        ],
+        "id": "30ab04ca-4be7-4d2e-9001-d8de57f08b2b",
+        "name": "filter_clients_in_db",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "email_thread",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "thread_id",
+                "condition": "eq",
+                "keyValue": "={{ $('Pull thread').item.json.threadId }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -5920,
+          -320
+        ],
+        "id": "0ae9a728-0d66-431c-bd8d-f196dcb7f998",
+        "name": "filter_threads_in_db",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "email_thread",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "thread_id",
+                "fieldValue": "={{ $('Pull thread').last().json.threadId }}"
+              },
+              {
+                "fieldId": "last_message_id",
+                "fieldValue": "={{ $('Pull thread').all()[$('Pull thread').all().length - 1].json.id }}\n"
+              },
+              {
+                "fieldId": "human_handover",
+                "fieldValue": "False"
+              },
+              {
+                "fieldId": "last_replied",
+                "fieldValue": "={{ $now }}"
+              },
+              {
+                "fieldId": "sender_email",
+                "fieldValue": "={{ $('Pull thread').first().json.From.match(/<([^>]+)>/) ? $('Pull thread').first().json.From.match(/<([^>]+)>/)[1] : '' }}"
+              },
+              {
+                "fieldId": "received_at",
+                "fieldValue": "={{ $('Pull thread').first().json.Date }}"
+              },
+              {
+                "fieldId": "client_id",
+                "fieldValue": "={{ $json.id }}"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "new_lead"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -5024,
+          -704
+        ],
+        "id": "fd2e7672-b96b-45d0-8b1d-d8726ad75f6c",
+        "name": "create_new_email_thread",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "thread_messages",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "message_id",
+                "fieldValue": "={{ $(\"Pull thread\").last().json[\"id\"] }}"
+              },
+              {
+                "fieldId": "email_thread",
+                "fieldValue": "={{ $json.thread_id }}"
+              },
+              {
+                "fieldId": "is_reminder",
+                "fieldValue": "False"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "={{ $json.status }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -4800,
+          -704
+        ],
+        "id": "7ab0a358-0f31-496b-8450-948bc9c91515",
+        "name": "create_thread_message",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "ee7d38e4-28a9-4986-a237-ac7d83d2318b",
+                "leftValue": "={{ $json }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "object",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -5696,
+          -320
+        ],
+        "id": "dd29be26-c603-4434-945d-bad670e538ec",
+        "name": "check_thread_exists"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "email_thread",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "thread_id",
+                "condition": "eq",
+                "keyValue": "={{ $('Pull thread').item.json.threadId }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "last_message_id",
+                "fieldValue": "={{ $('Pull thread').all()[$('Pull thread').all().length - 1].json.id }}\n"
+              },
+              {
+                "fieldId": "last_replied",
+                "fieldValue": "={{ $now.toISO().split('T')[0] }}\n"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "conversation_going_on"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -4800,
+          -512
+        ],
+        "id": "5ffc1970-74f3-4b1e-a370-4c081439b339",
+        "name": "update_email_thread",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "function pick(s, re){ const m = s && s.match(re); return m ? m[1].trim() : \"\"; }\nfunction emailOf(s){ const m = s && s.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/i); return m ? m[0] : \"\"; }\n\nconst items = $input.all();\nif (!items.length) return items;\n\nconst out = items.map(i => {\n  const last = i.json;\n\n  // 1) Convert HTML -> plain-ish text so regex can see markers/headers\n  const bodyHtml = String(last.body || \"\");\n  const bodyText = bodyHtml\n    .replace(/\\r/g, \"\")\n    .replace(/<br\\s*\\/?>/gi, \"\\n\")\n    .replace(/<\\/(div|p|tr|li|table|tbody|td|th)>/gi, \"\\n\")\n    .replace(/<[^>]+>/g, \"\")\n    .trim();\n\n  // 2) Find a \"forwarded\" marker (-----, =====, “Begin forwarded message:”)\n  const markers = [\n    /[-=–—]{3,}\\s*forwarded message\\s*[-=–—]{3,}/i,\n    /begin forwarded message\\s*:/i,\n    /forwarded message\\s*:/i\n  ];\n  let fwdStart = -1;\n  for (const re of markers) {\n    const idx = bodyText.search(re);\n    if (idx >= 0) { fwdStart = (fwdStart === -1) ? idx : Math.min(fwdStart, idx); }\n  }\n\n  const block = fwdStart >= 0 ? bodyText.slice(fwdStart) : \"\";\n\n  // 3) Extract fields from the forwarded block if found\n  let originalSenderEmail = \"\";\n  let cleanSubject = (last.subject || \"\").replace(/^fwd:\\s*/i, \"\").trim();\n\n  if (block) {\n    const fromLine = pick(block, /From:\\s*(.+)/i);\n    originalSenderEmail = emailOf(fromLine) || emailOf(block) || \"\";\n    const subjLine = pick(block, /Subject:\\s*(.+)/i);\n    if (subjLine) cleanSubject = subjLine.replace(/^fwd:\\s*/i, \"\").trim();\n  }\n\n  // 4) Who forwarded it (the visible \"from\" of the last message)\n  const forwardedByEmail = emailOf(last.from) || \"\";\n\n  // 5) Final detection flag\n  const isForwarded =\n    !!block ||\n    /forwarded message/i.test(bodyText) ||\n    /^fwd\\s*:/i.test(last.subject || \"\");\n\n  // 6) Attach results\n  return {\n    json: {\n      ...last,\n      isForwarded,\n      originalSenderEmail,\n      forwardedByEmail,\n      cleanSubject\n      // _debug: bodyText.slice(Math.max(0, fwdStart - 80), fwdStart + 160) // uncomment to inspect\n    }\n  };\n});\n\nreturn out;\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -4128,
+          -608
+        ],
+        "id": "09011bb0-095c-41cc-8d3d-2152912294d7",
+        "name": "parse_forwarded_mails"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Prefer items from \"Parse forward\" (has isForwarded/originalSenderEmail fields),\n// otherwise fall back to \"Code2\" (decoded Gmail parts). If both missing, use $input.\nconst debug = [];\nlet sourceItems = [];\n\nlet parseForwardItems, code2Items;\ntry {\n  parseForwardItems = $items('parse_forwarded_mails');\n} catch(e) {\n  debug.push(\"Error accessing 'Parse forward': \" + e.message);\n  parseForwardItems = undefined;\n}\nif (Array.isArray(parseForwardItems) && parseForwardItems.length) {\n  sourceItems = parseForwardItems;\n  debug.push(`Using items from 'Parse forward': ${parseForwardItems.length} items.`);\n} else {\n  try {\n    code2Items = $items('Code2');\n  } catch(e) {\n    debug.push(\"Error accessing 'Code2': \" + e.message);\n    code2Items = undefined;\n  }\n  if (Array.isArray(code2Items) && code2Items.length) {\n    sourceItems = code2Items;\n    debug.push(`Using items from 'Code2': ${code2Items.length} items.`);\n  } else {\n    sourceItems = $input.all();\n    debug.push('Using $input.all(), count: ' + sourceItems.length);\n  }\n}\n\n// Helpers\nfunction htmlToText(html) {\n  return String(html || \"\")\n    .replace(/\\r/g, \"\")\n    .replace(/<br\\s*\\/?>/gi, \"\\n\")\n    .replace(/<\\/(div|p|tr|li|table|tbody|td|th|ul|ol)>/gi, \"\\n\")\n    .replace(/<[^>]+>/g, \"\")\n    .replace(/\\u00A0/g, \" \")\n    .replace(/[ \\t]+\\n/g, \"\\n\")\n    .trim();\n}\n\n// Extract content *below* the forwarded headers block\nfunction extractForwardedContent(text) {\n  if (!text) return \"\";\n\n  // Split on common forwarded markers (handles =====, -----, en/em dashes)\n  const parts = text.split(/(?:[-=–—]{3,})\\s*Forwarded message\\s*(?:[-=–—]{3,})/i);\n  if (parts.length >= 3) {\n    // parts[1] is headers, parts[2] is the body after the second marker\n    return parts[2].trim();\n  }\n\n  // Fallback: \"Begin forwarded message:\" then skip headers until first blank line\n  const idx = text.search(/Begin forwarded message\\s*:/i);\n  if (idx >= 0) {\n    const rest = text.slice(idx);\n    const blank = rest.search(/\\n\\s*\\n/); // first blank line after headers\n    if (blank >= 0) return rest.slice(blank).trim();\n  }\n\n  // Fallback: try to find headers (From:/To:/Date:/Subject:) and then first blank line\n  const headersRe = /From:.*\\n(?:.*\\n){0,6}?Subject:.*\\n/i;\n  const m = text.match(headersRe);\n  if (m) {\n    const after = text.slice((m.index || 0) + m[0].length);\n    const blank = after.search(/\\n\\s*\\n/);\n    if (blank >= 0) return after.slice(blank).trim();\n  }\n\n  return \"\"; // nothing extracted\n}\n\n// Normalize to an array of plain JSONs\nconst msgs = Array.isArray(sourceItems)\n  ? sourceItems.map(i => i && typeof i === \"object\" && \"json\" in i ? i.json : null).filter(Boolean)\n  : [];\ndebug.push('Messages found: ' + msgs.length);\n\n// Sort by Gmail internalDate if present\nmsgs.sort((a, b) => (parseInt(a.date || 0) - parseInt(b.date || 0)));\n\n// De-duplicate by message id (fallback to body)\nconst seen = new Set();\nconst unique = msgs.filter(m => {\n  const key = m.id || m.body || '';\n  if (seen.has(key)) return false;\n  seen.add(key);\n  return true;\n});\n\n// Build normal formatted thread (fallback)\nconst formattedMessages = unique.map(m => {\n  const from = m.from || '';\n  const to = m.to || '';\n  const subject = m.subject || '';\n  const date = m.date ? new Date(parseInt(m.date)).toLocaleString('en-IN') : 'Unknown Date';\n  const body = m.body || '[No body found]';\n  return `From: ${from}\\nTo: ${to}\\nDate: ${date}\\nSubject: ${subject}\\n\\n${body}\\n\\n---`;\n});\nconst fullThreadText = formattedMessages.join('\\n');\n\n// Latest item\nconst last = unique.length ? unique[unique.length - 1] : {};\n\n// If forwarded: build a special body that starts *below* the forwarded headers\nlet aiBody = fullThreadText;\nif (last.isForwarded) {\n  const lastBodyText = htmlToText(last.body);\n  const forwardedOnly = extractForwardedContent(lastBodyText);\n  if (forwardedOnly) {\n    aiBody = forwardedOnly;\n    debug.push('Forwarded content extracted length: ' + forwardedOnly.length);\n  } else {\n    debug.push('Forwarded markers found, but content extraction failed; falling back to full thread.');\n  }\n}\n\n// Stop-reply heuristic (same as before)\nconst threadTextLower = (aiBody || fullThreadText).toLowerCase();\nconst stopReply =\n  threadTextLower.includes('neha rana') ||\n  threadTextLower.includes('looped in a senior') ||\n  threadTextLower.includes('escalate');\n\nreturn [\n  {\n    json: {\n      threadSummary: aiBody || '',\n      latestSubject: last?.cleanSubject || last?.subject || '',\n      latestFrom: last?.originalSenderEmail || last?.from || '',\n      isForwarded: !!last?.isForwarded,\n      originalSenderEmail: last?.originalSenderEmail || '',\n      forwardedByEmail: last?.forwardedByEmail || '',\n      stopReply,\n      debug,\n      threadId: last?.threadId || ''\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -3904,
+          -608
+        ],
+        "id": "816a8b05-1000-4084-b09e-317b7b7ab19c",
+        "name": "format_email_thread_for_agent"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "email_thread",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "thread_id",
+                "condition": "eq",
+                "keyValue": "={{ $('Pull thread').item.json.threadId }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status",
+                "fieldValue": "lost"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -3328,
+          -208
+        ],
+        "id": "cee7716a-5ebc-4108-bc91-7723d7d7fd35",
+        "name": "update_status_to_lost",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "email_thread",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "thread_id",
+                "condition": "eq",
+                "keyValue": "={{ $('Pull thread').last().json.threadId }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status",
+                "fieldValue": "spam"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -3328,
+          -16
+        ],
+        "id": "a6a825f8-40bc-4cc0-8f9a-6afd9d51c2f2",
+        "name": "update_status_to_spam",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "thread_messages",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "message_id",
+                "fieldValue": "={{ $('Pull thread').all()[$('Pull thread').all().length - 1].json.id }}"
+              },
+              {
+                "fieldId": "email_thread",
+                "fieldValue": "={{ $('Pull thread').last().json.threadId }}"
+              },
+              {
+                "fieldId": "is_reminder",
+                "fieldValue": "FALSE"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "lost"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -2976,
+          -208
+        ],
+        "id": "d49080fe-bc18-4435-8956-0678d2bf9903",
+        "name": "create_new_row_as_lost_in_db",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "thread_messages",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "message_id",
+                "fieldValue": "={{ $('Pull thread').all()[$('Pull thread').all().length - 1].json.id }}"
+              },
+              {
+                "fieldId": "email_thread",
+                "fieldValue": "={{ $('Pull thread').last().json.threadId }}"
+              },
+              {
+                "fieldId": "is_reminder",
+                "fieldValue": "FALSE"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "spam"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -2976,
+          -16
+        ],
+        "id": "08647016-f483-42bf-98f4-40788d9536f1",
+        "name": "create_new_row_as_lost_in_db1",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://gmail.googleapis.com/gmail/v1/users/me/threads/{{ $('Pull thread').last().json.threadId }}/modify\n",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "gmailOAuth2",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{ \"removeLabelIds\": [\"UNREAD\"] }\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -2608,
+          -208
+        ],
+        "id": "589e9fa2-459f-47d6-82a5-6abd3be06aff",
+        "name": "mark_thread_read",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://gmail.googleapis.com/gmail/v1/users/me/threads/{{ $('Pull thread').last().json.threadId }}/modify\n",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "gmailOAuth2",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{ \"removeLabelIds\": [\"UNREAD\"] }\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -2608,
+          -16
+        ],
+        "id": "40253d48-b0e5-416b-96f5-8e0bd959295f",
+        "name": "mark_thread_as_read",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "thread",
+          "operation": "reply",
+          "threadId": "={{ $('Pull thread').all()[0].json.id }}\n",
+          "messageId": "={{ $('Pull thread').all()[0].json.threadId || $('Pull thread').all()[0].json.thread_id }}\n",
+          "emailType": "html",
+          "message": "={{ $node[\"fix_reply\"].json.html }}",
+          "options": {
+            "ccList": "devansh.agarwal@scaleupally.io"
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          -2160,
+          -800
+        ],
+        "id": "4be917b1-810e-4b12-bf5b-e9dde5077844",
+        "name": "loop_human",
+        "webhookId": "90ea93d9-ac89-4f9e-b87f-fb466e774ed8",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "thread",
+          "operation": "reply",
+          "threadId": "={{ $('Pull thread').all()[0].json.id }}\n",
+          "messageId": "={{ $('Pull thread').all()[0].json.threadId || $('Pull thread').all()[0].json.thread_id }}\n",
+          "emailType": "html",
+          "message": "={{ $node[\"fix_reply\"].json.html }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          -2160,
+          -416
+        ],
+        "id": "5797415b-b275-46c8-b1ed-03f67ae1e5a5",
+        "name": "reply_to_message",
+        "webhookId": "a2b221e0-a079-4d8e-abe7-e13a4cee73ff",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "thread_messages",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "message_id",
+                "fieldValue": "={{ $json.id }}"
+              },
+              {
+                "fieldId": "email_thread",
+                "fieldValue": "={{ $json.threadId }}"
+              },
+              {
+                "fieldId": "is_reminder",
+                "fieldValue": "False"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "=handover"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1936,
+          -800
+        ],
+        "id": "6112d673-9037-4133-aac4-35823f0d5098",
+        "name": "create_new_entry_in_thread_message_of_reply",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "thread_messages",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "message_id",
+                "fieldValue": "={{ $json.id }}"
+              },
+              {
+                "fieldId": "email_thread",
+                "fieldValue": "={{ $json.threadId }}"
+              },
+              {
+                "fieldId": "is_reminder",
+                "fieldValue": "False"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "=negotiating"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1936,
+          -416
+        ],
+        "id": "8118df38-c710-4605-84a8-1a37701370c6",
+        "name": "create_new_entry_in_thread_message_of_reply1",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "email_thread",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "thread_id",
+                "condition": "eq",
+                "keyValue": "={{ $('reply_to_message').item.json.threadId }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status",
+                "fieldValue": "={{ $('AI Agent').item.json.output.state }}"
+              },
+              {
+                "fieldId": "meta",
+                "fieldValue": "={ \n\"comment\": \"{{ $('AI Agent').item.json.output.comment }}\", \"reason\": \"{{ $('AI Agent').item.json.output.reason }}\"\n}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1712,
+          -416
+        ],
+        "id": "92da7bf0-9a99-4b10-a78a-5a5e8c552157",
+        "name": "update_email_thread_after_reply",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://gmail.googleapis.com/gmail/v1/users/me/threads/{{ $('reply_to_message').item.json.threadId }}/modify\n",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "gmailOAuth2",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{ \"removeLabelIds\": [\"UNREAD\"] }\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1488,
+          -416
+        ],
+        "id": "7be9cd00-eb4e-49af-b9d6-e6182a817fb9",
+        "name": "mark_message_as_read",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "email_thread",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "thread_id",
+                "condition": "eq",
+                "keyValue": "={{ $('loop_human').item.json.threadId }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status",
+                "fieldValue": "={{ $('AI Agent').item.json.output.state }}"
+              },
+              {
+                "fieldId": "human_handover",
+                "fieldValue": "TRUE"
+              },
+              {
+                "fieldId": "meta",
+                "fieldValue": "={\n\"comment\": \"{{ $('AI Agent').item.json.output.comment }}\",\n\"reason\": \"{{ $('AI Agent').item.json.output.reason }}\"\n}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1712,
+          -800
+        ],
+        "id": "51804fb8-93d3-47aa-a7bf-fb10f66f29d2",
+        "name": "update_thread_status_to_handover",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "client",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "email",
+                "condition": "eq",
+                "keyValue": "={{ $('Pull thread').all()[0].json.From.match(/<([^>]+)>/) ? $('Pull thread').all()[0].json.From.match(/<([^>]+)>/)[1] : '' }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "converted",
+                "fieldValue": "TRUE"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1488,
+          -800
+        ],
+        "id": "7d955d21-727c-4b72-92de-09598ed485af",
+        "name": "update_client_status",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://gmail.googleapis.com/gmail/v1/users/me/threads/{{ $('loop_human').item.json.threadId }}/modify\n",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "gmailOAuth2",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{ \"removeLabelIds\": [\"UNREAD\"] }\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1264,
+          -800
+        ],
+        "id": "6245cf42-cad6-4714-8b79-15438bb45bae",
+        "name": "mark_message_read",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const plainText = $input.first().json.output.reply_body\n\nif (!plainText) {\n  return [\n    {\n      json: {\n        html: `<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n                 <p><i>No reply generated.</i></p>\n                 <br>\n                 <p>Best regards,<br>ScaleupAlly Team</p>\n               </div>`\n      }\n    }\n  ];\n}\n\n// Convert line breaks to <p> tags and bold words between ****\nconst formatted = plainText\n  .split('\\n')\n  .map(line => {\n    // Bold the content between ****\n    line = line.replace(/\\*\\*(.*?)\\*\\*/g, '<b>$1</b>'); // Matches text between ** and replaces it with <b></b> tags\n    return `<p>${line.trim()}</p>`;\n  })\n  .join('');\n\n// Check if signature already exists\nconst lowerText = plainText.toLowerCase();\nconst hasSignature = lowerText.includes(\"best regards\") || lowerText.includes(\"scaleupally.io\");\n\nconst signatureBlock = hasSignature\n  ? ''  // skip if already present\n  : `<p>Best regards,<br>ScaleupAlly Team</p>`;\n\nconst htmlFormatted = `\n  <div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n    ${formatted}\n    ${signatureBlock}\n  </div>\n`;\n\nreturn [\n  {\n    json: {\n      html: htmlFormatted\n    }\n  }\n];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2608,
+          -608
+        ],
+        "id": "727adeee-8633-4f92-b85e-b626ab45cc12",
+        "name": "fix_reply"
+      },
+      {
+        "parameters": {
+          "tableId": "thread_messages",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "message_id",
+                "fieldValue": "={{ $(\"Pull thread\").last().json[\"id\"] }}"
+              },
+              {
+                "fieldId": "email_thread",
+                "fieldValue": "={{ $json.thread_id }}"
+              },
+              {
+                "fieldId": "is_reminder",
+                "fieldValue": "False"
+              },
+              {
+                "fieldId": "status",
+                "fieldValue": "={{ $json.status }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -4800,
+          -320
+        ],
+        "id": "2d306d5c-f13f-49dc-83a5-35a03c6d912a",
+        "name": "create_new_thread_message_for_existing_client",
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "client",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "email",
+                "condition": "eq",
+                "keyValue": "={{ $('Pull thread').all()[0].json.From.match(/<([^>]+)>/) ? $('Pull thread').all()[0].json.From.match(/<([^>]+)>/)[1] : '' }}"
+              },
+              {
+                "keyName": "converted",
+                "condition": "eq",
+                "keyValue": "TRUE"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -5472,
+          -224
+        ],
+        "id": "54c39a8e-91c0-407e-9c84-dafbe5e7b599",
+        "name": "check_client_won_or_not",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "veIjgdLs1qKGvH4p",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "14cd405b-52a2-49a1-9464-da10f1a18526",
+                "leftValue": "={{ $json.converted }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -5248,
+          -224
+        ],
+        "id": "7cee3456-a4c1-451c-92b9-15cedafa5523",
+        "name": "If_won"
+      },
+      {
+        "parameters": {
+          "resource": "thread",
+          "operation": "reply",
+          "threadId": "={{ $('Pull thread').all()[0].json.id }}\n",
+          "messageId": "={{ $('Pull thread').all()[0].json.threadId || $('Pull thread').all()[0].json.thread_id }}\n",
+          "message": "=Hi,\nFollowing up on our earlier conversation regarding the pricing. I’m looping in Devansh Agarwal (devansh.agarwal@scaleupally.io), who will take this forward.",
+          "options": {
+            "bccList": "devansh.agarwal@scaleupally.io"
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          -5024,
+          -128
+        ],
+        "id": "00956777-29cf-48b1-99a4-c3884b451ec2",
+        "name": "loop_human1",
+        "webhookId": "90ea93d9-ac89-4f9e-b87f-fb466e774ed8",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "f456d8d1-7554-4e04-9e2f-91ea73ebafbb",
+                "leftValue": "={{ $json.stopReply }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -3472,
+          -928
+        ],
+        "id": "3c6562f8-4f06-47c7-9eae-81aeb76a9c91",
+        "name": "Check reply status"
+      }
+    ],
+    "connections": {
+      "Check for Guest Post Keywords": {
+        "main": [
+          [
+            {
+              "node": "Guest Post Keyword Filter",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Guest Post Keyword Filter": {
+        "main": [
+          [
+            {
+              "node": "filter_clients_in_db",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Not a Guest Post",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Start": {
+        "main": [
+          [
+            {
+              "node": "Pull thread",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create a  row in email_thread": {
+        "main": [
+          [
+            {
+              "node": "create_new_thread_message_for_existing_client",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model2": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Classify into categories",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model1": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Structured Output Parser",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Classify into categories": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No Operation, do nothing1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [],
+          [
+            {
+              "node": "update_status_to_lost",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "update_status_to_spam",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "loop_human",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send a message",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "reply_to_message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get a thread": {
+        "main": [
+          [
+            {
+              "node": "Code2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code2": {
+        "main": [
+          [
+            {
+              "node": "parse_forwarded_mails",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Structured Output Parser": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Agent": {
+        "main": [
+          [
+            {
+              "node": "fix_reply",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "check_exists": {
+        "main": [
+          [
+            {
+              "node": "create_new_client",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "filter_threads_in_db",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Pull thread": {
+        "main": [
+          [
+            {
+              "node": "Check for Guest Post Keywords",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "create_new_client": {
+        "main": [
+          [
+            {
+              "node": "create_new_email_thread",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "filter_clients_in_db": {
+        "main": [
+          [
+            {
+              "node": "check_exists",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "filter_threads_in_db": {
+        "main": [
+          [
+            {
+              "node": "check_thread_exists",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "create_new_email_thread": {
+        "main": [
+          [
+            {
+              "node": "create_thread_message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "create_thread_message": {
+        "main": [
+          [
+            {
+              "node": "Get a thread",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "check_thread_exists": {
+        "main": [
+          [
+            {
+              "node": "update_email_thread",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "check_client_won_or_not",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "update_email_thread": {
+        "main": [
+          [
+            {
+              "node": "Get a thread",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "parse_forwarded_mails": {
+        "main": [
+          [
+            {
+              "node": "format_email_thread_for_agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "format_email_thread_for_agent": {
+        "main": [
+          [
+            {
+              "node": "Classify into categories",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "update_status_to_lost": {
+        "main": [
+          [
+            {
+              "node": "create_new_row_as_lost_in_db",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "update_status_to_spam": {
+        "main": [
+          [
+            {
+              "node": "create_new_row_as_lost_in_db1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "create_new_row_as_lost_in_db": {
+        "main": [
+          [
+            {
+              "node": "mark_thread_read",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "create_new_row_as_lost_in_db1": {
+        "main": [
+          [
+            {
+              "node": "mark_thread_as_read",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "loop_human": {
+        "main": [
+          [
+            {
+              "node": "create_new_entry_in_thread_message_of_reply",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "reply_to_message": {
+        "main": [
+          [
+            {
+              "node": "create_new_entry_in_thread_message_of_reply1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "create_new_entry_in_thread_message_of_reply": {
+        "main": [
+          [
+            {
+              "node": "update_thread_status_to_handover",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "create_new_entry_in_thread_message_of_reply1": {
+        "main": [
+          [
+            {
+              "node": "update_email_thread_after_reply",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "update_email_thread_after_reply": {
+        "main": [
+          [
+            {
+              "node": "mark_message_as_read",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "mark_message_as_read": {
+        "main": [
+          []
+        ]
+      },
+      "update_thread_status_to_handover": {
+        "main": [
+          [
+            {
+              "node": "update_client_status",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "update_client_status": {
+        "main": [
+          [
+            {
+              "node": "mark_message_read",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "fix_reply": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "create_new_thread_message_for_existing_client": {
+        "main": [
+          [
+            {
+              "node": "Get a thread",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "check_client_won_or_not": {
+        "main": [
+          [
+            {
+              "node": "If_won",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If_won": {
+        "main": [
+          [
+            {
+              "node": "loop_human1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Create a  row in email_thread",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check reply status": {
+        "main": [
+          [],
+          []
+        ]
+      }
+    },
+    "authors": "Dev Scaleupally",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

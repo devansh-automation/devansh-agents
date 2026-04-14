@@ -1,0 +1,3869 @@
+{
+  "updatedAt": "2026-03-27T09:43:38.549Z",
+  "createdAt": "2026-02-09T12:51:25.387Z",
+  "id": "4XzWwBPDQSJ7CInx",
+  "name": "MCP – Execute Action",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "id"
+            }
+          ]
+        }
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -2432,
+        2592
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json._resolved.action }}",
+                    "rightValue": "update_deal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4af32fd4-beaf-4543-9598-a14485fbc615"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "update_deal"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "93a90bb1-86fc-4a64-974c-1eda3c8ea6a7",
+                    "leftValue": "={{ $json._resolved.action }}",
+                    "rightValue": "create_deal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "create_deal"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "93280a29-8f60-4038-9bdc-0cc93a04aa01",
+                    "leftValue": "={{ $json._resolved.action }}",
+                    "rightValue": "update_lead",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "update_lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a029399d-6083-4a26-ae9b-506aeda430d7",
+                    "leftValue": "={{ $json._resolved.action }}",
+                    "rightValue": "create_lead",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "create_lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "30be909e-f5ba-440e-a0c0-14c061e8e57d",
+                    "leftValue": "={{ $json._resolved.action }}",
+                    "rightValue": "create_contact",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "create_contact"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "1cb95b5d-139d-49e3-9a9c-69dda2dcee37",
+                    "leftValue": "={{ $json._resolved.action }}",
+                    "rightValue": "update_contact",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "update_contact"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "fd1abd52-c7d0-4bd9-b000-f83d4260f9dd",
+                    "leftValue": "={{ $json._resolved.action }}",
+                    "rightValue": "create_account",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "create_account"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0b8ed701-1bd8-43f6-8870-f4f028e6f327",
+                    "leftValue": "={{ $json._resolved.action }}",
+                    "rightValue": "update_account",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "update_account"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b06be0dc-f310-4fa3-bb25-79e1a6a8d2de",
+                    "leftValue": "={{ $json._resolved.action }}",
+                    "rightValue": "create_task",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "create_task"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7c6f7c6e-65ae-4300-8773-e03e5fea5c5d",
+                    "leftValue": "={{ $json._resolved.action }}",
+                    "rightValue": "convert_lead",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "convert_lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "3a673ca8-a8da-40b6-9ab6-82f10d61d99f",
+                    "leftValue": "={{ $json._resolved.action }}",
+                    "rightValue": "create_note",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "create_note"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1760,
+        1408
+      ],
+      "id": "7430b095-a708-4aea-9b5b-0eba87b00f91",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.zohoapis.com/crm/v3/Leads/{{ $json._resolved.record_id }}/actions/convert",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json.body) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        3216
+      ],
+      "id": "543c9701-a25f-4e19-aa27-febbc5dee1ba",
+      "name": "convert_lead",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "executing"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2208,
+        2592
+      ],
+      "id": "7d6c05da-2bc9-443d-a091-288d060a4d8a",
+      "name": "Update status to executing",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.zohoapis.com/crm/v3/Deals",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.body }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        528
+      ],
+      "id": "0aa5d1a7-3e5c-4e6c-9ecc-41b1e1db7767",
+      "name": "create_deal",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.zohoapis.com/crm/v3/Tasks",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": [\n    {\n      \"Subject\": \"{{ $json._resolved.fields.Subject }}\",\n      \"Status\": \"{{ $json._resolved.fields.Status || 'Not Started' }}\",\n      \"Priority\": \"{{ $json._resolved.fields.Priority || 'Normal' }}\",\n      \"Due_Date\": \"{{ $json._resolved.fields.Due_Date ? DateTime.fromISO($json._resolved.fields.Due_Date).toFormat('yyyy-MM-dd') : $today.plus({ days: 7 }).toFormat('yyyy-MM-dd') }}\",\n      \"$se_module\": \"{{ $json._resolved.module }}\",\n      \"What_Id\": {{ ['Accounts','Deals','Leads'].includes($json._resolved.module) && $json._resolved.fields.What_Id ? JSON.stringify($json._resolved.fields.What_Id) : null }},\n      \"Description\": \"{{ ($json._resolved.fields.Description || '').substring(0, 255) }}\",\n      \"Owner\": {{ $json._resolved.fields.Owner ? JSON.stringify($json._resolved.fields.Owner) : null }}\n    }\n  ]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        1296
+      ],
+      "id": "e32d54e3-9b67-4bef-93f9-9a55f94bdb0a",
+      "name": "create_task",
+      "notesInFlow": false,
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"json\": {\n    \"Who_Id\": {{ ['Contacts'].includes($json._resolved.module) ? $json._resolved.fields?.Who_Id : null }},\n    \"What_Id\": {{ ['Accounts','Deals','Leads'].includes($json._resolved.module) ? $json._resolved.fields?.What_Id : null }}\n  }\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1536,
+        1488
+      ],
+      "id": "3a33edb5-2613-43bc-a372-a85ce76db5df",
+      "name": "set Who_id and what_id"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ ['Leads','Deals','Accounts'].includes($json._resolved.module) }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "308ba511-a8a8-4bc6-85d1-3ca68ba4842e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "task_What_Id"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ed35fd00-34e6-4c61-a457-0bb279f2afe0",
+                    "leftValue": "={{ $json._resolved.module === \"Contacts\"  }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "task_Who_Id"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1312,
+        1488
+      ],
+      "id": "a259a829-0e64-4282-9fd0-5c0a10ddfb28",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.zohoapis.com/crm/v3/Tasks",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": [\n    {\n      \"Subject\": \"{{ $json._resolved.fields.Subject }}\",\n      \"Status\": \"{{ $json._resolved.fields.Status || 'Not Started' }}\",\n      \"Priority\": \"{{ $json._resolved.fields.Priority || 'Normal' }}\",\n      \"Due_Date\": \"{{ $json._resolved.fields.Due_Date ? DateTime.fromISO($json._resolved.fields.Due_Date).toFormat('yyyy-MM-dd') : $today.plus({ days: 7 }).toFormat('yyyy-MM-dd') }}\",\n      \"Who_Id\": {{ $json._resolved.fields.Who_Id ? JSON.stringify($json._resolved.fields.Who_Id) : null }},\n      \"$se_module\": \"{{ $json._resolved.module }}\",\n      \"Description\": \"{{ ($json._resolved.fields.Description || '').substring(0, 255) }}\",\n      \"Owner\": {{ $json._resolved.fields.Owner ? JSON.stringify($json._resolved.fields.Owner) : null }}\n    }\n  ]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        1680
+      ],
+      "id": "2336e11c-caec-4b59-ac9d-d1f2bc6126a6",
+      "name": "create_task1",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"execution_status\": \"success\",\n  \"user_message\": \" Task created successfully.\",\n  \"record_id\": \"{{ $('create_task').item.json.body.data[0].details.id }}\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        1456
+      ],
+      "id": "f6e5e59e-e6fa-4fc7-a8c8-a1eda7889853",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"execution_status\": \"success\",\n  \"user_message\": \" Deal created successfully.\",\n  \"record_id\": \"{{ $('create_deal').item.json.body.data[0].details.id }}\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        496
+      ],
+      "id": "ee7e8044-6ae8-412d-9b23-6bda0d2686b5",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"execution_status\": \"success\",\n  \"user_message\": \" Lead updated successfully.\",\n  \"record_id\": \"{{ $('update_lead').item.json.body.data[0].details.id }}\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        112
+      ],
+      "id": "ba4c571d-f238-41d6-ae83-4cf9244d4f97",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"execution_status\": \"success\",\n  \"user_message\": \" Contact updated successfully.\",\n  \"record_id\":\"{{ $('update_contact').item.json.body.data[0].details.id }}\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        2416
+      ],
+      "id": "88844467-823b-476e-b62e-7d751cff78be",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"execution_status\": \"success\",\n  \"user_message\": \" Account updated successfully.\",\n  \"record_id\": \"{{ $('create_account').item.json.body.data[0].details.id }}\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        880
+      ],
+      "id": "f799199c-c028-4e53-9137-506537d47aad",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"execution_status\": \"success\",\n  \"user_message\": \" Task created successfully.\",\n  \"record_id\": \"{{ $('create_task1').item.json.body.data[0].details.id }}\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        1648
+      ],
+      "id": "07401988-6faf-4fdd-804b-430de2e3e067",
+      "name": "Edit Fields6"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"execution_status\": \"Success\",\n  \"user_message\": \" Lead Converted successfully.\",\n  \"record_id\": \"{{ $('convert_lead').item.json.data[0].Deals.id }}\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        3184
+      ],
+      "id": "8558e986-0361-43cb-8a38-91c6ffb03a9f",
+      "name": "Edit Fields8"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"execution_status\": \"success\",\n  \"user_message\": \" Lead created successfully.\",\n  \"record_id\": \"{{ $('create_lead').item.json.body.data[0].details.id }}\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        2224
+      ],
+      "id": "62eced7a-70ea-4214-bc1c-b1c4652594d5",
+      "name": "Edit Fields9"
+    },
+    {
+      "parameters": {
+        "numberInputs": 10
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -192,
+        1360
+      ],
+      "id": "b9ce6b52-5d7a-46ae-a020-c2087f2c1ed6",
+      "name": "Merge",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0d9b816-d024-4cb3-888d-951f1a25f7af",
+              "leftValue": "={{ $json.body.data.first().status === 'error'}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -864,
+        1296
+      ],
+      "id": "e10d05b4-cbd3-45ba-a99f-dfd3b7b80f8a",
+      "name": "check_for_error"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "success"
+            },
+            {
+              "fieldId": "executed_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        1456
+      ],
+      "id": "d22eb4e2-c46e-40de-a9ff-52c319e7927c",
+      "name": "update_complete_for_task_creation in DAL",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "failed"
+            },
+            {
+              "fieldId": "cancelled_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        1264
+      ],
+      "id": "0d6b67ed-156f-4099-94a0-6686f20e715c",
+      "name": "update_fail_for_task_creation in DAL",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0d9b816-d024-4cb3-888d-951f1a25f7af",
+              "leftValue": "={{ $json.body.data.first().status === 'error'}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -864,
+        1680
+      ],
+      "id": "8d7b8ccf-b426-4a07-a108-93ae255022da",
+      "name": "check_for_error1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "success"
+            },
+            {
+              "fieldId": "executed_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        1648
+      ],
+      "id": "d44ba70f-fdcf-4ad5-b16d-c915b81fa5fa",
+      "name": "update_complete_for_task_creation_in_contact",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "failed"
+            },
+            {
+              "fieldId": "cancelled_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        1840
+      ],
+      "id": "43904888-5860-4b23-9b2b-5605e9bc2316",
+      "name": "update_fail_for_task_creation_in_contact",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0d9b816-d024-4cb3-888d-951f1a25f7af",
+              "leftValue": "={{ $json.body.data.first().status === 'error'}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -864,
+        2832
+      ],
+      "id": "e99a2d5a-771d-4f84-aede-f3b0efedaff3",
+      "name": "check_for_error2"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "success"
+            },
+            {
+              "fieldId": "executed_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:mm') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        2800
+      ],
+      "id": "17f7f3f7-86b8-4be2-899c-a9f7f7fc180e",
+      "name": "update_complete_for_contact_create",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "failed"
+            },
+            {
+              "fieldId": "cancelled_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        2992
+      ],
+      "id": "5eb1dd01-fbca-41e9-b2a6-d94fe453efee",
+      "name": "update_fail_for_contact_create",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0d9b816-d024-4cb3-888d-951f1a25f7af",
+              "leftValue": "={{ $json.body.data.first().status === 'error'}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -864,
+        2064
+      ],
+      "id": "b6aa6cc0-fe2d-407c-8765-1764eb936677",
+      "name": "check_for_error3"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "success"
+            },
+            {
+              "fieldId": "executed_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        2032
+      ],
+      "id": "f54c4c80-e54f-4173-a9b7-80811a056359",
+      "name": "update_complete_for_lead_creation",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "failed"
+            },
+            {
+              "fieldId": "cancelled_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        2224
+      ],
+      "id": "9cad79e1-00bf-4ad3-b980-d7b9f8cdc340",
+      "name": "update_fail_for_lead_creation",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0d9b816-d024-4cb3-888d-951f1a25f7af",
+              "leftValue": "={{ $json.statusCode !== 200 && $json.statusCode !== 201 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -864,
+        3216
+      ],
+      "id": "96623696-2baf-4d3c-b6bf-fa436c409595",
+      "name": "check_for_error4"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "success"
+            },
+            {
+              "fieldId": "executed_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        3184
+      ],
+      "id": "985abee8-54bf-4ee0-80fe-7594f7a0945a",
+      "name": "update_complete_for_lead_convert",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "failed"
+            },
+            {
+              "fieldId": "cancelled_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        3376
+      ],
+      "id": "9b914efa-62bc-44bc-982d-694c12752012",
+      "name": "update_fail_for_lead_convert",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0d9b816-d024-4cb3-888d-951f1a25f7af",
+              "leftValue": "={{ $json.body.data.first().status === 'error'}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -864,
+        912
+      ],
+      "id": "4c1bd9a3-f8b0-4c50-b940-c8ed759b643d",
+      "name": "check_for_error5"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "success"
+            },
+            {
+              "fieldId": "executed_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        880
+      ],
+      "id": "d5553901-bb46-4ee6-9ca4-83fb34c7240a",
+      "name": "update_complete_for_account_creation",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "failed"
+            },
+            {
+              "fieldId": "cancelled_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        1072
+      ],
+      "id": "2bc3bae1-6d8f-4670-9ba8-d58177e9dac8",
+      "name": "update_fail_for_account_creation",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0d9b816-d024-4cb3-888d-951f1a25f7af",
+              "leftValue": "={{ $json.body.data.first().status === 'error'}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -864,
+        2448
+      ],
+      "id": "469ecc6f-3156-4c00-8dbe-1451c2361ffb",
+      "name": "check_for_error6"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "success"
+            },
+            {
+              "fieldId": "executed_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        2416
+      ],
+      "id": "64995720-17a1-4a19-858e-d980ec016ab3",
+      "name": "update_status_for_contact_update",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "failed"
+            },
+            {
+              "fieldId": "cancelled_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        2608
+      ],
+      "id": "e5b10694-7b33-4fb4-ab19-6651d92a56e9",
+      "name": "update_status_for_contact_update2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0d9b816-d024-4cb3-888d-951f1a25f7af",
+              "leftValue": "={{ $json.body.data.first().status === 'error'}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -864,
+        144
+      ],
+      "id": "7df05406-f8ca-4d6a-ab3b-4a8bbab22728",
+      "name": "check_for_error7"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "success"
+            },
+            {
+              "fieldId": "executed_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        112
+      ],
+      "id": "e5fac652-a6ea-46f0-ab2d-a8806b229a23",
+      "name": "update_status_for_lead_update",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "failed"
+            },
+            {
+              "fieldId": "cancelled_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        304
+      ],
+      "id": "171543dd-92c5-455b-9023-004175e8abaf",
+      "name": "update_status_for_lead_update1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2432,
+        -880
+      ],
+      "id": "0abea726-530a-41be-8e96-eb96dee77b4a",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.zohoapis.com/crm/v3/Notes",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": [\n    {\n      \"Note_Title\": \"{{ $json._resolved.fields.Note_Title || 'CRM Note' }}\",\n      \"Note_Content\": \"{{ ($json._resolved.fields.Note_Content || $json._resolved.fields.notes || $json._resolved.fields.Notes || $json.notes || '').replace(/\\n/g, ' ') }}\",\n      \"Parent_Id\": {{ $json._resolved.fields.Who_Id ? JSON.stringify($json._resolved.fields.Who_Id) : ($json._resolved.fields.What_Id ? JSON.stringify($json._resolved.fields.What_Id) : null) }},\n      \"$se_module\": \"{{ $json._resolved.module }}\"\n    }\n  ]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        3600
+      ],
+      "id": "b0c933fa-89eb-4a74-895b-7c7ae7ccf8ae",
+      "name": "create_note",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0d9b816-d024-4cb3-888d-951f1a25f7af",
+              "leftValue": "={{ $json.body.data.first().status === 'error'}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -864,
+        3600
+      ],
+      "id": "658c288a-587b-422a-9b20-de735f3e420d",
+      "name": "check_for_error8"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "success"
+            },
+            {
+              "fieldId": "executed_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        3568
+      ],
+      "id": "8820f126-e9d6-422d-9edf-8c03a74644ac",
+      "name": "update_complete_for_note_create",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "failed"
+            },
+            {
+              "fieldId": "cancelled_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        3760
+      ],
+      "id": "75c1cf2b-db67-42a0-8f16-e217afd1ec8a",
+      "name": "update_fail_for_note_create",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0d9b816-d024-4cb3-888d-951f1a25f7af",
+              "leftValue": "={{ $json.body.data.first().status === 'error'}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -864,
+        528
+      ],
+      "id": "6054057a-580c-4d75-997c-3ee5baea7bb8",
+      "name": "check_for_error9"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "failed"
+            },
+            {
+              "fieldId": "cancelled_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        688
+      ],
+      "id": "89d92d42-e55b-4fda-a449-afb1282d5b93",
+      "name": "update_status_for_deal_create",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "success"
+            },
+            {
+              "fieldId": "executed_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        496
+      ],
+      "id": "fa5aec5b-b5a9-4bbc-80c7-58ae753cbb09",
+      "name": "update_status_for_deal_create1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"execution_status\": \"success\",\n  \"user_message\": \" Deal updated successfully.\",\n  \"record_id\": \"{{ $('update_deal').item.json.body.data[0].details.id }}\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        -656
+      ],
+      "id": "c364206f-4f95-4856-81ad-06ccb82790ce",
+      "name": "Edit Fields10"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0d9b816-d024-4cb3-888d-951f1a25f7af",
+              "leftValue": "={{ $json.body.data.first().status === 'error'}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -864,
+        -640
+      ],
+      "id": "ee5d07ae-47d8-4bea-bf8b-233ac8358b11",
+      "name": "check_for_error10"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "failed"
+            },
+            {
+              "fieldId": "cancelled_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -464
+      ],
+      "id": "88a199f2-f27e-4419-a2cc-41ad190acbf2",
+      "name": "update_status_for_deal_update",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "success"
+            },
+            {
+              "fieldId": "executed_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -656
+      ],
+      "id": "47b6ccc4-189a-4a00-a0e1-0080496e984a",
+      "name": "update_status_for_deal_update1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"execution_status\": \"success\",\n  \"user_message\": \" Account updated successfully.\",\n  \"record_id\":\"{{ $('update_account').item.json.body.data[0].details.id }}\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        -272
+      ],
+      "id": "686915c6-b86d-4c93-a5f2-da070afdefdd",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0d9b816-d024-4cb3-888d-951f1a25f7af",
+              "leftValue": "={{ $json.body.data.first().status === 'error'}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -864,
+        -256
+      ],
+      "id": "12a95699-67e3-4324-a12b-1e278dd270c4",
+      "name": "check_for_error11"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "failed"
+            },
+            {
+              "fieldId": "cancelled_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -80
+      ],
+      "id": "efc74ab2-31ff-4baa-aa29-2a46a27cbd0e",
+      "name": "update_status_for_contact_update3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "success"
+            },
+            {
+              "fieldId": "executed_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:MM') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -272
+      ],
+      "id": "a57afcfb-d1f5-4a3d-b63c-04c1b20eac4b",
+      "name": "update_status_for_account_update",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.zohoapis.com/crm/v3/Accounts/{{$json._resolved.record_id}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.body }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        -256
+      ],
+      "id": "f6275dd2-047f-4962-98b5-61643af6af38",
+      "name": "update_account",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "https://www.zohoapis.com/crm/v3/Contacts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.body }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        2448
+      ],
+      "id": "efe73c00-6a6e-46c1-9654-b5b5f2b29a4d",
+      "name": "update_contact",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.zohoapis.com/crm/v3/Contacts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": [\n    {\n      \"First_Name\": \"{{ $json._resolved.fields.First_Name || '' }}\",\n      \"Last_Name\": \"{{ $json._resolved.fields.Last_Name }}\",\n      \"Email\": \"{{ $json._resolved.fields.Email || '' }}\",\n      \"Phone\": \"{{ $json._resolved.fields.Phone || '' }}\",\n      \"Mobile\": \"{{ $json._resolved.fields.Mobile || $json._resolved.fields.Phone || '' }}\",\n      \"Title\": \"{{ $json._resolved.fields.Title || '' }}\",\n      \"Salutation\": \"{{ $json._resolved.fields.Salutation || '' }}\",\n      \"Lead_Source\": \"{{ $json._resolved.fields.Lead_Source || '' }}\",\n      \"Description\": \"{{ $json._resolved.fields.Description || '' }}\",\n      \"Mailing_Street\": \"{{ $json._resolved.fields.Mailing_Street || '' }}\",\n      \"Mailing_City\": \"{{ $json._resolved.fields.Mailing_City || '' }}\",\n      \"Mailing_State\": \"{{ $json._resolved.fields.Mailing_State || '' }}\",\n      \"Mailing_Country\": \"{{ $json._resolved.fields.Mailing_Country || '' }}\",\n      \"Mailing_Zip\": \"{{ $json._resolved.fields.Mailing_Zip || $json._resolved.fields.Mailing_Code || '' }}\",\n      \"Contact_Type\": \"{{ $json._resolved.fields.Contact_Type || '' }}\",\n      \"Inbound_or_Not\": \"{{ $json._resolved.fields.Inbound_Outbound || 'Outbound' }}\",\n      \"Client_Whatsapp\": \"{{ $json._resolved.fields.Whatsapp_Number || $json._resolved.fields.Phone || '' }}\",\n      \"Account_Name\": {\n              \"id\":\"5118344000005134001\"\n      },\n      \"Owner\": {{ $json._resolved.fields.Owner ? JSON.stringify({id: String($json._resolved.fields.Owner.id || $json._resolved.fields.Owner)}) : null }}\n    }\n  ]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        2832
+      ],
+      "id": "b8436fce-1975-4fee-a60c-36beb37b1d36",
+      "name": "create_contact",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "https://www.zohoapis.com/crm/v3/Deals",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n\"data\":[{{ JSON.stringify($json) }}]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        -640
+      ],
+      "id": "1330191f-73df-48c5-af17-78cceb626908",
+      "name": "update_deal",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\n// Parse string fields from Supabase first\nif (typeof item.step_queue === 'string' && item.step_queue.startsWith('[')) {\n  try { item.step_queue = JSON.parse(item.step_queue); } catch(e) {}\n}\nif (typeof item.completed_steps === 'string') {\n  try { item.completed_steps = JSON.parse(item.completed_steps); } catch(e) {}\n}\n\n// NOW read state — after parsing so completed_steps is already an array\nconst current_step    = item._advance?.current_step    ?? item.current_step    ?? 0;\nconst completed_steps = item._advance?.completed_steps ?? item.completed_steps ?? [];\n\nconst isMultiStep = Array.isArray(item.step_queue) && item.step_queue.length > 0;\n\nlet resolvedAction, resolvedModule, resolvedRecordId, resolvedFields;\n\nif (isMultiStep) {\n  const queue = item.step_queue;\n  const step  = queue[current_step];\n  if (!step) throw new Error(`Step ${current_step} not found in step_queue (len ${queue.length})`);\n\n  resolvedAction   = step.action;\n  resolvedModule   = step.module;\n  resolvedRecordId = step.record_id || 'NEW';\n\n  let fields = JSON.parse(JSON.stringify(step.fields || {}));\n\n  function resolveVal(val) {\n    if (typeof val === 'string') {\n      const m = val.match(/\\[\\[step_(\\d+)_id\\]\\]/);\n      if (m) {\n        const resolved = completed_steps[parseInt(m[1]) - 1];\n        if (!resolved) throw new Error(`[[step_${m[1]}_id]] not resolved yet`);\n        return { id: String(resolved) };\n      }\n    }\n    if (typeof val === 'object' && val !== null && typeof val?.id === 'string') {\n      const m = val.id.match(/\\[\\[step_(\\d+)_id\\]\\]/);\n      if (m) {\n        const resolved = completed_steps[parseInt(m[1]) - 1];\n        if (!resolved) throw new Error(`Nested [[step_${m[1]}_id]] not resolved`);\n        return { id: String(resolved) };\n      }\n    }\n    return val;\n  }\n\n  for (const key of Object.keys(fields)) fields[key] = resolveVal(fields[key]);\n  resolvedFields = fields;\n\n} else {\n  resolvedAction   = item.action;\n  resolvedModule   = item.module;\n  resolvedRecordId = item.record_id;\n  resolvedFields   = item.fields || {};\n}\n\nreturn [{ json: {\n  ...item,\n  current_step,\n  completed_steps,\n  _resolved: {\n    action:           resolvedAction,\n    module:           resolvedModule,\n    record_id:        resolvedRecordId,\n    fields:           resolvedFields,\n    is_multi_step:    isMultiStep,\n    current_step_idx: current_step,\n    total_steps:      isMultiStep ? item.step_queue.length : 1,\n  }\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1984,
+        2592
+      ],
+      "id": "c2d3505a-9f27-4cc9-b603-8f29968dc6c4",
+      "name": "Step_Processor"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "https://www.zohoapis.com/crm/v3/Leads",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        144
+      ],
+      "id": "331df013-0b66-41c9-9047-379504a0d19e",
+      "name": "update_lead",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.zohoapis.com/crm/v3/Accounts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": [\n    {\n      \"Account_Name\": \"{{ $json._resolved.fields.Account_Name }}\",\n      \"Account_Number\": \"{{$json._resolved.fields.Account_Number || ''}}\",\n      \"Account_Type\": \"{{$json._resolved.fields.Account_Type || 'Client'}}\",\n      \"Annual_Revenue\": \"{{$json._resolved.fields.Annual_Revenue || ''}}\",\n      \"Currency\": \"{{$json._resolved.fields.Currency || 'USD'}}\",\n      \"Description\": \"{{$json._resolved.fields.Description || ''}}\",\n      \"Employees\": \"{{$json._resolved.fields.Employees || ''}}\",\n      \"Industry\": \"{{ $json._resolved.fields.Industry || '' }}\",\n      \"Phone\": \"{{ $json._resolved.fields.Phone || $json._resolved.fields.Mobile || '' }}\",\n      \"Website\": \"{{ $json._resolved.fields.Website || '' }}\",\n      \"Billing_Street\": \"{{ $json._resolved.fields.Billing_Street || '' }}\",\n      \"Billing_City\": \"{{ $json._resolved.fields.Billing_City || '' }}\",\n      \"Billing_State\": \"{{ $json._resolved.fields.Billing_State || '' }}\",\n      \"Billing_Country\": \"{{ $json._resolved.fields.Billing_Country || '' }}\",\n      \"Billing_Code\": \"{{ $json._resolved.fields.Billing_Code || '' }}\",\n      \"Domestic_International\": \"{{ $json._resolved.fields.Domestic_International || 'International' }}\",\n      \"Account_Status\": \"{{ $json._resolved.fields.Account_Status || 'Active' }}\",\n      \"Owner\": {{ $json._resolved.fields.Owner ? JSON.stringify($json._resolved.fields.Owner) : null }}\n    }\n  ]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        912
+      ],
+      "id": "b8253cd6-7e1f-4c2b-ac30-73c9fa344a85",
+      "name": "create_account",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.zohoapis.com/crm/v3/Leads",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": [\n    {\n      \"Last_Name\": \"{{ $json._resolved.fields.Last_Name }}\",\n      \"Company\": \"{{ $json._resolved.fields.Company || '' }}\",\n      \"First_Name\": \"{{ $json._resolved.fields.First_Name || '' }}\",\n      \"Email\": \"{{ $json._resolved.fields.Email || '' }}\",\n      \"Mobile\": \"{{ $json._resolved.fields.Mobile || '' }}\",\n      \"Designation\": \"{{ $json._resolved.fields.Designation || '' }}\",\n      \"Description\": \"{{ $json._resolved.fields.Description || '' }}\",\n      \"Lead_Source\": \"{{ $json._resolved.fields.Lead_Source || '' }}\",\n      \"Lead_Status\": \"{{ $json._resolved.fields.Lead_Status || '' }}\",\n      \"Industry\": \"{{ $json._resolved.fields.Industry || '' }}\",\n      \"Industry_Type\": \"{{ $json._resolved.fields.Industry_Type || '' }}\",\n      \"Annual_Revenue\": \"{{ $json._resolved.fields.Annual_Revenue || '' }}\",\n      \"Website\": \"{{ $json._resolved.fields.Website || '' }}\",\n      \"Salutation\": \"{{ $json._resolved.fields.Salutation || '' }}\",\n      \"Street\": \"{{ $json._resolved.fields.Street || '' }}\",\n      \"City\": \"{{ $json._resolved.fields.City || '' }}\",\n      \"State\": \"{{ $json._resolved.fields.State || '' }}\",\n      \"Country\": \"{{ $json._resolved.fields.Country || '' }}\",\n      \"Zip_Code\": \"{{ $json._resolved.fields.Zip_Code || '' }}\",\n      \"Inbound_or_Not\": \"{{ $json._resolved.fields.Inbound_or_Not || '' }}\",\n      \"Lead_Location\": \"{{ $json._resolved.fields.Lead_Location || '' }}\",\n      \"Lead_Lost_Reason\": \"{{ $json._resolved.fields.Lead_Lost_Reason || '' }}\",\n      \"Project_Description\": \"{{ $json._resolved.fields.Project_Description || '' }}\",\n      \"Pick_List_1\": \"{{ $json._resolved.fields.Pick_List_1 || '' }}\",\n      \"Service_Type\": {{ Array.isArray($json._resolved.fields.Service_Type) ?   JSON.stringify($json._resolved.fields.Service_Type) : ($json._resolved.fields.Service_Type ? JSON.stringify([$json._resolved.fields.Service_Type]) : '[]') }},\n      \"Strategic_Partner\": \"{{ $json._resolved.fields.Strategic_Partner || '' }}\",\n      \"Owner\": {{ $json._resolved.fields.Owner ? JSON.stringify($json._resolved.fields.Owner) : null }}\n    }\n  ]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        2064
+      ],
+      "id": "e9b8f7d4-65a6-4359-b99b-59d9d7d8829f",
+      "name": "create_lead",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// FORMAT RESULT CODE NODE\n// Type: n8n-nodes-base.code\n// Position: after Merge (replaces all 11 Edit Fields nodes)\n\nconst item = $input.first().json;\n\n// Extract record_id from whichever Zoho response shape was returned\nlet recordId = null;\nif (item.data?.[0]?.details?.id)            recordId = item.data[0].details.id;\nelse if (item.data?.[0]?.id)               recordId = item.data[0].id;\nelse if (item.body?.data?.[0]?.details?.id) recordId = item.body.data[0].details.id;\nelse if (item.record_id && String(item.record_id).match(/^\\d{15,20}$/)) recordId = String(item.record_id);\n// Never fall back to item.id — that is the Supabase UUID\n\nconst action = item._resolved?.action || item.action || 'unknown';\n\nconst LABELS = {\n  create_deal:'Deal created', update_deal:'Deal updated',\n  create_lead:'Lead created', update_lead:'Lead updated', convert_lead:'Lead converted',\n  create_contact:'Contact created', update_contact:'Contact updated',\n  create_account:'Account created', update_account:'Account updated',\n  create_task:'Task created', create_note:'Note added',\n};\n\nconst label = LABELS[action] || action.replace(/_/g, ' ');\n\nconst hasError = (\n  item.data?.[0]?.status === 'error' ||\n  item.body?.data?.[0]?.status === 'error' ||\n  item.status === 'error' ||\n  (item.statusCode && item.statusCode >= 400)\n);\n\nconst errorDetail = hasError\n  ? (item.data?.[0]?.message || item.body?.data?.[0]?.message || item.message || 'Unknown error')\n  : null;\n\nreturn [{ json: {\n  ...item,\n  _result: {\n    execution_status: hasError ? 'failed' : 'success',\n    action,\n    module:      item._resolved?.module || item.module,\n    record_id:   recordId,\n    user_message: hasError\n      ? `Action failed: ${errorDetail}`\n      : `${label} successfully${recordId ? ' (ID: ' + recordId + ')' : ''}`,\n    error:       errorDetail,\n    is_multi_step:    item._resolved?.is_multi_step || false,\n    current_step_idx: item._resolved?.current_step_idx || 0,\n    total_steps:      item._resolved?.total_steps || 1,\n  }\n}}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        1488
+      ],
+      "id": "383d91c1-33a7-4f5b-8942-bbe7a51b60b6",
+      "name": "Format Result"
+    },
+    {
+      "parameters": {
+        "jsCode": "// STEP ADVANCE CODE NODE\n// Type: n8n-nodes-base.code\n// Position: after Format Result\n\nconst item = $input.first().json;\nconst result = item._result;\n\n// Parse string fields that may come through as strings from Supabase or Edit Fields\nif (typeof item.completed_steps === 'string') {\n  try { item.completed_steps = JSON.parse(item.completed_steps); } catch(e) { item.completed_steps = []; }\n}\nif (typeof item.step_queue === 'string' && item.step_queue.startsWith('[')) {\n  try { item.step_queue = JSON.parse(item.step_queue); } catch(e) {}\n}\n\n// Detect multi-step directly from step_queue — never trust _result.is_multi_step\n// because _resolved gets destroyed by Supabase update nodes before reaching here\nconst isMultiStep = Array.isArray(item.step_queue) && item.step_queue.length > 1;\n\nconst STEP_LABELS = {\n  create_deal:'deal', update_deal:'deal update', create_lead:'lead',\n  update_lead:'lead update', convert_lead:'lead conversion',\n  create_contact:'contact', update_contact:'contact update',\n  create_account:'account', update_account:'account update',\n  create_task:'task', create_note:'note',\n};\n\nif (!isMultiStep) {\n  return [{ json: {\n    ...item,\n    _advance: {\n      proposal_id:        item.id,\n      user_id:            item.user_id,\n      steps_remaining:    0,\n      completed_steps:    item.completed_steps || [],\n      current_step:       0,\n      completion_message: result.user_message,\n      execution_result: {\n        execution_status: result.execution_status,\n        action:           result.action,\n        module:           result.module,\n        record_id:        result.record_id,\n        user_message:     result.user_message,\n        error:            result.error || null,\n        completed_steps:  [],\n      }\n    }\n  }}];\n}\n\n// Multi-step: append record_id, advance pointer\nconst completedIds  = [...(item.completed_steps || [])];\nif (result.record_id) completedIds.push(result.record_id);\n\nconst nextStep       = (item.current_step || 0) + 1;\nconst totalSteps     = item.step_queue.length;\nconst stepsRemaining = totalSteps - nextStep;\n\nlet completionMessage = null;\nif (stepsRemaining === 0) {\n  const labels = item.step_queue\n    .map(s => STEP_LABELS[s.action] || s.action).join(', ');\n  completionMessage = `All done! Completed: ${labels}.`;\n}\n\nreturn [{ json: {\n  ...item,\n  _advance: {\n    proposal_id:        item.id,\n    user_id:            item.user_id,\n    steps_remaining:    stepsRemaining,\n    completed_steps:    completedIds,\n    current_step:       nextStep,\n    completion_message: completionMessage || result.user_message,\n    execution_result: {\n      execution_status: stepsRemaining === 0 ? result.execution_status : 'in_progress',\n      action:           result.action,\n      module:           result.module,\n      record_id:        result.record_id,\n      user_message:     completionMessage || result.user_message,\n      error:            result.error || null,\n      completed_steps:  completedIds,\n    }\n  }\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        1488
+      ],
+      "id": "ad3d52b4-2acb-468c-89ab-76550f82aace",
+      "name": "Step Advance"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "03f93704-6945-40a5-ab09-f3b6953fd386",
+              "leftValue": "={{ $json._advance.steps_remaining > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        480,
+        1488
+      ],
+      "id": "36f36917-6e4d-4c12-8e70-af803b265ac0",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json._advance.proposal_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "current_step",
+              "fieldValue": "={{ $json._advance.current_step }}"
+            },
+            {
+              "fieldId": "completed_steps",
+              "fieldValue": "={{ JSON.stringify($json._advance.completed_steps) }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "executing"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        704,
+        3856
+      ],
+      "id": "d9508a21-b522-446c-8abf-9488743390fc",
+      "name": "Save Loop State",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm_action_proposals",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json._advance.proposal_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "completion_message",
+              "fieldValue": "={{ $json._advance.completion_message }}"
+            },
+            {
+              "fieldId": "executed_at",
+              "fieldValue": "={{ $now.setZone('Asia/Kolkata').format('yyyy-MM-dd HH:mm') }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "executed"
+            },
+            {
+              "fieldId": "execution_result",
+              "fieldValue": "={{ JSON.stringify($json._advance.execution_result) }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        704,
+        1440
+      ],
+      "id": "da46a530-6700-4caa-af37-83a290fc8680",
+      "name": "Mark Executed",
+      "credentials": {
+        "supabaseApi": {
+          "id": "XtU0aykhI7HfjMZq",
+          "name": "CRM_agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.user_id }}",
+        "text": "={{ $json.completion_message }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        928,
+        1440
+      ],
+      "id": "d6b40a9b-2c43-4fa3-b193-c0ebfe673d06",
+      "name": "Send a text message",
+      "webhookId": "164c3ead-2238-45b7-8f97-b877a4caac71",
+      "credentials": {
+        "telegramApi": {
+          "id": "5LcTaFrxMf6lEi05",
+          "name": "SUACRM_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f4d238c3-ef09-48f3-8d80-c303645c20c9",
+              "name": "=execution_status",
+              "value": "={{ $('Step Advance').item.json._advance.execution_result.execution_status }}",
+              "type": "string"
+            },
+            {
+              "id": "1918217d-d8ed-4929-849f-8b7734d9d4e4",
+              "name": "action",
+              "value": "={{ $('Step Advance').item.json._advance.execution_result.action }}",
+              "type": "string"
+            },
+            {
+              "id": "46339313-3dd7-470a-890a-cfe5080c0dab",
+              "name": "module",
+              "value": "={{ $('Step Advance').item.json._advance.execution_result.module }}",
+              "type": "string"
+            },
+            {
+              "id": "6fc7f30f-ef80-423e-9c9c-f43bbda05e07",
+              "name": "record_id",
+              "value": "={{ $('Step Advance').item.json._advance.execution_result.record_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2c02951f-b454-4a2c-8d56-922421cf8d78",
+              "name": "user_message",
+              "value": "={{ $('Step Advance').item.json._advance.execution_result.user_message }}",
+              "type": "string"
+            },
+            {
+              "id": "647f947a-0227-44a4-b1a9-a722231527b2",
+              "name": "error",
+              "value": "={{ $('Step Advance').item.json._advance.execution_result.error }}",
+              "type": "string"
+            },
+            {
+              "id": "c0ca4031-ebc6-4a97-b39e-b0e8165ca8d8",
+              "name": "completed_steps",
+              "value": "={{ $('Step Advance').item.json._advance.execution_result.completed_steps }}",
+              "type": "string"
+            },
+            {
+              "id": "8e4030d1-f380-434e-a213-2074d97a85aa",
+              "name": "proposal_id",
+              "value": "={{ $('Step Advance').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "39501f7e-a1d9-400e-9e97-d32776a48916",
+              "name": "user_id",
+              "value": "={{ $('Step Advance').item.json.user_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1152,
+        1440
+      ],
+      "id": "a6491d38-fc60-42b8-8743-53568b6ccd74",
+      "name": "Set Output"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"execution_status\": \"success\",\n  \"user_message\": \" Contact created successfully.\",\n  \"record_id\":\"{{ $('create_contact').item.json.body.data[0].details.id }}\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        2800
+      ],
+      "id": "ecb61463-8568-415a-9964-e3b158856bdf",
+      "name": "Edit Fields7"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"execution_status\": \"success\",\n  \"user_message\": \" Note created successfully.\",\n  \"record_id\":\"{{ $('create_note').item.json.body.data[0].details.id }}\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        3568
+      ],
+      "id": "2268fe32-0be4-4a41-bd9b-48d8b3baf0d2",
+      "name": "Edit Fields12"
+    },
+    {
+      "parameters": {
+        "jsCode": "const f = $json._resolved.fields;\nconst data = { id: $json._resolved.record_id };\n\nif (f.Last_Name)           data.Last_Name          = f.Last_Name;\nif (f.Company)             data.Company            = f.Company;\nif (f.Email)               data.Email              = f.Email;\nif (f.Mobile)              data.Mobile             = f.Mobile;\nif (f.Designation)         data.Designation        = f.Designation;\nif (f.Description)         data.Description        = f.Description;\nif (f.Lead_Source)         data.Lead_Source        = f.Lead_Source;\nif (f.Lead_Status)         data.Lead_Status        = f.Lead_Status;\nif (f.Industry)            data.Industry           = f.Industry;\nif (f.Industry_Type)       data.Industry_Type      = f.Industry_Type;\nif (f.Website)             data.Website            = f.Website;\nif (f.Salutation)          data.Salutation         = f.Salutation;\nif (f.Annual_Revenue)      data.Annual_Revenue     = f.Annual_Revenue;\nif (f.Street)              data.Street             = f.Street;\nif (f.City)                data.City               = f.City;\nif (f.State)               data.State              = f.State;\nif (f.Country)             data.Country            = f.Country;\nif (f.Zip_Code)            data.Zip_Code           = f.Zip_Code;\nif (f.Inbound_Outbound)    data.Inbound_or_Not     = f.Inbound_Outbound;\nif (f.Lead_Location)       data.Lead_Location      = f.Lead_Location;\nif (f.Lead_Lost_Reason)    data.Lead_Lost_Reason   = f.Lead_Lost_Reason;\nif (f.Project_Description) data.Project_Description = f.Project_Description;\nif (f.Service_Division)    data.Pick_List_1        = f.Service_Division;\nif (f.Service_Type)        data.Service_Type       = Array.isArray(f.Service_Type) ? f.Service_Type : [f.Service_Type];\nif (f.Strategic_Partner)   data.Strategic_Partner  = f.Strategic_Partner;\nif (f.Owner)               data.Owner              = f.Owner;\n\nreturn [{ json: { ...$json, body: { data: [data] } } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        144
+      ],
+      "id": "e442b202-657b-436f-af0c-fd133e9abff9",
+      "name": "Build update_lead body"
+    },
+    {
+      "parameters": {
+        "jsCode": "const f = $json._resolved.fields;\n\nconst deal = {\n  Deal_Name:           f.Deal_Name,\n  Stage:               f.Stage || 'High level Requirement gathering',\n  Amount:              Number(f.Amount || 0),\n  Closing_Date:        f.Closing_Date || $today.format('yyyy-MM-dd'),\n  Engagement_Type:     f.Engagement_Type || 'Fixed',\n  Service_Division:    f.Service_Division || 'Tech Services',\n  Key_Milestones:      f.Key_Milestones || '',\n  Expected_Start_Date: f.Expected_Start_Date || '',\n  Expected_End_Date:   f.Expected_End_Date || '',\n  Payment_Terms:       (f.Payment_Terms || '').replace(/\\n/g, ' '),\n  Project_Link:        f.Project_Link || '',\n  Scope_Document:      f.Scope_Document || '',\n  Description:         f.Description || ''\n};\n\nif (f.Account_Name) deal.Account_Name = f.Account_Name;\nif (f.Contact_Name) deal.Contact_Name = f.Contact_Name;\n\nreturn [{ json: {\n  ...$json,\n  body: {\n    data: [{\n      overwrite: true,\n      notify_lead_owner: true,\n      notify_new_entity_owner: true,\n      Deals: deal\n    }]\n  }\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        3216
+      ],
+      "id": "65f1ef82-e9de-4b53-958e-f1ceb3ac8ddd",
+      "name": "Build convert_lead body"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const f = $json._resolved.fields;\nconst data = { id: $json._resolved.record_id };\n\nif (f.Deal_Name)          data.Deal_Name         = f.Deal_Name;\nif (f.Stage)              data.Stage             = f.Stage;\nif (f.Account_Name)       data.Account_Name      = f.Account_Name;\nif (f.Contact_Name)       data.Contact_Name      = f.Contact_Name;\nif (f.Strategic_Partner)  data.Strategic_Partner = f.Strategic_Partner;\nif (f.Owner)              data.Owner             = f.Owner;\nif (f.Amount !== undefined && f.Amount !== null) data.Amount = Number(f.Amount);\nif (f.Closing_Date)       data.Closing_Date      = f.Closing_Date;\nif (f.Currency)           data.Currency          = f.Currency;\nif (f.Contact_Email)      data.Contact_Email     = f.Contact_Email;\nif (f.Engagement_Type)    data.Engagement_Type   = f.Engagement_Type;\nif (f.Estimated_Delivery_Time_Shared) data.Estimated_Delivery_Time_Shared = f.Estimated_Delivery_Time_Shared;\nif (f.Expected_End_Date)  data.Expected_End_Date  = f.Expected_End_Date;\nif (f.Expected_Start_Date) data.Expected_Start_Date = f.Expected_Start_Date;\nif (f.Key_Milestones)     data.Key_Milestones    = f.Key_Milestones;\nif (f.Payment_Terms)      data.Payment_Terms     = f.Payment_Terms;\nif (f.Project_Link)       data.Project_Link      = f.Project_Link;\nif (f.Scope_Document)     data.Scope_Document    = f.Scope_Document;\nif (f.Service_Division)   data.Service_Division  = f.Service_Division;\nif (f.Service_Type)       data.Service_Type      = Array.isArray(f.Service_Type) ? f.Service_Type : [f.Service_Type];\nif (f.Lead_Source)        data.Lead_Source       = f.Lead_Source;\nif (f.Description)        data.Description       = f.Description;\n\nreturn { json: data };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        -640
+      ],
+      "id": "8b358428-755b-458a-ac81-93a214a723fa",
+      "name": "Build update_deal body"
+    },
+    {
+      "parameters": {
+        "jsCode": "const f = $json._resolved.fields;\n\nconst data = {};\n\nif (f.Deal_Name)         data.Deal_Name        = f.Deal_Name;\nif (f.Stage)             data.Stage            = f.Stage;\nif (f.Account_Name?.id)  data.Account_Name     = f.Account_Name;\nif (f.Contact_Name?.id)  data.Contact_Name     = f.Contact_Name;\nif (f.Strategic_Partner) data.Strategic_Partner = f.Strategic_Partner;\nif (f.Amount)            data.Amount           = Number(f.Amount);\nif (f.Closing_Date)      data.Closing_Date     = f.Closing_Date;\nif (f.Currency)          data.Currency         = f.Currency;\nif (f.Contact_Email)     data.Contact_Email    = f.Contact_Email;\nif (f.Engagement_Type)   data.Engagement_Type  = f.Engagement_Type;\nif (f.Estimated_Delivery_time_shared) data.Estimated_Delivery_Time_Shared = f.Estimated_Delivery_time_shared;\nif (f.Expected_End_Date)   data.Expected_End_Date   = f.Expected_End_Date;\nif (f.Expected_Start_Date) data.Expected_Start_Date = f.Expected_Start_Date;\nif (f.Key_Milestones)    data.Key_Milestones   = f.Key_Milestones;\nif (f.Payment_Terms)     data.Payment_Terms    = f.Payment_Terms;\nif (f.Project_Description) data.Project_Description = f.Project_Description.substring(0, 252);\nif (f.Project_Link)      data.Project_Link     = f.Project_Link;\nif (f.Scope_Document)    data.Scope_Document   = f.Scope_Document;\nif (f.Service_Division)  data.Service_Division = f.Service_Division;\nif (f.Service_Type)      data.Service_Type     = Array.isArray(f.Service_Type) ? f.Service_Type : [f.Service_Type];\nif (f.Lead_Source)       data.Lead_Source      = f.Lead_Source;\nif (f.Description)       data.Description      = f.Description;\nif (f.Closed_Lost_Reasons) data.Closed_Lost_Reasons = f.Closed_Lost_Reasons;\n\n\nreturn [{json:{  ...$json , body:{data: [data]}}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        528
+      ],
+      "id": "d24a8044-de86-47ff-842c-924349109e16",
+      "name": "Build create_deal body"
+    },
+    {
+      "parameters": {
+        "jsCode": "const f = $json._resolved.fields;\n\nconst data = { id: $json._resolved.record_id };\n\nif (f.Account_Name)    data.Account_Name    = f.Account_Name;\nif (f.Account_Type)    data.Account_Type    = f.Account_Type;\nif (f.Phone)           data.Phone           = f.Phone;\nif (f.Website)         data.Website         = f.Website;\nif (f.Industry)        data.Industry        = f.Industry;\nif (f.Description)     data.Description     = f.Description;\nif (f.Currency)        data.Currency        = f.Currency;\nif (f.Billing_Street)  data.Billing_Street  = f.Billing_Street;\nif (f.Billing_City)    data.Billing_City    = f.Billing_City;\nif (f.Billing_State)   data.Billing_State   = f.Billing_State;\nif (f.Billing_Country) data.Billing_Country = f.Billing_Country;\nif (f.Billing_Code)    data.Billing_Code    = f.Billing_Code;\nif (f.Account_Status)  data.Account_Status  = f.Account_Status;\nif (f.Domestic_International) data.Domestic_International = f.Domestic_International;\nif (f.Owner?.id)       data.Owner           = f.Owner;\nif (f.Billing_GST_Number) data.Billing_GST_Number = f.Billing_GST_Number;\nif (f.Ownership)       data.Ownership       = f.Ownership;\n\n// Boolean - always include\ndata.Listed_Company = f.Listed_Company ?? false;\n\n// Numbers\nif (f.Employees !== undefined && f.Employees !== null && f.Employees !== '')\n  data.Employees = Number(f.Employees);\nif (f.Annual_Revenue !== undefined && f.Annual_Revenue !== null && f.Annual_Revenue !== '')\n  data.Annual_Revenue = Number(f.Annual_Revenue);\n\nreturn [{ json: {...$json, body: { data: [data] } } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        -256
+      ],
+      "id": "aaa1e7b5-f06f-4e1b-8c4b-cdb840c36b97",
+      "name": "Build update_account body"
+    },
+    {
+      "parameters": {
+        "jsCode": "const f = $json._resolved.fields;\n\nconst data = { id: $json._resolved.record_id };\n\nif (f.First_Name)       data.First_Name    = f.First_Name;\nif (f.Last_Name)        data.Last_Name     = f.Last_Name;\nif (f.Phone)            data.Phone         = f.Phone;\nif (f.Mobile)           data.Mobile        = f.Mobile;\nif (f.Title)            data.Title         = f.Title;\nif (f.Lead_Source)      data.Lead_Source   = f.Lead_Source;\nif (f.Account_Name)     data.Account_Name  = f.Account_Name;\nif (f.Mailing_Street)   data.Mailing_Street  = f.Mailing_Street;\nif (f.Mailing_City)     data.Mailing_City    = f.Mailing_City;\nif (f.Mailing_State)    data.Mailing_State   = f.Mailing_State;\nif (f.Mailing_Country)  data.Mailing_Country = f.Mailing_Country;\nif (f.Mailing_Code)     data.Mailing_Zip     = f.Mailing_Code;\nif (f.Department)       data.Description     = f.Department;\nif (f.Contact_Type)     data.Contact_Type    = f.Contact_Type;\nif (f.Inbound_Outbound) data.Inbound_or_Not  = f.Inbound_Outbound;\nif (f.Owner)            data.Owner           = f.Owner;\nif (f.Date_of_Birth)    data.Date_of_Birth   = f.Date_of_Birth;\nif (f.Client_LinkedIn)  data.Client_LinkedIn = f.Client_LinkedIn;\n\n// Whatsapp: first non-empty wins\nconst wa = f.Whatsapp_Number || f.Client_Whatsapp || f.Phone;\nif (wa) data.Client_Whatsapp = wa;\n\nreturn [{ json: { body: { data: [data] } } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        2448
+      ],
+      "id": "16818fb1-b3cf-4ed1-b887-6ee004927fa8",
+      "name": "Build update_contact body"
+    },
+    {
+      "parameters": {
+        "jsCode": "const f = $json._resolved.fields;\n\nconst data = {};\n\nif (f.Account_Name)    data.Account_Name    = f.Account_Name;\nif (f.Account_Number)  data.Account_Number  = f.Account_Number;\nif (f.Account_Type)    data.Account_Type    = f.Account_Type;\nif (f.Currency)        data.Currency        = f.Currency;\nif (f.Description)     data.Description     = f.Description;\nif (f.Industry)        data.Industry        = f.Industry;\nif (f.Website)         data.Website         = f.Website;\nif (f.Billing_Street)  data.Billing_Street  = f.Billing_Street;\nif (f.Billing_City)    data.Billing_City    = f.Billing_City;\nif (f.Billing_State)   data.Billing_State   = f.Billing_State;\nif (f.Billing_Country) data.Billing_Country = f.Billing_Country;\nif (f.Billing_Code)    data.Billing_Code    = f.Billing_Code;\nif (f.Account_Status)  data.Account_Status  = f.Account_Status;\nif (f.Domestic_International) data.Domestic_International = f.Domestic_International;\nif (f.Owner?.id)       data.Owner           = f.Owner;\n\n// Phone - first non-empty wins\nconst phone = f.Phone || f.Mobile;\nif (phone) data.Phone = phone;\n\n// Numbers\nif (f.Employees !== undefined && f.Employees !== null && f.Employees !== '')\n  data.Employees = Number(f.Employees);\nif (f.Annual_Revenue !== undefined && f.Annual_Revenue !== null && f.Annual_Revenue !== '')\n  data.Annual_Revenue = Number(f.Annual_Revenue);\n\nreturn [{ json: { body: { data: [data] } } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        2832
+      ],
+      "id": "0bc2fa74-0987-401a-a113-35e79a24c114",
+      "name": "Build create_contact body"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Update status to executing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Build update_deal body",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build create_deal body",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build update_lead body",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create_lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build create_contact body",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build update_contact body",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create_account",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build update_account body",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "set Who_id and what_id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build convert_lead body",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create_note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "convert_lead": {
+      "main": [
+        [
+          {
+            "node": "check_for_error4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update status to executing": {
+      "main": [
+        [
+          {
+            "node": "Step_Processor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_deal": {
+      "main": [
+        [
+          {
+            "node": "check_for_error9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set Who_id and what_id": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_task": {
+      "main": [
+        [
+          {
+            "node": "check_for_error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "create_task",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create_task1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_task1": {
+      "main": [
+        [
+          {
+            "node": "check_for_error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields8": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 9
+          }
+        ]
+      ]
+    },
+    "Edit Fields9": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 8
+          }
+        ]
+      ]
+    },
+    "Edit Fields6": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_for_error": {
+      "main": [
+        [
+          {
+            "node": "update_fail_for_task_creation in DAL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "update_complete_for_task_creation in DAL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_complete_for_task_creation in DAL": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_for_error1": {
+      "main": [
+        [
+          {
+            "node": "update_fail_for_task_creation_in_contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "update_complete_for_task_creation_in_contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_complete_for_task_creation_in_contact": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_for_error2": {
+      "main": [
+        [
+          {
+            "node": "update_fail_for_contact_create",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "update_complete_for_contact_create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_complete_for_contact_create": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_for_error3": {
+      "main": [
+        [
+          {
+            "node": "update_complete_for_lead_creation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "update_fail_for_lead_creation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_complete_for_lead_creation": {
+      "main": [
+        []
+      ]
+    },
+    "check_for_error4": {
+      "main": [
+        [
+          {
+            "node": "update_fail_for_lead_convert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "update_complete_for_lead_convert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_complete_for_lead_convert": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_for_error5": {
+      "main": [
+        [
+          {
+            "node": "update_fail_for_account_creation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "update_complete_for_account_creation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_complete_for_account_creation": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_for_error6": {
+      "main": [
+        [
+          {
+            "node": "update_status_for_contact_update2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "update_status_for_contact_update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_status_for_contact_update": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_for_error7": {
+      "main": [
+        [
+          {
+            "node": "update_status_for_lead_update1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "update_status_for_lead_update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_status_for_lead_update": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        []
+      ]
+    },
+    "check_for_error8": {
+      "main": [
+        [
+          {
+            "node": "update_fail_for_note_create",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "update_complete_for_note_create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_note": {
+      "main": [
+        [
+          {
+            "node": "check_for_error8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_for_error9": {
+      "main": [
+        [
+          {
+            "node": "update_status_for_deal_create",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "update_status_for_deal_create1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_status_for_deal_create1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_for_error10": {
+      "main": [
+        [
+          {
+            "node": "update_status_for_deal_update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "update_status_for_deal_update1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_status_for_deal_update1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields10": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "check_for_error11": {
+      "main": [
+        [
+          {
+            "node": "update_status_for_contact_update3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "update_status_for_account_update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_status_for_account_update": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_account": {
+      "main": [
+        [
+          {
+            "node": "check_for_error11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_contact": {
+      "main": [
+        [
+          {
+            "node": "check_for_error6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_contact": {
+      "main": [
+        [
+          {
+            "node": "check_for_error2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_deal": {
+      "main": [
+        [
+          {
+            "node": "check_for_error10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step_Processor": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_lead": {
+      "main": [
+        [
+          {
+            "node": "check_for_error7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_account": {
+      "main": [
+        [
+          {
+            "node": "check_for_error5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_lead": {
+      "main": [
+        [
+          {
+            "node": "check_for_error3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Result": {
+      "main": [
+        [
+          {
+            "node": "Step Advance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step Advance": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Save Loop State",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Executed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Loop State": {
+      "main": [
+        [
+          {
+            "node": "Step_Processor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Executed": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Set Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Edit Fields7": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "update_complete_for_note_create": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields12": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "update_fail_for_lead_creation": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build update_lead body": {
+      "main": [
+        [
+          {
+            "node": "update_lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build convert_lead body": {
+      "main": [
+        [
+          {
+            "node": "convert_lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build update_deal body": {
+      "main": [
+        [
+          {
+            "node": "update_deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build create_deal body": {
+      "main": [
+        [
+          {
+            "node": "create_deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build update_account body": {
+      "main": [
+        [
+          {
+            "node": "update_account",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build update_contact body": {
+      "main": [
+        [
+          {
+            "node": "update_contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build create_contact body": {
+      "main": [
+        [
+          {
+            "node": "create_contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Error Trigger": [
+      {
+        "json": {
+          "execution": {
+            "id": 231,
+            "url": "https://devscaleup.app.n8n.cloud/execution/workflow/1/231",
+            "retryOf": "34",
+            "error": {
+              "message": "Example Error Message",
+              "stack": "Stacktrace"
+            },
+            "lastNodeExecuted": "Node With Error",
+            "mode": "manual"
+          },
+          "workflow": {
+            "id": "1",
+            "name": "Example Workflow"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "create_note": [
+      {
+        "json": {
+          "body": {
+            "data": [
+              {
+                "code": "SUCCESS",
+                "details": {
+                  "Modified_Time": "2026-03-18T16:30:49+05:30",
+                  "Modified_By": {
+                    "name": "sales.scaleupally",
+                    "id": "5118344000004729073"
+                  },
+                  "Created_Time": "2026-03-18T16:30:49+05:30",
+                  "id": "5118344000005277002",
+                  "Created_By": {
+                    "name": "sales.scaleupally",
+                    "id": "5118344000004729073"
+                  }
+                },
+                "message": "record added",
+                "status": "success"
+              }
+            ]
+          },
+          "headers": {
+            "server": "ZGS",
+            "date": "Wed, 18 Mar 2026 11:00:50 GMT",
+            "content-type": "application/json;charset=UTF-8",
+            "content-length": "338",
+            "connection": "close",
+            "referrer-policy": "strict-origin",
+            "x-content-type-options": "nosniff",
+            "content-security-policy": "default-src 'none';frame-ancestors 'self'; report-uri https://logsapi.zoho.com/csplog?service=crm",
+            "x-xss-protection": "0; mode=block",
+            "set-cookie": [
+              "crmcsr=c1acb8cf-701b-46db-921c-be1569e7c57b;path=/;SameSite=None;Secure;priority=high",
+              "_zcsr_tmp=c1acb8cf-701b-46db-921c-be1569e7c57b;path=/;SameSite=Strict;Secure;priority=high"
+            ],
+            "cache-control": "no-store, no-cache, must-revalidate, private",
+            "pragma": "no-cache",
+            "expires": "Thu, 01 Jan 1970 00:00:00 GMT",
+            "x-frame-options": "SAMEORIGIN",
+            "clientversion": "12872039",
+            "clientsubversion": "25adefbafdab8f3e64438932db6d4cc8",
+            "x-accesstoken-reset": "2026-03-18T16:40:14+05:30",
+            "content-disposition": "attachment; filename=response.json",
+            "server-timing": "cpuTime;desc=\"CPU Time\";dur=83, totalTime;desc=\"Total Execution Time\";dur=295,murphySpanId;desc=\"\";dur=0",
+            "content-language": "en-US",
+            "strict-transport-security": "max-age=64072000; includeSubDomains; preload"
+          },
+          "statusCode": 201,
+          "statusMessage": ""
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "id": "4deaf133-89f6-4c81-883b-285c4eadb3f7"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "0646316a-4d31-491d-a12f-ab6c3c49ebf5",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-02-09T12:51:25.390Z",
+      "createdAt": "2026-02-09T12:51:25.390Z",
+      "role": "workflow:owner",
+      "workflowId": "4XzWwBPDQSJ7CInx",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

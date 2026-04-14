@@ -1,0 +1,721 @@
+{
+  "updatedAt": "2025-07-29T09:43:30.000Z",
+  "createdAt": "2025-06-24T08:05:53.142Z",
+  "id": "m3kpbOa71OugJlvs",
+  "name": "Sales_analysis_workflow",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -900,
+        -480
+      ],
+      "id": "db188e64-e8e3-4d8e-9959-4330d49d8d9a",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a sales performance coach. Your job is to evaluate a salesperson’s performance during a sales call using the call transcript.  \nFocus only on the salesperson’s behavior (not the client), and give candid yet constructive feedback to help them improve.\n\nYou are provided with:\n\nsalesperson_name: \"{{ $node[\"Set Final Inputs for LLM\"].json[\"salesperson_name\"] }}\"\n\nclient_name: \"{{ $node[\"Set Final Inputs for LLM\"].json[\"client_name\"] }}\"\n\ncurrent_transcript: {{ $node[\"Set Final Inputs for LLM\"].json[\"current_transcript\"] }}\n\nprevious_feedback_html: {{ $node[\"Set Final Inputs for LLM\"].json[\"previous_feedback_html\"] }}\n\nThis `previous_feedback_html` is an HTML document containing the feedback generated during the **previous sales call**. Use it to compare the current performance to the previous one where applicable.\n\nYour response should contain ONLY the following section:\n\n🟢 PART 1: HTML Coaching Summary  \nReturn a clean, minimal HTML document (not markdown) with proper `<h2>`, `<h3>`, `<ul>`, and `<p>` tags. Style is not required — focus on semantic structure.\n\nUse the following structure for each skill:\n\n<h2>[Skill Name]</h2>\n\n<h3>🧠 Skill Summary</h3>\n\n<h3>🧪 Reflection Compared to Previous Call</h3> ← Include this only if previous_feedback_html is provided\n\n<h3>⚠️ What Could Be Improved</h3>\n\n<h3>🧩 Example Moments from the Call</h3> with a <ul><li> list of 4–6 timestamped quote snippets\n\n<h3>✅ Coaching Suggestions</h3>\n\nRepeat for each skill:\n\n- Active Listening  \n- Line of Questioning  \n- Technical Knowledge  \n- Sentence Framing  \n- Rapport Building  \n\nEnd with:\n\n<h2>🧾 Overall Summary</h2> → A concise final paragraph (7–8 lines)\n",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a senior SaaS sales coach. Provide structured, highly detailed evaluations of sales calls. Use coaching language, actionable insights, timestamped examples, and format everything in clear, labeled sections. Be specific, not generic. Only analyze the **sales representative's** dialogue."
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        1740,
+        -480
+      ],
+      "id": "d31f9aa4-bb20-4161-8dcc-cc870e7fcde5",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c37c4a42-2728-436f-84c5-ec3c9c515d52",
+              "name": "transcript_id",
+              "value": 13,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -680,
+        -480
+      ],
+      "id": "21ac4954-33df-4f7e-b631-da794c7f7fac",
+      "name": "Get Transcript By Number"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "chatgpt-4o-latest"
+        },
+        "options": {
+          "frequencyPenalty": 0.2,
+          "presencePenalty": 0.4,
+          "temperature": 0.7,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1828,
+        -260
+      ],
+      "id": "2c02c070-938e-4bf5-8db3-baac355b535a",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "USE sales_analysis;\nSELECT raw_transcript, transcript_id, taken_by_user_id\nFROM dbo.transcripts\nWHERE transcript_id = {{ $json.transcript_id }};\n"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        -240,
+        -480
+      ],
+      "id": "0314acaa-5efe-4741-8a0b-0df68118ed15",
+      "name": "Fetch Transcript",
+      "credentials": {
+        "microsoftSql": {
+          "id": "oQzuaRrONIEY0r0V",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "USE sales_analysis\nSELECT \n  u.full_name AS salesperson_name,\n  t.client_name,\n  t.taken_by_user_id,\n  t.transcript_id\nFROM transcripts t\nJOIN users u ON t.taken_by_user_id = u.user_id\nWHERE t.transcript_id = {{$json[\"transcript_id\"]}}\n"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        -20,
+        -480
+      ],
+      "id": "1adca534-615d-4238-a562-db187b5b8a2c",
+      "name": "Join Transcript and users table to get client name",
+      "credentials": {
+        "microsoftSql": {
+          "id": "oQzuaRrONIEY0r0V",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e6421268-ec05-4435-a2fc-b973a6f714a4",
+              "name": "salesperson_name",
+              "value": "=\t{{$node[\"Join Transcript and users table to get client name\"].json[\"salesperson_name\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "bf9c0f5d-1260-4ab4-a628-b3e1072de38d",
+              "name": "client_name",
+              "value": "={{$node[\"Join Transcript and users table to get client name\"].json[\"client_name\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "3cd43bef-f25a-48b3-a425-7331febc75dc",
+              "name": "current_transcript",
+              "value": "={{$node[\"Fetch Transcript\"].json[\"raw_transcript\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "2c2b7d6c-d111-4a83-95eb-f9d3eee22de9",
+              "name": "previous_feedback_html",
+              "value": "={{ $json.body }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1520,
+        -480
+      ],
+      "id": "f3131301-7297-4c70-829e-85b9a4a920b3",
+      "name": "Set Final Inputs for LLM"
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $json[\"text\"];  // LLM output, assumed to contain only markdown now\n\n// Since there's no JSON part, we skip the split and parsing\nreturn [\n  {\n    json: {\n      markdown_summary: output.trim(),\n      feedback_json: null,\n      json_raw: null,\n      json_error: \"No JSON output present in the LLM response.\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2116,
+        -480
+      ],
+      "id": "a9964b28-1f26-4028-92a1-f5899f1d4b77",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT taken_by_user_id,transcript_id\nFROM transcripts\nWHERE transcript_id = {{ $json[\"transcript_id\"] }}\n"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        -460,
+        -480
+      ],
+      "id": "a5c28b19-d27a-4c72-a692-85fb927bff37",
+      "name": "Get Salesperson ID",
+      "credentials": {
+        "microsoftSql": {
+          "id": "oQzuaRrONIEY0r0V",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdfshift.io/v3/convert/pdf",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "source",
+              "value": "={{ '<!DOCTYPE html>' + $json[\"html\"] }}\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2556,
+        -480
+      ],
+      "id": "79dbab7d-e404-4124-a32a-294e976b5280",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "RFDhx1OxMPOo4KN3",
+          "name": "mis credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "Call with Gavan Electrical Yii- Manu Jain",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1wSMzUV8wBhBk2PsmPF4O3wXM8KH4ryYs",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2780,
+        -480
+      ],
+      "id": "7ca7a06a-85d7-48c7-93f1-2dbe9e0c427c",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "UKYwsDI4wEys8QTO",
+          "name": "mis google drive credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputName = $json[\"salesperson_name\"] || \"\";\nconst normalized = inputName.toLowerCase().includes(\"vikas\")\n  ? \"Vikas Singh\"\n  : inputName.toLowerCase().includes(\"manu\")\n  ? \"Manu Jain\"\n  : inputName; // add more mappings if needed\n\nreturn {\n  json: {\n    search_term: `Call with ${normalized}`\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        -480
+      ],
+      "id": "733659f4-6b4c-4a84-a11b-c99e438c3114",
+      "name": "Normalize Salesperson Name"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "={{ \"name contains '\" + $json[\"search_term\"] + \"'\" }}\n",
+        "limit": 2,
+        "filter": {
+          "driveId": {
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1wSMzUV8wBhBk2PsmPF4O3wXM8KH4ryYs",
+            "mode": "id"
+          }
+        },
+        "options": {
+          "fields": [
+            "id",
+            "webViewLink"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        420,
+        -480
+      ],
+      "id": "50e52d43-4dc1-4ad8-b536-5f7b62aa8ffa",
+      "name": "Search files and folders",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "UKYwsDI4wEys8QTO",
+          "name": "mis google drive credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json[\"id\"] }}?fields=webContentLink,webViewLink,name,mimeType,modifiedTime,name,id",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        -580
+      ],
+      "id": "e3a343ab-b2f4-48a0-a496-6bdfd73104aa",
+      "name": "HTTP Request1",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "bGMIRvPTuf1qh9Sc",
+          "name": "Mis_HTTP_Google_drive credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdf.co/v1/pdf/convert/to/text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "mis.scaleupally@gmail.com_qSw4yXtkZP1LFfpnTGKvZDVwf12tDYnbOJv2p8ShQkdDCQexAK3Q9GiFRpx7wTI6"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"{{ $json.webContentLink }}\",\n  \"inline\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1300,
+        -580
+      ],
+      "id": "faa3c3cf-1910-4531-b885-a0caf55f4f3e",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        -900,
+        -120
+      ],
+      "id": "58517918-0baf-45e6-a99b-4be4efc6f57c",
+      "name": "DeepSeek Chat Model",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "b9a3LznEMaPOoIJD",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const files = $input.all().map(item => item.json);\n\nif (files.length === 0) {\n  // Gracefully exit if no file found\n  return [];\n}\n\n// Sort files by modifiedTime in descending order\nfiles.sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));\n\n// Return only the latest file\nreturn [\n  {\n    json: files[0]\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        -580
+      ],
+      "id": "d15740c6-3f38-443e-9856-6eef13edb27a",
+      "name": "Pick Latest PDF"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9f509c29-08dd-4ec5-a087-da7cb5ffecf4",
+              "leftValue": "={{$json[\"id\"] !== undefined}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        -480
+      ],
+      "id": "0e08d62e-c8bf-4c85-904b-16c37828bb19",
+      "name": "Conditional, if no previous transcript found."
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\"body\": \"\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1300,
+        -380
+      ],
+      "id": "ac0aeab7-2d13-4056-9012-a27e7fc7f6ab",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "68e67779-4e63-49c1-8659-cc7be7e32db7",
+              "name": "html",
+              "value": "=<html><head><style> body { font-family: Arial, sans-serif; padding: 24px; line-height: 1.6; } h2, h3 { color: #2c3e50; } </style></head><body> {{$json[\"markdown_summary\"]}} </bod=y></html>",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2336,
+        -480
+      ],
+      "id": "648d2e52-94ab-4ab5-9599-6c42039e58c5",
+      "name": "Set clean HTML"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get Transcript By Number",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Transcript By Number": {
+      "main": [
+        [
+          {
+            "node": "Get Salesperson ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Transcript": {
+      "main": [
+        [
+          {
+            "node": "Join Transcript and users table to get client name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Join Transcript and users table to get client name": {
+      "main": [
+        [
+          {
+            "node": "Normalize Salesperson Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Final Inputs for LLM": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Set clean HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Salesperson ID": {
+      "main": [
+        [
+          {
+            "node": "Fetch Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Salesperson Name": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Conditional, if no previous transcript found.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Pick Latest PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Set Final Inputs for LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Pick Latest PDF": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conditional, if no previous transcript found.": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Set Final Inputs for LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set clean HTML": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "8afcfe82-2da5-4050-a922-a3876330c464",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-06-24T08:05:53.145Z",
+      "createdAt": "2025-06-24T08:05:53.145Z",
+      "role": "workflow:owner",
+      "workflowId": "m3kpbOa71OugJlvs",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [
+    {
+      "updatedAt": "2025-07-14T06:22:00.853Z",
+      "createdAt": "2025-07-14T06:21:42.741Z",
+      "id": "o0gqDTGMQjrNvQzK",
+      "name": "Devansh workflow"
+    }
+  ]
+}

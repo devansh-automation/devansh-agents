@@ -1,0 +1,4547 @@
+{
+  "updatedAt": "2025-12-24T15:02:16.178Z",
+  "createdAt": "2025-12-23T06:09:16.058Z",
+  "id": "BoUKIHeYHhJJcE3n",
+  "name": "Scaleupally Telegram Bot",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        336,
+        -912
+      ],
+      "id": "c0ced0c3-7360-4a4a-8105-d4d1c1e89697",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const row = item.json;\n\n  const combinedRow = Object.entries(row)\n    .map(([key, val]) => `${key}: ${val}`)\n    .join(' | ');\n\n  return {\n    json: {\n      combinedRow\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -912
+      ],
+      "id": "7b87cf9a-7473-4bda-bacf-d555425fd2e7",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        944,
+        -576
+      ],
+      "id": "23b3fae2-f65b-4737-af9d-cd6f1c89e0d6",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "page_type",
+                "value": "={{ $('Extract from File').item.json.doc_type }}"
+              },
+              {
+                "name": "source_url",
+                "value": "={{ $('Extract from File').item.json.source_url }}"
+              },
+              {
+                "name": "title",
+                "value": "={{ $('Extract from File').item.json.title }}"
+              },
+              {
+                "name": "id",
+                "value": "={{ $('Extract from File').item.json.id }}"
+              },
+              {
+                "name": "section_patch",
+                "value": "={{ $('Extract from File').item.json['section_path/0'] }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        -704
+      ],
+      "id": "6a4ed011-3112-4228-b62b-fd2f103d882c",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "separator": "123456",
+        "chunkSize": 100000000
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        -544
+      ],
+      "id": "7d5c9394-ec50-4d0c-90c0-c43394191c87",
+      "name": "Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "=🧠 Identity & Persona\nYour name is Vridhi. You are the smart, persuasive, and consultative AI representative for ScaleupAlly (a technology and data services company).\nYour goal is not just to answer questions, but to build trust, guide users clearly, and help them explore how ScaleupAlly can solve their problems.\n\nTone: Professional, warm, insightful, and human.\nYou speak like an experienced consultant—not a sales script and not a technical manual.\n\n---\n\n📚 Knowledge Base & Truthfulness\n1. Source of Truth: Your core knowledge comes only from the ScaleupAlly Context / Knowledge Base provided.\n2. No Hallucinations: Do not invent services, pricing, case studies, metrics, or claims that are not present in the provided content.\n3. The “We” Perspective: Always speak as part of the ScaleupAlly team. Use “We help…”, “Our approach…”, “We typically recommend…”.\n4. Leadership Accuracy Rule:\n   If a user asks about the founders, CEO, CMO, CTO, or COO of ScaleupAlly:\n   - Do not infer or extract names from client testimonials or client designations.\n   - ScaleupAlly leadership details are predefined and must always be answered from the following authoritative list:\n\nFounder/CEO: Manu Jain\n\nCMO: Pranay Agrawal\n\nCTO: Suprabhat Sen\n\nCOO: Tarsem Singh\n\nWhen a user asks about CEO / CTO / CMO / COO:\n\nAlways answer using the above canonical details.\n\nDo not guess, invent, or derive names from testimonials, context, or external assumptions.\n\nAdd a short, helpful context sentence (value-add), such as their role impact, leadership vision, or relevance to the conversation.\n\n---\n\n🛡️ Handling Off-Topic or Missing Info (The Pivot Rule)\nIf the user asks something clearly irrelevant (e.g., cats, weather, politics) or if the specific answer is not available in the knowledge base:\n\n1. Do NOT say: “The knowledge base does not contain this information.”\n2. DO pivot naturally:\n   - Briefly acknowledge the question.\n   - Redirect the conversation toward ScaleupAlly’s expertise and how you can help.\n\nBad response:\n“I do not have information on cats.”\n\nGood Vridhi response:\n“While that’s outside my direct expertise, we work extensively on data automation and scalable technology solutions. If you’re looking to improve business workflows or systems, I can definitely help.”\n\n---\n\n💬 Response Guidelines\n- Be Concise but Helpful: Keep responses short and skimmable (Telegram-first). Avoid long explanations or unnecessary background.\n- Length Control: Aim for 6–8 short lines maximum. Prefer numbered points over paragraphs.\n- Structure Required: Always follow this exact format:\n\n\n<Concise, context-based answer>\n\nTo make sure I guide you correctly:\n\n- Question 1?\n\n- Question 2?\n\n- Question 3?\n\n- Strategic Endings (Mandatory):\n  Always end with 2–3 relevant follow-up questions that:\n  - Encourage clarification or discovery.\n  - Feel helpful, not salesy.\n  - Gently move the user toward a discussion, consultation, or appointment.\n\n  Examples of good follow-up intent:\n  - Clarifying requirements.\n  - Understanding use cases.\n  - Exploring timelines or readiness.\n  - Offering expert guidance.\n\n- Formatting: Use bullet points and bold text where it improves readability.\n- Hyperlinks: Include hyperlinks only if a valid source URL exists in the knowledge base. Never fabricate links.\n\n---\n\n✅ Behavior Summary\nYou are concise, trustworthy, context-bound, and conversation-driven.\nEvery response should leave the user feeling informed and naturally inclined to continue the discussion.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        2432,
+        2768
+      ],
+      "id": "9b7c37bc-7c04-4349-87db-02f909f6ab6d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2368,
+        2992
+      ],
+      "id": "0afa11c1-77f9-4a90-a00c-471c36b94dd4",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.chatInput }}",
+        "contextWindowLength": 1
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        2496,
+        2992
+      ],
+      "id": "f0c2d2bb-32be-4a03-8564-e876b069f0dc",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "topN": 5
+      },
+      "type": "@n8n/n8n-nodes-langchain.rerankerCohere",
+      "typeVersion": 1,
+      "position": [
+        2768,
+        3200
+      ],
+      "id": "50c3c178-a88a-42c9-a14a-5e90442cb205",
+      "name": "Reranker Cohere",
+      "credentials": {
+        "cohereApi": {
+          "id": "c2UpKPtvwm9yDlo8",
+          "name": "CohereApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        944,
+        -912
+      ],
+      "id": "8d995836-3c68-429d-bd0c-3e9d3f896be6",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "luG10gRRoLwLO6U6",
+          "name": "Supabase Scaleupally_Telegram_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "=Call this tool to answer any question. It contains the company's full service list, technology stack, case studies, and approach to software development. Always use this tool first.\n\n-- If a user asks for the founders or the CEO, CMO, CTO, or COO of Scaleupally, then do not suggest testimonials of the clients.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 10,
+        "useReranker": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        2624,
+        2992
+      ],
+      "id": "189f7a17-e78f-4307-854d-63b2314dfc6d",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "luG10gRRoLwLO6U6",
+          "name": "Supabase Scaleupally_Telegram_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('AI Agent').item.json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_web_page_preview": true
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3216,
+        2768
+      ],
+      "id": "1e504d4f-c33d-45a1-8a81-674fe4024b74",
+      "name": "Send a text message",
+      "webhookId": "7541d1ba-4a81-49e7-8fdd-b8802f39b257",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        1936
+      ],
+      "id": "299245ab-95c2-47c4-b913-8bc0b63de59e",
+      "name": "Telegram Trigger",
+      "webhookId": "5284669e-6e76-4b21-9bc5-4e942258f5dd",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendChatAction",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2992,
+        2768
+      ],
+      "id": "1ca809c9-dd48-453f-9a85-5da75110fe7b",
+      "name": "Send a chat action1",
+      "webhookId": "bdb05da0-91bb-4084-baa1-829bb140fc71",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2640,
+        3200
+      ],
+      "id": "30dee5f3-0a34-4924-abd8-d46231570188",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "chat_history",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "channel",
+              "fieldValue": "={{ $json.channel }}"
+            },
+            {
+              "fieldId": "chat_id",
+              "fieldValue": "={{ $json.chat_id }}"
+            },
+            {
+              "fieldId": "username",
+              "fieldValue": "={{ $json.username }}"
+            },
+            {
+              "fieldId": "first_name",
+              "fieldValue": "={{ $json.first_name }}"
+            },
+            {
+              "fieldId": "last_name",
+              "fieldValue": "={{ $json.last_name }}"
+            },
+            {
+              "fieldId": "message_id",
+              "fieldValue": "={{ $json.message_id }}"
+            },
+            {
+              "fieldId": "question",
+              "fieldValue": "={{ $json.question }}"
+            },
+            {
+              "fieldId": "answer",
+              "fieldValue": "={{ $json.answer }}"
+            },
+            {
+              "fieldId": "retrieved_docs",
+              "fieldValue": "={{ $json.retrieved_docs }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3664,
+        2768
+      ],
+      "id": "b7e951ac-dc3f-4bf1-9b88-734edf2af104",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "luG10gRRoLwLO6U6",
+          "name": "Supabase Scaleupally_Telegram_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"channel\": \"telegram\",\n  \"chat_id\": \"{{ $json.result.chat.id }}\",\n  \"message_id\": \"{{ $json.result.message_id }}\",\n\n  \"first_name\": \"{{ $json.result.chat.first_name }}\",\n  \"last_name\": \"{{ $json.result.chat.last_name }}\",\n  \"username\": \"{{ $('Telegram Trigger').item.json.message.chat.username || null}}\",\n\n  \"question\": \"{{ $('Telegram Trigger').item.json.message.text }}\",\n  \"answer\": \"{{ $json.result.text }}\",\n  \"retrieved_docs\": \"{{ $json.retrieved_docs }}\",\n  \"confidence_score\": \"{{ $json.similarity_score || null }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3440,
+        2768
+      ],
+      "id": "996bfd0f-2fd7-4182-a124-b593d616026f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4846a162-fd30-46db-bf84-de294b321c3a",
+                    "leftValue": "={{ $('If').item.json.stage }}",
+                    "rightValue": "consent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Consent Granted"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0e216144-8859-45a0-9478-6f55158de3fc",
+                    "leftValue": "={{ $('If').item.json.stage }}",
+                    "rightValue": "name",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Capture Name"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f32b7dfb-f6c7-4762-9658-a312df001791",
+                    "leftValue": "={{ $('If').item.json.stage }}",
+                    "rightValue": "email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Capture Email"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "409fc55a-765e-4333-9238-2a7141a81e92",
+                    "leftValue": "={{ $('If').item.json.stage }}",
+                    "rightValue": "phone",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Capture Phone"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "93abc28c-3cba-412c-97e0-ecefd74a4b18",
+                    "leftValue": "={{ $('If').item.json.stage }}",
+                    "rightValue": "business_type",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Capture Business"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7f0172d3-920c-4800-816f-060474aa800c",
+                    "leftValue": "={{ $('If').item.json.stage }}",
+                    "rightValue": "location",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Capture Location"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "5eb07ac9-651d-4dd6-85d2-f6d339b12233",
+                    "leftValue": "={{ $('If').item.json.stage }}",
+                    "rightValue": "meeting_time",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Capture Time & Finalize"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "552d0ef4-0d08-4999-9814-83bb5b4b8005",
+                    "leftValue": "={{ $('If').item.json.stage }}",
+                    "rightValue": "completed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Stage - Completed"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        1296
+      ],
+      "id": "92472adf-3a8a-4b75-8da1-3387f13a85b7",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "meeting_leads",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.message.chat.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        224,
+        1872
+      ],
+      "id": "261479f9-927e-452e-98e3-0fc21f0d9809",
+      "name": "Get user State",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "luG10gRRoLwLO6U6",
+          "name": "Supabase Scaleupally_Telegram_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=I can assist you in scheduling a call with our team. The process takes just a minute.\n\nWould you like to proceed? (Please reply 'Yes' to continue or 'No' to skip).",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2576,
+        2368
+      ],
+      "id": "2f19664b-bb6d-4bd3-8b97-c076bbd694be",
+      "name": "Send a text message1",
+      "webhookId": "61407c79-db5b-4fe1-9793-bd2c14c46d2c",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1648,
+        2192
+      ],
+      "id": "3d48b39e-be8e-415a-8ec4-e5f4601625ba",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a988f216-0174-4030-9997-d4fa806fdbd4",
+              "leftValue": "={{ $json.chat_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        1936
+      ],
+      "id": "b4d41b77-6777-46db-ba9f-7816dbc12587",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=User Input: {{ $('Telegram Trigger').item.json.message.text }}\n\nClassify the user's intent into exactly one of these two categories:\n1. BOOKING (if they want to schedule a call, meeting, demo, or speak to someone).\n2. GENERAL (if they are asking questions, saying hi, or anything else).\n\nOutput ONLY the category name.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1568,
+        2368
+      ],
+      "id": "59822d76-0837-4966-a8a1-3741723ae271",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1648,
+        2592
+      ],
+      "id": "c8cefff5-74d5-4a04-bf00-390b1ffe1411",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "2SN6l7TZaVixYAzM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "meeting_leads",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "chat_id",
+              "fieldValue": "={{ $('Merge').item.json.message.chat.id }}"
+            },
+            {
+              "fieldId": "stage",
+              "fieldValue": "consent"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2144,
+        2368
+      ],
+      "id": "60762551-f246-4870-bed6-04d218f912dc",
+      "name": "Initialize Session",
+      "credentials": {
+        "supabaseApi": {
+          "id": "luG10gRRoLwLO6U6",
+          "name": "Supabase Scaleupally_Telegram_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "meeting_leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "condition": "eq",
+              "keyValue": "={{ $('If').item.json.chat_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        2768
+      ],
+      "id": "a3b01d33-47bb-4269-9659-c2e561877cea",
+      "name": "Delete a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "luG10gRRoLwLO6U6",
+          "name": "Supabase Scaleupally_Telegram_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "No problem! I've cancelled the request. Let me know if you need help with anything else.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1632,
+        2768
+      ],
+      "id": "9712b73a-7761-498f-9cef-3b6c0af2dcd7",
+      "name": "Send a text message8",
+      "webhookId": "9226df54-0f4a-42d9-8cd1-d84bb17697c6",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7cfa573a-8a98-4e5a-92a0-f5c9dbe0233f",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "BOOKING",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1920,
+        2480
+      ],
+      "id": "f1c04079-9e52-4c5c-bfd0-f87d939136f0",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        1936
+      ],
+      "id": "f59b90af-7254-4649-a0c8-1e9ec6bdcca2",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "894fa659-2a34-476f-9705-26b051318270",
+              "name": "chatInput",
+              "value": "={{ $('Merge').first().json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "3ca33f97-d948-4cce-a354-f02dcaa0bba0",
+              "name": "chat_id",
+              "value": "={{ $('Merge').first().json.message.chat.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2144,
+        2768
+      ],
+      "id": "bb2c120b-6ffc-4bc9-8711-8e9feedb6002",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1971a70d-c618-4f2e-be3c-7335ccc605a6",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "={{ $now }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1920,
+        2080
+      ],
+      "id": "6e818591-9994-4539-9894-2f86af411a4b",
+      "name": "Future Date&Time"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "meeting_leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "condition": "eq",
+              "keyValue": "={{ $('If').item.json.chat_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "stage",
+              "fieldValue": "name"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        432
+      ],
+      "id": "a335dc48-c840-4c14-8f63-34fb7b6a15a2",
+      "name": "Update Stage Name",
+      "credentials": {
+        "supabaseApi": {
+          "id": "luG10gRRoLwLO6U6",
+          "name": "Supabase Scaleupally_Telegram_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('If').item.json.chat_id }}",
+        "text": "=Great! Welcome to ScaleUpAlly! \nTo get us started, could I please have your full name?",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        432
+      ],
+      "id": "bb552e45-daba-4e90-a092-70b90986e4e2",
+      "name": "Ask For Name",
+      "webhookId": "aeca1bdf-f102-4f95-8453-7c8c8c9e4ce7",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "meeting_leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "condition": "eq",
+              "keyValue": "={{ $('If').item.json.chat_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "stage",
+              "fieldValue": "phone"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $('If').item.json.message.text }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        816
+      ],
+      "id": "70544caa-bb91-49ca-b79b-910467844769",
+      "name": "Update Stage Phone",
+      "credentials": {
+        "supabaseApi": {
+          "id": "luG10gRRoLwLO6U6",
+          "name": "Supabase Scaleupally_Telegram_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('If').item.json.chat_id }}",
+        "text": "=What is the best phone number to reach you at?\n(Please include your country code, e.g., +1 or +91).",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2144,
+        816
+      ],
+      "id": "3e6c0868-08ad-4799-a958-007869470cc1",
+      "name": "Ask For Phone",
+      "webhookId": "9226df54-0f4a-42d9-8cd1-d84bb17697c6",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a smart scheduling assistant.\nYour goal: Extract the meeting date and time in ISO format (YYYY-MM-DDTHH:mm:ss±HH:mm).\n\nCONTEXT:\n1. Current Bot Time: {{ $now }} (Use this to calculate relative dates like \"tomorrow\").\n2. User's Location: {{ $('If').item.json.location }}\n   (If the user's location is empty, assume UTC or ask for clarification).\n\nINSTRUCTIONS:\n1. Use the \"User's Location\" to determine the correct Timezone Offset.\n   - Example: If Location is \"Chicago\" and user says \"3pm\", use Central Time (CST/CDT).\n   - Example: If Location is \"London\", use GMT/BST.\n2. Convert the user's requested time into ISO 8601 format with the correct offset.\n3. If the user mentions a different timezone explicitly (e.g., \"3pm EST\"), prioritize that over their stored location.\n\nUser Input: {{ $('If').item.json.message.text }}",
+        "options": {
+          "systemMessage": "CRITICAL OUTPUT RULE: \nYou must output ONLY the final ISO 8601 date string. \nDo NOT explain your reasoning. \nDo NOT say \"The date is...\". \nDo NOT include any other text. \nJust the string."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1568,
+        1968
+      ],
+      "id": "6c7d043e-522b-46d7-b4fd-db9c1f8d155e",
+      "name": "TimeZone"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "meeting_leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "condition": "eq",
+              "keyValue": "={{ $('If').item.json.chat_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "stage",
+              "fieldValue": "completed"
+            },
+            {
+              "fieldId": "meeting_datetime_ist",
+              "fieldValue": "={{ $json.output }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2144,
+        1744
+      ],
+      "id": "d979c757-1601-46c3-a632-42eed5ea457a",
+      "name": "Update Stage completed",
+      "credentials": {
+        "supabaseApi": {
+          "id": "luG10gRRoLwLO6U6",
+          "name": "Supabase Scaleupally_Telegram_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b79a6526-a189-47a1-858f-b533966ea135",
+              "leftValue": "={{ $('If').item.json.message.text }}",
+              "rightValue": "^(\\+|00)[0-9\\s-]{6,}$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1632,
+        1200
+      ],
+      "id": "5fd64fdc-0c23-4e98-a646-f80bf0da6e77",
+      "name": "Phone Number Validation"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "meeting_leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "condition": "eq",
+              "keyValue": "={{ $('If').item.json.chat_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "stage",
+              "fieldValue": "business_type"
+            },
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $('If').item.json.message.text }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        1200
+      ],
+      "id": "e4775dc6-ef49-42ee-8364-479d845b9f9b",
+      "name": "Update Stage Business",
+      "credentials": {
+        "supabaseApi": {
+          "id": "luG10gRRoLwLO6U6",
+          "name": "Supabase Scaleupally_Telegram_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('If').item.json.chat_id }}",
+        "text": "=To help us prepare for the call, could you briefly describe your business type? (e.g., SaaS, E-commerce, Agency, AI).",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2144,
+        1200
+      ],
+      "id": "d8030aae-db02-4a0e-af1c-b456c4d21ed7",
+      "name": "Ask For Business Type",
+      "webhookId": "c361b8a6-f0fe-458e-bd14-d49c84f4230f",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('If').item.json.chat_id }}",
+        "text": "Please enter your phone number with the Country Code (e.g., +1 for USA, +91 for India).",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        1392
+      ],
+      "id": "c80b7199-a355-4462-90b0-ace67d5a65fa",
+      "name": "Ask for Valid phone",
+      "webhookId": "c361b8a6-f0fe-458e-bd14-d49c84f4230f",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "meeting_leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "condition": "eq",
+              "keyValue": "={{ $('If').item.json.chat_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "stage",
+              "fieldValue": "meeting_time"
+            },
+            {
+              "fieldId": "location",
+              "fieldValue": "={{ $('If').item.json.message.text }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        1776
+      ],
+      "id": "1091a76c-69ce-453e-8e03-d0048a6b07f0",
+      "name": "Update Stage datetime",
+      "credentials": {
+        "supabaseApi": {
+          "id": "luG10gRRoLwLO6U6",
+          "name": "Supabase Scaleupally_Telegram_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('If').item.json.chat_id }}",
+        "text": "=Perfect. Please let me know your preferred date and time for the call.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        1776
+      ],
+      "id": "58c7be49-35ff-44fc-a95e-9cb6133a1d03",
+      "name": "Ask for DateTime",
+      "webhookId": "bf80b3a8-66da-4fc9-ae44-aca1b0f89bc6",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "meeting_leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "condition": "eq",
+              "keyValue": "={{ $('If').item.json.chat_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "stage",
+              "fieldValue": "email"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $('If').item.json.message.text }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        624
+      ],
+      "id": "e0dad5a0-2f42-4f61-87ca-3445c35814d3",
+      "name": "Update Stage Email",
+      "credentials": {
+        "supabaseApi": {
+          "id": "luG10gRRoLwLO6U6",
+          "name": "Supabase Scaleupally_Telegram_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('If').item.json.chat_id }}",
+        "text": "=Great to meet you. Where should we send the meeting confirmation details? \n(Please enter your email Business address.)",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        624
+      ],
+      "id": "d9374a49-530e-482d-9bd7-6ea221ed08ac",
+      "name": "Ask for Email Address",
+      "webhookId": "0cc804f3-feb9-4fc8-b148-a36b3e126f64",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "meeting_leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "condition": "eq",
+              "keyValue": "={{ $('If').item.json.chat_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "stage",
+              "fieldValue": "location"
+            },
+            {
+              "fieldId": "business_type",
+              "fieldValue": "={{ $('If').item.json.message.text }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        1584
+      ],
+      "id": "0c6ccd29-c9eb-46fc-ac25-228ac115e3d1",
+      "name": "Update Stage Location",
+      "credentials": {
+        "supabaseApi": {
+          "id": "luG10gRRoLwLO6U6",
+          "name": "Supabase Scaleupally_Telegram_Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('If').item.json.chat_id }}",
+        "text": "=To ensure we schedule this in your local time zone, which city or country are you joining us from? (e.g.: Noida, India or Chicago, USA)",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        1584
+      ],
+      "id": "3798cd57-91ab-4c79-bfd8-7707663f3f01",
+      "name": "Ask For Location",
+      "webhookId": "c361b8a6-f0fe-458e-bd14-d49c84f4230f",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Meeting Confirmation: {{ $json.name }}",
+        "emailType": "text",
+        "message": "=Hi {{ $json.name }},\n\nYour meeting is confirmed!\n\n🌍 Meeting Time (Your Location):\n{{ DateTime.fromISO($('TimeZone').item.json.output, { setZone: true }).toFormat('dd LLL yyyy, h:mm a') }}\n(Location: {{ $json.location }})\n\n🇮🇳 Meeting Time (Our Team - India):\n{{ DateTime.fromISO($('TimeZone').item.json.output).setZone('Asia/Kolkata').toFormat('dd LLL yyyy, h:mm a') }} (IST)\n\n📍Where: Google Meet (Link to be sent shortly)\n\nIf you need to reschedule, just reply to this email.\nSee you then!\n\nVisit : Scaleupally.io",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2736,
+        1632
+      ],
+      "id": "4dd05803-06b4-4fc6-88d4-0968f8b79847",
+      "name": "Send a message to client",
+      "webhookId": "41af9452-7d8a-4fac-9974-827cc9ba654e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "shashankjain2309@gmail.com",
+        "subject": "=🔔 New Booking: {{ $('Update Stage completed').item.json.name }}",
+        "emailType": "text",
+        "message": "=🔔 New Meeting Alert!\n\n👤 Client: {{ $('Update Stage completed').item.json.name }}\n🏢 Business: {{ $('Update Stage completed').item.json.business_type }}\n📍 Location: {{ $('Update Stage completed').item.json.location }}\n\nCONTACT INFO:\n📧 {{ $('Update Stage completed').item.json.email }}\n📱 {{ $('Update Stage completed').item.json.phone }}\n\n📅 SCHEDULE:\n🇮🇳 India Time: {{ DateTime.fromISO($('TimeZone').item.json.output).setZone('Asia/Kolkata').toFormat('dd LLL yyyy, h:mm a') }} (IST)\n🌍 Client Time: {{ DateTime.fromISO($('TimeZone').item.json.output, { setZone: true }).toFormat('dd LLL yyyy, h:mm a') }}\n\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2992,
+        1632
+      ],
+      "id": "51ec59f5-dc33-4a38-8e62-3a465de6be1a",
+      "name": "Send a message to Self",
+      "webhookId": "ea9ec257-5115-4491-a991-f5cb39bd5d37",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpfckWukTNtzNN6c",
+          "name": "mis gmail API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Update Stage completed').item.json.chat_id }}",
+        "text": "=All set! Your meeting has been scheduled for {{ $('Telegram Trigger').item.json.message.text }}. We have sent a confirmation email.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3232,
+        1744
+      ],
+      "id": "22050200-fbc0-4299-bff4-f925ee53b2f0",
+      "name": "Mail Confirmation Message",
+      "webhookId": "8fbb009a-8927-4396-9b89-1bd21c096a44",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('If').item.json.chat_id }}",
+        "text": "=That time seems to be in the past. Please enter a future date and time.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2144,
+        2176
+      ],
+      "id": "f119dab2-6688-43d4-8461-7faa247b25b6",
+      "name": "Not a Valid MeetTime  Message",
+      "webhookId": "8fbb009a-8927-4396-9b89-1bd21c096a44",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendChatAction",
+        "chatId": "={{ $json.message.chat.id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        2960
+      ],
+      "id": "488e0830-a9a2-484a-9d20-24cd71c33237",
+      "name": "Send a chat action",
+      "webhookId": "a9bfd840-f5f1-44dc-ade7-c537d6541354",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendChatAction",
+        "chatId": "={{ $json.chat_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        896,
+        1744
+      ],
+      "id": "b5cf44d6-d129-42b7-8379-4d0d8e3b1332",
+      "name": "Send a chat action2",
+      "webhookId": "a9bfd840-f5f1-44dc-ade7-c537d6541354",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "05a607df-ce9f-4bdb-a03c-dd83f0758011",
+              "leftValue": "={{ $('If').item.json.message.text }}",
+              "rightValue": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1632,
+        816
+      ],
+      "id": "9ae4eef4-88bf-4171-b203-696daee8e2f8",
+      "name": "Email validation Check"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('If').item.json.chat_id }}",
+        "text": "Please enter a valid email address. (Business email Preferable) (e.g. name@xyz.com)",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        1008
+      ],
+      "id": "11247b0e-df0e-4962-8659-d1a62ad7b458",
+      "name": "Ask for Valid phone1",
+      "webhookId": "c361b8a6-f0fe-458e-bd14-d49c84f4230f",
+      "credentials": {
+        "telegramApi": {
+          "id": "CW6PEm7Pg9DXMMIy",
+          "name": "Scaleupally_chat_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c5464b26-7d8f-414a-af15-01fa64e3a4e8",
+              "leftValue": "={{ $('If').item.json.message.text.toLowerCase() }}",
+              "rightValue": "\\b(no|nope|cancel|stop|not now)\\b",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        1744
+      ],
+      "id": "d75aebf6-73ea-464a-b370-440092051670",
+      "name": "Consent Check"
+    }
+  ],
+  "connections": {
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reranker Cohere": {
+      "ai_reranker": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_reranker",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a chat action1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get user State",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Send a chat action1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Update Stage Name",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Stage Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email validation Check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Phone Number Validation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Stage Location",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Stage datetime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TimeZone",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get user State": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "TimeZone",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a chat action2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a chat action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Session": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a row": {
+      "main": [
+        [
+          {
+            "node": "Send a text message8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Initialize Session",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Future Date&Time": {
+      "main": [
+        [
+          {
+            "node": "Update Stage completed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Not a Valid MeetTime  Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Stage Name": {
+      "main": [
+        [
+          {
+            "node": "Ask For Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Stage Phone": {
+      "main": [
+        [
+          {
+            "node": "Ask For Phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TimeZone": {
+      "main": [
+        [
+          {
+            "node": "Future Date&Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Stage completed": {
+      "main": [
+        [
+          {
+            "node": "Mail Confirmation Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phone Number Validation": {
+      "main": [
+        [
+          {
+            "node": "Update Stage Business",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ask for Valid phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Stage Business": {
+      "main": [
+        [
+          {
+            "node": "Ask For Business Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Stage datetime": {
+      "main": [
+        [
+          {
+            "node": "Ask for DateTime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Stage Email": {
+      "main": [
+        [
+          {
+            "node": "Ask for Email Address",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Stage Location": {
+      "main": [
+        [
+          {
+            "node": "Ask For Location",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message to client": {
+      "main": [
+        [
+          {
+            "node": "Send a message to Self",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message to Self": {
+      "main": [
+        []
+      ]
+    },
+    "Send a chat action": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a chat action2": {
+      "main": [
+        [
+          {
+            "node": "Consent Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email validation Check": {
+      "main": [
+        [
+          {
+            "node": "Update Stage Phone",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ask for Valid phone1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consent Check": {
+      "main": [
+        [
+          {
+            "node": "Delete a row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "33596e3b-3d55-4574-9ae9-4c718de20808",
+  "activeVersionId": "33596e3b-3d55-4574-9ae9-4c718de20808",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-12-23T06:09:16.062Z",
+      "createdAt": "2025-12-23T06:09:16.062Z",
+      "role": "workflow:owner",
+      "workflowId": "BoUKIHeYHhJJcE3n",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-24T15:02:16.179Z",
+    "createdAt": "2025-12-24T15:02:16.179Z",
+    "versionId": "33596e3b-3d55-4574-9ae9-4c718de20808",
+    "workflowId": "BoUKIHeYHhJJcE3n",
+    "nodes": [
+      {
+        "parameters": {
+          "options": {
+            "headerRow": true
+          }
+        },
+        "type": "n8n-nodes-base.extractFromFile",
+        "typeVersion": 1.1,
+        "position": [
+          336,
+          -912
+        ],
+        "id": "c0ced0c3-7360-4a4a-8105-d4d1c1e89697",
+        "name": "Extract from File"
+      },
+      {
+        "parameters": {
+          "jsCode": "return items.map(item => {\n  const row = item.json;\n\n  const combinedRow = Object.entries(row)\n    .map(([key, val]) => `${key}: ${val}`)\n    .join(' | ');\n\n  return {\n    json: {\n      combinedRow\n    }\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          672,
+          -912
+        ],
+        "id": "7b87cf9a-7473-4bda-bacf-d555425fd2e7",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          944,
+          -576
+        ],
+        "id": "23b3fae2-f65b-4737-af9d-cd6f1c89e0d6",
+        "name": "Embeddings OpenAI",
+        "credentials": {
+          "openAiApi": {
+            "id": "2SN6l7TZaVixYAzM",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "textSplittingMode": "custom",
+          "options": {
+            "metadata": {
+              "metadataValues": [
+                {
+                  "name": "page_type",
+                  "value": "={{ $('Extract from File').item.json.doc_type }}"
+                },
+                {
+                  "name": "source_url",
+                  "value": "={{ $('Extract from File').item.json.source_url }}"
+                },
+                {
+                  "name": "title",
+                  "value": "={{ $('Extract from File').item.json.title }}"
+                },
+                {
+                  "name": "id",
+                  "value": "={{ $('Extract from File').item.json.id }}"
+                },
+                {
+                  "name": "section_patch",
+                  "value": "={{ $('Extract from File').item.json['section_path/0'] }}"
+                }
+              ]
+            }
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+        "typeVersion": 1.1,
+        "position": [
+          1040,
+          -704
+        ],
+        "id": "6a4ed011-3112-4228-b62b-fd2f103d882c",
+        "name": "Default Data Loader"
+      },
+      {
+        "parameters": {
+          "separator": "123456",
+          "chunkSize": 100000000
+        },
+        "type": "@n8n/n8n-nodes-langchain.textSplitterCharacterTextSplitter",
+        "typeVersion": 1,
+        "position": [
+          1232,
+          -544
+        ],
+        "id": "7d5c9394-ec50-4d0c-90c0-c43394191c87",
+        "name": "Character Text Splitter"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $json.chatInput }}",
+          "options": {
+            "systemMessage": "=🧠 Identity & Persona\nYour name is Vridhi. You are the smart, persuasive, and consultative AI representative for ScaleupAlly (a technology and data services company).\nYour goal is not just to answer questions, but to build trust, guide users clearly, and help them explore how ScaleupAlly can solve their problems.\n\nTone: Professional, warm, insightful, and human.\nYou speak like an experienced consultant—not a sales script and not a technical manual.\n\n---\n\n📚 Knowledge Base & Truthfulness\n1. Source of Truth: Your core knowledge comes only from the ScaleupAlly Context / Knowledge Base provided.\n2. No Hallucinations: Do not invent services, pricing, case studies, metrics, or claims that are not present in the provided content.\n3. The “We” Perspective: Always speak as part of the ScaleupAlly team. Use “We help…”, “Our approach…”, “We typically recommend…”.\n4. Leadership Accuracy Rule:\n   If a user asks about the founders, CEO, CMO, CTO, or COO of ScaleupAlly:\n   - Do not infer or extract names from client testimonials or client designations.\n   - ScaleupAlly leadership details are predefined and must always be answered from the following authoritative list:\n\nFounder/CEO: Manu Jain\n\nCMO: Pranay Agrawal\n\nCTO: Suprabhat Sen\n\nCOO: Tarsem Singh\n\nWhen a user asks about CEO / CTO / CMO / COO:\n\nAlways answer using the above canonical details.\n\nDo not guess, invent, or derive names from testimonials, context, or external assumptions.\n\nAdd a short, helpful context sentence (value-add), such as their role impact, leadership vision, or relevance to the conversation.\n\n---\n\n🛡️ Handling Off-Topic or Missing Info (The Pivot Rule)\nIf the user asks something clearly irrelevant (e.g., cats, weather, politics) or if the specific answer is not available in the knowledge base:\n\n1. Do NOT say: “The knowledge base does not contain this information.”\n2. DO pivot naturally:\n   - Briefly acknowledge the question.\n   - Redirect the conversation toward ScaleupAlly’s expertise and how you can help.\n\nBad response:\n“I do not have information on cats.”\n\nGood Vridhi response:\n“While that’s outside my direct expertise, we work extensively on data automation and scalable technology solutions. If you’re looking to improve business workflows or systems, I can definitely help.”\n\n---\n\n💬 Response Guidelines\n- Be Concise but Helpful: Keep responses short and skimmable (Telegram-first). Avoid long explanations or unnecessary background.\n- Length Control: Aim for 6–8 short lines maximum. Prefer numbered points over paragraphs.\n- Structure Required: Always follow this exact format:\n\n\n<Concise, context-based answer>\n\nTo make sure I guide you correctly:\n\n- Question 1?\n\n- Question 2?\n\n- Question 3?\n\n- Strategic Endings (Mandatory):\n  Always end with 2–3 relevant follow-up questions that:\n  - Encourage clarification or discovery.\n  - Feel helpful, not salesy.\n  - Gently move the user toward a discussion, consultation, or appointment.\n\n  Examples of good follow-up intent:\n  - Clarifying requirements.\n  - Understanding use cases.\n  - Exploring timelines or readiness.\n  - Offering expert guidance.\n\n- Formatting: Use bullet points and bold text where it improves readability.\n- Hyperlinks: Include hyperlinks only if a valid source URL exists in the knowledge base. Never fabricate links.\n\n---\n\n✅ Behavior Summary\nYou are concise, trustworthy, context-bound, and conversation-driven.\nEvery response should leave the user feeling informed and naturally inclined to continue the discussion.\n"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3,
+        "position": [
+          2432,
+          2768
+        ],
+        "id": "9b7c37bc-7c04-4349-87db-02f909f6ab6d",
+        "name": "AI Agent"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-4.1",
+            "mode": "list",
+            "cachedResultName": "gpt-4.1"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          2368,
+          2992
+        ],
+        "id": "0afa11c1-77f9-4a90-a00c-471c36b94dd4",
+        "name": "OpenAI Chat Model",
+        "credentials": {
+          "openAiApi": {
+            "id": "2SN6l7TZaVixYAzM",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sessionIdType": "customKey",
+          "sessionKey": "={{ $json.chatInput }}",
+          "contextWindowLength": 1
+        },
+        "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+        "typeVersion": 1.3,
+        "position": [
+          2496,
+          2992
+        ],
+        "id": "f0c2d2bb-32be-4a03-8564-e876b069f0dc",
+        "name": "Simple Memory"
+      },
+      {
+        "parameters": {
+          "topN": 5
+        },
+        "type": "@n8n/n8n-nodes-langchain.rerankerCohere",
+        "typeVersion": 1,
+        "position": [
+          2768,
+          3200
+        ],
+        "id": "50c3c178-a88a-42c9-a14a-5e90442cb205",
+        "name": "Reranker Cohere",
+        "credentials": {
+          "cohereApi": {
+            "id": "c2UpKPtvwm9yDlo8",
+            "name": "CohereApi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "insert",
+          "tableName": {
+            "__rl": true,
+            "value": "documents",
+            "mode": "list",
+            "cachedResultName": "documents"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+        "typeVersion": 1.3,
+        "position": [
+          944,
+          -912
+        ],
+        "id": "8d995836-3c68-429d-bd0c-3e9d3f896be6",
+        "name": "Supabase Vector Store",
+        "credentials": {
+          "supabaseApi": {
+            "id": "luG10gRRoLwLO6U6",
+            "name": "Supabase Scaleupally_Telegram_Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "retrieve-as-tool",
+          "toolDescription": "=Call this tool to answer any question. It contains the company's full service list, technology stack, case studies, and approach to software development. Always use this tool first.\n\n-- If a user asks for the founders or the CEO, CMO, CTO, or COO of Scaleupally, then do not suggest testimonials of the clients.",
+          "tableName": {
+            "__rl": true,
+            "value": "documents",
+            "mode": "list",
+            "cachedResultName": "documents"
+          },
+          "topK": 10,
+          "useReranker": true,
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+        "typeVersion": 1.3,
+        "position": [
+          2624,
+          2992
+        ],
+        "id": "189f7a17-e78f-4307-854d-63b2314dfc6d",
+        "name": "Supabase Vector Store1",
+        "credentials": {
+          "supabaseApi": {
+            "id": "luG10gRRoLwLO6U6",
+            "name": "Supabase Scaleupally_Telegram_Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+          "text": "={{ $('AI Agent').item.json.output }}",
+          "additionalFields": {
+            "appendAttribution": false,
+            "disable_web_page_preview": true
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          3216,
+          2768
+        ],
+        "id": "1e504d4f-c33d-45a1-8a81-674fe4024b74",
+        "name": "Send a text message",
+        "webhookId": "7541d1ba-4a81-49e7-8fdd-b8802f39b257",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "updates": [
+            "message",
+            "callback_query"
+          ],
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.telegramTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          1936
+        ],
+        "id": "299245ab-95c2-47c4-b913-8bc0b63de59e",
+        "name": "Telegram Trigger",
+        "webhookId": "5284669e-6e76-4b21-9bc5-4e942258f5dd",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "sendChatAction",
+          "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          2992,
+          2768
+        ],
+        "id": "1ca809c9-dd48-453f-9a85-5da75110fe7b",
+        "name": "Send a chat action1",
+        "webhookId": "bdb05da0-91bb-4084-baa1-829bb140fc71",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          2640,
+          3200
+        ],
+        "id": "30dee5f3-0a34-4924-abd8-d46231570188",
+        "name": "Embeddings OpenAI1",
+        "credentials": {
+          "openAiApi": {
+            "id": "2SN6l7TZaVixYAzM",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "chat_history",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "channel",
+                "fieldValue": "={{ $json.channel }}"
+              },
+              {
+                "fieldId": "chat_id",
+                "fieldValue": "={{ $json.chat_id }}"
+              },
+              {
+                "fieldId": "username",
+                "fieldValue": "={{ $json.username }}"
+              },
+              {
+                "fieldId": "first_name",
+                "fieldValue": "={{ $json.first_name }}"
+              },
+              {
+                "fieldId": "last_name",
+                "fieldValue": "={{ $json.last_name }}"
+              },
+              {
+                "fieldId": "message_id",
+                "fieldValue": "={{ $json.message_id }}"
+              },
+              {
+                "fieldId": "question",
+                "fieldValue": "={{ $json.question }}"
+              },
+              {
+                "fieldId": "answer",
+                "fieldValue": "={{ $json.answer }}"
+              },
+              {
+                "fieldId": "retrieved_docs",
+                "fieldValue": "={{ $json.retrieved_docs }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          3664,
+          2768
+        ],
+        "id": "b7e951ac-dc3f-4bf1-9b88-734edf2af104",
+        "name": "Create a row",
+        "credentials": {
+          "supabaseApi": {
+            "id": "luG10gRRoLwLO6U6",
+            "name": "Supabase Scaleupally_Telegram_Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={\n  \"channel\": \"telegram\",\n  \"chat_id\": \"{{ $json.result.chat.id }}\",\n  \"message_id\": \"{{ $json.result.message_id }}\",\n\n  \"first_name\": \"{{ $json.result.chat.first_name }}\",\n  \"last_name\": \"{{ $json.result.chat.last_name }}\",\n  \"username\": \"{{ $('Telegram Trigger').item.json.message.chat.username || null}}\",\n\n  \"question\": \"{{ $('Telegram Trigger').item.json.message.text }}\",\n  \"answer\": \"{{ $json.result.text }}\",\n  \"retrieved_docs\": \"{{ $json.retrieved_docs }}\",\n  \"confidence_score\": \"{{ $json.similarity_score || null }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          3440,
+          2768
+        ],
+        "id": "996bfd0f-2fd7-4182-a124-b593d616026f",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "4846a162-fd30-46db-bf84-de294b321c3a",
+                      "leftValue": "={{ $('If').item.json.stage }}",
+                      "rightValue": "consent",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Consent Granted"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "0e216144-8859-45a0-9478-6f55158de3fc",
+                      "leftValue": "={{ $('If').item.json.stage }}",
+                      "rightValue": "name",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Capture Name"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "f32b7dfb-f6c7-4762-9658-a312df001791",
+                      "leftValue": "={{ $('If').item.json.stage }}",
+                      "rightValue": "email",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Capture Email"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "409fc55a-765e-4333-9238-2a7141a81e92",
+                      "leftValue": "={{ $('If').item.json.stage }}",
+                      "rightValue": "phone",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Capture Phone"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "93abc28c-3cba-412c-97e0-ecefd74a4b18",
+                      "leftValue": "={{ $('If').item.json.stage }}",
+                      "rightValue": "business_type",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Capture Business"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "7f0172d3-920c-4800-816f-060474aa800c",
+                      "leftValue": "={{ $('If').item.json.stage }}",
+                      "rightValue": "location",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Capture Location"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "5eb07ac9-651d-4dd6-85d2-f6d339b12233",
+                      "leftValue": "={{ $('If').item.json.stage }}",
+                      "rightValue": "meeting_time",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Capture Time & Finalize"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "552d0ef4-0d08-4999-9814-83bb5b4b8005",
+                      "leftValue": "={{ $('If').item.json.stage }}",
+                      "rightValue": "completed",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Stage - Completed"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          1344,
+          1296
+        ],
+        "id": "92472adf-3a8a-4b75-8da1-3387f13a85b7",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "meeting_leads",
+          "limit": 1,
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "chat_id",
+                "condition": "eq",
+                "keyValue": "={{ $json.message.chat.id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          224,
+          1872
+        ],
+        "id": "261479f9-927e-452e-98e3-0fc21f0d9809",
+        "name": "Get user State",
+        "alwaysOutputData": true,
+        "credentials": {
+          "supabaseApi": {
+            "id": "luG10gRRoLwLO6U6",
+            "name": "Supabase Scaleupally_Telegram_Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $json.chat_id }}",
+          "text": "=I can assist you in scheduling a call with our team. The process takes just a minute.\n\nWould you like to proceed? (Please reply 'Yes' to continue or 'No' to skip).",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          2576,
+          2368
+        ],
+        "id": "2f19664b-bb6d-4bd3-8b97-c076bbd694be",
+        "name": "Send a text message1",
+        "webhookId": "61407c79-db5b-4fe1-9793-bd2c14c46d2c",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-4o-mini",
+            "mode": "list",
+            "cachedResultName": "gpt-4o-mini"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          1648,
+          2192
+        ],
+        "id": "3d48b39e-be8e-415a-8ec4-e5f4601625ba",
+        "name": "OpenAI Chat Model1",
+        "credentials": {
+          "openAiApi": {
+            "id": "2SN6l7TZaVixYAzM",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "a988f216-0174-4030-9997-d4fa806fdbd4",
+                "leftValue": "={{ $json.chat_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "number",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          672,
+          1936
+        ],
+        "id": "b4d41b77-6777-46db-ba9f-7816dbc12587",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=User Input: {{ $('Telegram Trigger').item.json.message.text }}\n\nClassify the user's intent into exactly one of these two categories:\n1. BOOKING (if they want to schedule a call, meeting, demo, or speak to someone).\n2. GENERAL (if they are asking questions, saying hi, or anything else).\n\nOutput ONLY the category name.",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3,
+        "position": [
+          1568,
+          2368
+        ],
+        "id": "59822d76-0837-4966-a8a1-3741723ae271",
+        "name": "AI Agent2"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "gpt-4o-mini",
+            "mode": "list",
+            "cachedResultName": "gpt-4o-mini"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          1648,
+          2592
+        ],
+        "id": "c8cefff5-74d5-4a04-bf00-390b1ffe1411",
+        "name": "OpenAI Chat Model2",
+        "credentials": {
+          "openAiApi": {
+            "id": "2SN6l7TZaVixYAzM",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "tableId": "meeting_leads",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "chat_id",
+                "fieldValue": "={{ $('Merge').item.json.message.chat.id }}"
+              },
+              {
+                "fieldId": "stage",
+                "fieldValue": "consent"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          2144,
+          2368
+        ],
+        "id": "60762551-f246-4870-bed6-04d218f912dc",
+        "name": "Initialize Session",
+        "credentials": {
+          "supabaseApi": {
+            "id": "luG10gRRoLwLO6U6",
+            "name": "Supabase Scaleupally_Telegram_Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "delete",
+          "tableId": "meeting_leads",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "chat_id",
+                "condition": "eq",
+                "keyValue": "={{ $('If').item.json.chat_id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1344,
+          2768
+        ],
+        "id": "a3b01d33-47bb-4269-9659-c2e561877cea",
+        "name": "Delete a row",
+        "credentials": {
+          "supabaseApi": {
+            "id": "luG10gRRoLwLO6U6",
+            "name": "Supabase Scaleupally_Telegram_Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $json.chat_id }}",
+          "text": "No problem! I've cancelled the request. Let me know if you need help with anything else.",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1632,
+          2768
+        ],
+        "id": "9712b73a-7761-498f-9cef-3b6c0af2dcd7",
+        "name": "Send a text message8",
+        "webhookId": "9226df54-0f4a-42d9-8cd1-d84bb17697c6",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "7cfa573a-8a98-4e5a-92a0-f5c9dbe0233f",
+                "leftValue": "={{ $json.output }}",
+                "rightValue": "BOOKING",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1920,
+          2480
+        ],
+        "id": "f1c04079-9e52-4c5c-bfd0-f87d939136f0",
+        "name": "If1"
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          448,
+          1936
+        ],
+        "id": "f59b90af-7254-4649-a0c8-1e9ec6bdcca2",
+        "name": "Merge"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "894fa659-2a34-476f-9705-26b051318270",
+                "name": "chatInput",
+                "value": "={{ $('Merge').first().json.message.text }}",
+                "type": "string"
+              },
+              {
+                "id": "3ca33f97-d948-4cce-a354-f02dcaa0bba0",
+                "name": "chat_id",
+                "value": "={{ $('Merge').first().json.message.chat.id }}",
+                "type": "number"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2144,
+          2768
+        ],
+        "id": "bb2c120b-6ffc-4bc9-8711-8e9feedb6002",
+        "name": "Edit Fields1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "1971a70d-c618-4f2e-be3c-7335ccc605a6",
+                "leftValue": "={{ $json.output }}",
+                "rightValue": "={{ $now }}",
+                "operator": {
+                  "type": "dateTime",
+                  "operation": "after"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1920,
+          2080
+        ],
+        "id": "6e818591-9994-4539-9894-2f86af411a4b",
+        "name": "Future Date&Time"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "meeting_leads",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "chat_id",
+                "condition": "eq",
+                "keyValue": "={{ $('If').item.json.chat_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "stage",
+                "fieldValue": "name"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1632,
+          432
+        ],
+        "id": "a335dc48-c840-4c14-8f63-34fb7b6a15a2",
+        "name": "Update Stage Name",
+        "credentials": {
+          "supabaseApi": {
+            "id": "luG10gRRoLwLO6U6",
+            "name": "Supabase Scaleupally_Telegram_Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('If').item.json.chat_id }}",
+          "text": "=Great! Welcome to ScaleUpAlly! \nTo get us started, could I please have your full name?",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1920,
+          432
+        ],
+        "id": "bb552e45-daba-4e90-a092-70b90986e4e2",
+        "name": "Ask For Name",
+        "webhookId": "aeca1bdf-f102-4f95-8453-7c8c8c9e4ce7",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "meeting_leads",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "chat_id",
+                "condition": "eq",
+                "keyValue": "={{ $('If').item.json.chat_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "stage",
+                "fieldValue": "phone"
+              },
+              {
+                "fieldId": "email",
+                "fieldValue": "={{ $('If').item.json.message.text }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1920,
+          816
+        ],
+        "id": "70544caa-bb91-49ca-b79b-910467844769",
+        "name": "Update Stage Phone",
+        "credentials": {
+          "supabaseApi": {
+            "id": "luG10gRRoLwLO6U6",
+            "name": "Supabase Scaleupally_Telegram_Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('If').item.json.chat_id }}",
+          "text": "=What is the best phone number to reach you at?\n(Please include your country code, e.g., +1 or +91).",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          2144,
+          816
+        ],
+        "id": "3e6c0868-08ad-4799-a958-007869470cc1",
+        "name": "Ask For Phone",
+        "webhookId": "9226df54-0f4a-42d9-8cd1-d84bb17697c6",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=You are a smart scheduling assistant.\nYour goal: Extract the meeting date and time in ISO format (YYYY-MM-DDTHH:mm:ss±HH:mm).\n\nCONTEXT:\n1. Current Bot Time: {{ $now }} (Use this to calculate relative dates like \"tomorrow\").\n2. User's Location: {{ $('If').item.json.location }}\n   (If the user's location is empty, assume UTC or ask for clarification).\n\nINSTRUCTIONS:\n1. Use the \"User's Location\" to determine the correct Timezone Offset.\n   - Example: If Location is \"Chicago\" and user says \"3pm\", use Central Time (CST/CDT).\n   - Example: If Location is \"London\", use GMT/BST.\n2. Convert the user's requested time into ISO 8601 format with the correct offset.\n3. If the user mentions a different timezone explicitly (e.g., \"3pm EST\"), prioritize that over their stored location.\n\nUser Input: {{ $('If').item.json.message.text }}",
+          "options": {
+            "systemMessage": "CRITICAL OUTPUT RULE: \nYou must output ONLY the final ISO 8601 date string. \nDo NOT explain your reasoning. \nDo NOT say \"The date is...\". \nDo NOT include any other text. \nJust the string."
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3,
+        "position": [
+          1568,
+          1968
+        ],
+        "id": "6c7d043e-522b-46d7-b4fd-db9c1f8d155e",
+        "name": "TimeZone"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "meeting_leads",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "chat_id",
+                "condition": "eq",
+                "keyValue": "={{ $('If').item.json.chat_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "stage",
+                "fieldValue": "completed"
+              },
+              {
+                "fieldId": "meeting_datetime_ist",
+                "fieldValue": "={{ $json.output }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          2144,
+          1744
+        ],
+        "id": "d979c757-1601-46c3-a632-42eed5ea457a",
+        "name": "Update Stage completed",
+        "credentials": {
+          "supabaseApi": {
+            "id": "luG10gRRoLwLO6U6",
+            "name": "Supabase Scaleupally_Telegram_Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "b79a6526-a189-47a1-858f-b533966ea135",
+                "leftValue": "={{ $('If').item.json.message.text }}",
+                "rightValue": "^(\\+|00)[0-9\\s-]{6,}$",
+                "operator": {
+                  "type": "string",
+                  "operation": "regex"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1632,
+          1200
+        ],
+        "id": "5fd64fdc-0c23-4e98-a646-f80bf0da6e77",
+        "name": "Phone Number Validation"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "meeting_leads",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "chat_id",
+                "condition": "eq",
+                "keyValue": "={{ $('If').item.json.chat_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "stage",
+                "fieldValue": "business_type"
+              },
+              {
+                "fieldId": "phone",
+                "fieldValue": "={{ $('If').item.json.message.text }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1920,
+          1200
+        ],
+        "id": "e4775dc6-ef49-42ee-8364-479d845b9f9b",
+        "name": "Update Stage Business",
+        "credentials": {
+          "supabaseApi": {
+            "id": "luG10gRRoLwLO6U6",
+            "name": "Supabase Scaleupally_Telegram_Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('If').item.json.chat_id }}",
+          "text": "=To help us prepare for the call, could you briefly describe your business type? (e.g., SaaS, E-commerce, Agency, AI).",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          2144,
+          1200
+        ],
+        "id": "d8030aae-db02-4a0e-af1c-b456c4d21ed7",
+        "name": "Ask For Business Type",
+        "webhookId": "c361b8a6-f0fe-458e-bd14-d49c84f4230f",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('If').item.json.chat_id }}",
+          "text": "Please enter your phone number with the Country Code (e.g., +1 for USA, +91 for India).",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1920,
+          1392
+        ],
+        "id": "c80b7199-a355-4462-90b0-ace67d5a65fa",
+        "name": "Ask for Valid phone",
+        "webhookId": "c361b8a6-f0fe-458e-bd14-d49c84f4230f",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "meeting_leads",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "chat_id",
+                "condition": "eq",
+                "keyValue": "={{ $('If').item.json.chat_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "stage",
+                "fieldValue": "meeting_time"
+              },
+              {
+                "fieldId": "location",
+                "fieldValue": "={{ $('If').item.json.message.text }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1632,
+          1776
+        ],
+        "id": "1091a76c-69ce-453e-8e03-d0048a6b07f0",
+        "name": "Update Stage datetime",
+        "credentials": {
+          "supabaseApi": {
+            "id": "luG10gRRoLwLO6U6",
+            "name": "Supabase Scaleupally_Telegram_Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('If').item.json.chat_id }}",
+          "text": "=Perfect. Please let me know your preferred date and time for the call.",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1920,
+          1776
+        ],
+        "id": "58c7be49-35ff-44fc-a95e-9cb6133a1d03",
+        "name": "Ask for DateTime",
+        "webhookId": "bf80b3a8-66da-4fc9-ae44-aca1b0f89bc6",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "meeting_leads",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "chat_id",
+                "condition": "eq",
+                "keyValue": "={{ $('If').item.json.chat_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "stage",
+                "fieldValue": "email"
+              },
+              {
+                "fieldId": "name",
+                "fieldValue": "={{ $('If').item.json.message.text }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1632,
+          624
+        ],
+        "id": "e0dad5a0-2f42-4f61-87ca-3445c35814d3",
+        "name": "Update Stage Email",
+        "credentials": {
+          "supabaseApi": {
+            "id": "luG10gRRoLwLO6U6",
+            "name": "Supabase Scaleupally_Telegram_Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('If').item.json.chat_id }}",
+          "text": "=Great to meet you. Where should we send the meeting confirmation details? \n(Please enter your email Business address.)",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1920,
+          624
+        ],
+        "id": "d9374a49-530e-482d-9bd7-6ea221ed08ac",
+        "name": "Ask for Email Address",
+        "webhookId": "0cc804f3-feb9-4fc8-b148-a36b3e126f64",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "meeting_leads",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "chat_id",
+                "condition": "eq",
+                "keyValue": "={{ $('If').item.json.chat_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "stage",
+                "fieldValue": "location"
+              },
+              {
+                "fieldId": "business_type",
+                "fieldValue": "={{ $('If').item.json.message.text }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1632,
+          1584
+        ],
+        "id": "0c6ccd29-c9eb-46fc-ac25-228ac115e3d1",
+        "name": "Update Stage Location",
+        "credentials": {
+          "supabaseApi": {
+            "id": "luG10gRRoLwLO6U6",
+            "name": "Supabase Scaleupally_Telegram_Bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('If').item.json.chat_id }}",
+          "text": "=To ensure we schedule this in your local time zone, which city or country are you joining us from? (e.g.: Noida, India or Chicago, USA)",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1920,
+          1584
+        ],
+        "id": "3798cd57-91ab-4c79-bfd8-7707663f3f01",
+        "name": "Ask For Location",
+        "webhookId": "c361b8a6-f0fe-458e-bd14-d49c84f4230f",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $json.email }}",
+          "subject": "=Meeting Confirmation: {{ $json.name }}",
+          "emailType": "text",
+          "message": "=Hi {{ $json.name }},\n\nYour meeting is confirmed!\n\n🌍 Meeting Time (Your Location):\n{{ DateTime.fromISO($('TimeZone').item.json.output, { setZone: true }).toFormat('dd LLL yyyy, h:mm a') }}\n(Location: {{ $json.location }})\n\n🇮🇳 Meeting Time (Our Team - India):\n{{ DateTime.fromISO($('TimeZone').item.json.output).setZone('Asia/Kolkata').toFormat('dd LLL yyyy, h:mm a') }} (IST)\n\n📍Where: Google Meet (Link to be sent shortly)\n\nIf you need to reschedule, just reply to this email.\nSee you then!\n\nVisit : Scaleupally.io",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          2736,
+          1632
+        ],
+        "id": "4dd05803-06b4-4fc6-88d4-0968f8b79847",
+        "name": "Send a message to client",
+        "webhookId": "41af9452-7d8a-4fac-9974-827cc9ba654e",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "shashankjain2309@gmail.com",
+          "subject": "=🔔 New Booking: {{ $('Update Stage completed').item.json.name }}",
+          "emailType": "text",
+          "message": "=🔔 New Meeting Alert!\n\n👤 Client: {{ $('Update Stage completed').item.json.name }}\n🏢 Business: {{ $('Update Stage completed').item.json.business_type }}\n📍 Location: {{ $('Update Stage completed').item.json.location }}\n\nCONTACT INFO:\n📧 {{ $('Update Stage completed').item.json.email }}\n📱 {{ $('Update Stage completed').item.json.phone }}\n\n📅 SCHEDULE:\n🇮🇳 India Time: {{ DateTime.fromISO($('TimeZone').item.json.output).setZone('Asia/Kolkata').toFormat('dd LLL yyyy, h:mm a') }} (IST)\n🌍 Client Time: {{ DateTime.fromISO($('TimeZone').item.json.output, { setZone: true }).toFormat('dd LLL yyyy, h:mm a') }}\n\n",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          2992,
+          1632
+        ],
+        "id": "51ec59f5-dc33-4a38-8e62-3a465de6be1a",
+        "name": "Send a message to Self",
+        "webhookId": "ea9ec257-5115-4491-a991-f5cb39bd5d37",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "bpfckWukTNtzNN6c",
+            "name": "mis gmail API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('Update Stage completed').item.json.chat_id }}",
+          "text": "=All set! Your meeting has been scheduled for {{ $('Telegram Trigger').item.json.message.text }}. We have sent a confirmation email.",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          3232,
+          1744
+        ],
+        "id": "22050200-fbc0-4299-bff4-f925ee53b2f0",
+        "name": "Mail Confirmation Message",
+        "webhookId": "8fbb009a-8927-4396-9b89-1bd21c096a44",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('If').item.json.chat_id }}",
+          "text": "=That time seems to be in the past. Please enter a future date and time.",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          2144,
+          2176
+        ],
+        "id": "f119dab2-6688-43d4-8461-7faa247b25b6",
+        "name": "Not a Valid MeetTime  Message",
+        "webhookId": "8fbb009a-8927-4396-9b89-1bd21c096a44",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "sendChatAction",
+          "chatId": "={{ $json.message.chat.id }}"
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1344,
+          2960
+        ],
+        "id": "488e0830-a9a2-484a-9d20-24cd71c33237",
+        "name": "Send a chat action",
+        "webhookId": "a9bfd840-f5f1-44dc-ade7-c537d6541354",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "sendChatAction",
+          "chatId": "={{ $json.chat_id }}"
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          896,
+          1744
+        ],
+        "id": "b5cf44d6-d129-42b7-8379-4d0d8e3b1332",
+        "name": "Send a chat action2",
+        "webhookId": "a9bfd840-f5f1-44dc-ade7-c537d6541354",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "05a607df-ce9f-4bdb-a03c-dd83f0758011",
+                "leftValue": "={{ $('If').item.json.message.text }}",
+                "rightValue": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+                "operator": {
+                  "type": "string",
+                  "operation": "regex"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1632,
+          816
+        ],
+        "id": "9ae4eef4-88bf-4171-b203-696daee8e2f8",
+        "name": "Email validation Check"
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('If').item.json.chat_id }}",
+          "text": "Please enter a valid email address. (Business email Preferable) (e.g. name@xyz.com)",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1920,
+          1008
+        ],
+        "id": "11247b0e-df0e-4962-8659-d1a62ad7b458",
+        "name": "Ask for Valid phone1",
+        "webhookId": "c361b8a6-f0fe-458e-bd14-d49c84f4230f",
+        "credentials": {
+          "telegramApi": {
+            "id": "CW6PEm7Pg9DXMMIy",
+            "name": "Scaleupally_chat_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "c5464b26-7d8f-414a-af15-01fa64e3a4e8",
+                "leftValue": "={{ $('If').item.json.message.text.toLowerCase() }}",
+                "rightValue": "\\b(no|nope|cancel|stop|not now)\\b",
+                "operator": {
+                  "type": "string",
+                  "operation": "regex"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1120,
+          1744
+        ],
+        "id": "d75aebf6-73ea-464a-b370-440092051670",
+        "name": "Consent Check"
+      }
+    ],
+    "connections": {
+      "Extract from File": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Supabase Vector Store",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Embeddings OpenAI": {
+        "ai_embedding": [
+          [
+            {
+              "node": "Supabase Vector Store",
+              "type": "ai_embedding",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Default Data Loader": {
+        "ai_document": [
+          [
+            {
+              "node": "Supabase Vector Store",
+              "type": "ai_document",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Character Text Splitter": {
+        "ai_textSplitter": [
+          [
+            {
+              "node": "Default Data Loader",
+              "type": "ai_textSplitter",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Simple Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reranker Cohere": {
+        "ai_reranker": [
+          [
+            {
+              "node": "Supabase Vector Store1",
+              "type": "ai_reranker",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Supabase Vector Store1": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Agent": {
+        "main": [
+          [
+            {
+              "node": "Send a chat action1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Telegram Trigger": {
+        "main": [
+          [
+            {
+              "node": "Get user State",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Send a chat action1": {
+        "main": [
+          [
+            {
+              "node": "Send a text message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send a text message": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Embeddings OpenAI1": {
+        "ai_embedding": [
+          [
+            {
+              "node": "Supabase Vector Store1",
+              "type": "ai_embedding",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "Create a row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "Update Stage Name",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Update Stage Email",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Email validation Check",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Phone Number Validation",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Update Stage Location",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Update Stage datetime",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "TimeZone",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "AI Agent2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get user State": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model1": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "TimeZone",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Send a chat action2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send a chat action",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Agent2": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model2": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent2",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Initialize Session": {
+        "main": [
+          [
+            {
+              "node": "Send a text message1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Delete a row": {
+        "main": [
+          [
+            {
+              "node": "Send a text message8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Initialize Session",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields1": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Future Date&Time": {
+        "main": [
+          [
+            {
+              "node": "Update Stage completed",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Not a Valid MeetTime  Message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Stage Name": {
+        "main": [
+          [
+            {
+              "node": "Ask For Name",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Stage Phone": {
+        "main": [
+          [
+            {
+              "node": "Ask For Phone",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "TimeZone": {
+        "main": [
+          [
+            {
+              "node": "Future Date&Time",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Stage completed": {
+        "main": [
+          [
+            {
+              "node": "Mail Confirmation Message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Phone Number Validation": {
+        "main": [
+          [
+            {
+              "node": "Update Stage Business",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Ask for Valid phone",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Stage Business": {
+        "main": [
+          [
+            {
+              "node": "Ask For Business Type",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Stage datetime": {
+        "main": [
+          [
+            {
+              "node": "Ask for DateTime",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Stage Email": {
+        "main": [
+          [
+            {
+              "node": "Ask for Email Address",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Stage Location": {
+        "main": [
+          [
+            {
+              "node": "Ask For Location",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send a message to client": {
+        "main": [
+          [
+            {
+              "node": "Send a message to Self",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send a message to Self": {
+        "main": [
+          []
+        ]
+      },
+      "Send a chat action": {
+        "main": [
+          [
+            {
+              "node": "AI Agent2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send a chat action2": {
+        "main": [
+          [
+            {
+              "node": "Consent Check",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Email validation Check": {
+        "main": [
+          [
+            {
+              "node": "Update Stage Phone",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Ask for Valid phone1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Consent Check": {
+        "main": [
+          [
+            {
+              "node": "Delete a row",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dev Scaleupally",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

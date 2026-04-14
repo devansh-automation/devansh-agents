@@ -1,0 +1,413 @@
+{
+  "updatedAt": "2025-07-17T06:05:46.000Z",
+  "createdAt": "2025-07-15T07:11:13.500Z",
+  "id": "1f6PBPAl600qoX25",
+  "name": "contact bulk download",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -360,
+        -60
+      ],
+      "id": "6a0ca40f-a006-4800-b1dd-b488c0406486",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://accounts.zoho.com/oauth/v2/token",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "refresh_token",
+              "value": "1000.4a3578fac43b72095553dabf162297f4.197f1538d7c3fee320f5bd883089b3a0"
+            },
+            {
+              "name": "client_id",
+              "value": "1000.KF7TDPSEBGWA4EGKT9IRNF5MTLFMXU"
+            },
+            {
+              "name": "client_secret",
+              "value": "7839be994a32efc7bf0f9ad3a455c202011cf3b7e2"
+            },
+            {
+              "name": "grant_type",
+              "value": "refresh_token"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        -60
+      ],
+      "id": "74faa766-8352-4ecf-88d3-ce9195c62f4a",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "https://www.zohoapis.com/crm/v8/Contacts",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "Id,Email,Title,Department,First_Name,Last_Name,Industry_Choice_1,Industry_choice_2,Role_Location,Role_Success_Stage,Role_Success_Notes,Link_to_CV,Duration,Placement_status,MyInterview_URL,Skills,Industry_2_Areas,Industry_1_Areas"
+            },
+            {
+              "name": "=next_page_token",
+              "value": "={{ $json.next_page_token }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Zoho-oauthtoken  {{ $json.access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        360,
+        80
+      ],
+      "id": "1d522751-410e-4ab8-a99a-549856b70ab4",
+      "name": "HTTP Request1",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO contacts (\n  id, first_name, last_name, email, duration,\n  industry_choice_1, industry_choice_2, industry_1_areas, industry_2_areas,\n  placement_status, role_success_stage, role_success_notes,\n  myinterview_url, link_to_cv, skills\n) VALUES (\n  {{$json[\"id\"]}}, {{$json[\"first_name\"]}}, {{$json[\"last_name\"]}}, {{$json[\"email\"]}}, {{$json[\"duration\"]}},\n  {{$json[\"industry_choice_1\"]}}, {{$json[\"industry_choice_2\"]}}, {{$json[\"industry_1_areas\"]}}, {{$json[\"industry_2_areas\"]}},\n  {{$json[\"placement_status\"]}}, {{$json[\"role_success_stage\"]}}, {{$json[\"role_success_notes\"]}},\n  {{$json[\"myinterview_url\"]}}, {{$json[\"link_to_cv\"]}}, {{$json[\"skills\"]}}\n)\nON DUPLICATE KEY UPDATE\n  first_name = {{$json[\"first_name\"]}},\n  last_name = {{$json[\"last_name\"]}},\n  email = {{$json[\"email\"]}},\n  duration = {{$json[\"duration\"]}},\n  industry_choice_1 = {{$json[\"industry_choice_1\"]}},\n  industry_choice_2 = {{$json[\"industry_choice_2\"]}},\n  industry_1_areas = {{$json[\"industry_1_areas\"]}},\n  industry_2_areas = {{$json[\"industry_2_areas\"]}},\n  placement_status = {{$json[\"placement_status\"]}},\n  role_success_stage = {{$json[\"role_success_stage\"]}},\n  role_success_notes = {{$json[\"role_success_notes\"]}},\n  myinterview_url = {{$json[\"myinterview_url\"]}},\n  link_to_cv = {{$json[\"link_to_cv\"]}},\n  skills = {{$json[\"skills\"]}};\n",
+        "options": {
+          "queryReplacement": ""
+        }
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        1080,
+        180
+      ],
+      "id": "e0b027ea-45d9-47a0-a5bb-4d50281245d7",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "mySql": {
+          "id": "xQBeQaj1zis9Y1yi",
+          "name": "MySQL account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items[0].json.data.map(contact => {\n  return {\n    json: {\n      id: contact.id,\n      first_name: contact.First_Name || null,\n      last_name: contact.Last_Name || null,\n      email: contact.Email || null,\n      duration: contact.Duration ? parseInt(contact.Duration) : null,\n      industry_choice_1: contact.Industry_Choice_1 || null,\n      industry_choice_2: contact.Industry_choice_2 || null,\n      industry_1_areas: contact.Industry_1_Areas || null,\n      industry_2_areas: contact.Industry_2_Areas || null,\n      placement_status: contact.Placement_status || null,\n      role_success_stage: contact.Role_Success_Stage || null,\n      role_success_notes: contact.Role_Success_Notes || null,\n      myinterview_url: contact.MyInterview_URL || null,\n      link_to_cv: contact.Link_to_CV || null,\n      skills: contact.Skills || null\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        -20
+      ],
+      "id": "440db2ba-82e1-4cfb-8b95-8992a5eae012",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "function escape(value) {\n  if (value === null || value === undefined) return 'NULL';\n  if (typeof value === 'number') return value;\n  return `'${value.replace(/'/g, \"''\")}'`;\n}\n\nreturn items.map(item => {\n  const c = item.json;\n  return {\n    json: {\n      id: escape(c.id),\n      first_name: escape(c.first_name),\n      last_name: escape(c.last_name),\n      email: escape(c.email),\n      duration: escape(c.duration),\n      industry_choice_1: escape(c.industry_choice_1),\n      industry_choice_2: escape(c.industry_choice_2),\n      industry_1_areas: escape(c.industry_1_areas),\n      industry_2_areas: escape(c.industry_2_areas),\n      placement_status: escape(c.placement_status),\n      role_success_stage: escape(c.role_success_stage),\n      role_success_notes: escape(c.role_success_notes),\n      myinterview_url: escape(c.myinterview_url),\n      link_to_cv: escape(c.link_to_cv),\n      skills: escape(c.skills)\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        820,
+        -20
+      ],
+      "id": "a3ab8b31-4362-44c6-ab0a-212e420f4882",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        120,
+        80
+      ],
+      "id": "8178ca5b-4c44-4d56-9d29-fa44691eee23",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json.data || [];\nconst info = $json.info || {};\n\nreturn [\n  {\n    json: {\n      contacts: data,\n      next_page_token: info.next_page_token || null,\n      more_records: info.more_records || false\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        160
+      ],
+      "id": "faee8e1e-6c12-4670-be0b-d6c834a40c5d",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3f0e58fb-e5af-4248-9923-a12d11474d42",
+              "leftValue": "={{ $json.more_records }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        160
+      ],
+      "id": "dc7b77b8-b7db-4a8d-af52-141e7d451bec",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"next_page_token\": null,\n  \"more_records\": true\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -80,
+        180
+      ],
+      "id": "44702f43-6619-4158-8fa7-0aa74ecbecd8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2538a526-dd9f-41f7-ba7d-def4230f9957",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -400,
+        300
+      ],
+      "id": "79d73754-5204-458a-9abf-d4ade65bf92d",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        80
+      ],
+      "id": "10e060ba-2a20-4de1-8b2f-4ec19801ed1e",
+      "name": "Code3"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        []
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "6a18ea2e-c8c0-4b2d-b1f6-b342a07e1c30",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-07-15T07:11:13.506Z",
+      "createdAt": "2025-07-15T07:11:13.506Z",
+      "role": "workflow:owner",
+      "workflowId": "1f6PBPAl600qoX25",
+      "projectId": "kL4d2d65bbWAOPAf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
