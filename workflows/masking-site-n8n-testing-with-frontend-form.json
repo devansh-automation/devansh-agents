@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-14T11:46:56.409Z",
+  "updatedAt": "2026-04-16T06:58:39.586Z",
   "createdAt": "2026-04-06T06:35:51.069Z",
   "id": "iqytijpO36bnkdZl",
   "name": "Masking site n8n testing with frontend form",
@@ -21,7 +21,7 @@
               "content": "You are a product researcher. Return ONLY valid JSON, no markdown, no explanation."
             },
             {
-              "content": "=Find {{ $json.batchCount }} unique generic non-branded products \nfor type: \"{{ $json.productType }}\"\n\nThis is batch {{ $json.batchNumber }} of {{ $json.totalBatches }} \nso make sure products are DIFFERENT from other batches.\n\nReturn a JSON array with exactly {{ $json.batchCount }} objects.\n\nEach object must have:\n- name (string , unique product name)\n- image_search_query: (6–8 words for finding a GENERIC final material/product-only photo)\n\nSTRICT RULES:\n1. NO brand names, NO packaging, NO labels\n2. NO humans, NO body parts, NO application or usage (e.g., no \"on face\", \"applying\", \"hands\", etc.)\n3. Focus ONLY on the product's physical appearance (texture, color, consistency, form)\n4. Prefer close-up, macro, or top-view descriptions\n5. The image should look like raw product material or plain product mass (e.g., cream texture, gel blob, powder, liquid)\n6. Avoid contextual words like: \"application\", \"routine\", \"spa\", \"bathroom\", \"model\"\n7. If the product is typically used on body (e.g., face mask), show ONLY the substance (e.g., clay texture, cream spread)\n8. Keep it generic and non-branded\n\nGOOD EXAMPLES:\n- \"smooth white cream texture swirl macro\"\n- \"green clay paste texture closeup top view\"\n\nBAD EXAMPLES:\n- \"face mask applied on woman face\"\n- \"person using lotion on hands\"\n- \"cosmetic product bottle on table\"\n\n- short_description: Write exactly 7 full sentences. Each sentence must be 25 words long.\n- long_description: Write exactly 10 full sentences. Each sentence must be 20 words long.\n- Length (string in inches)\n- Width (string in inches)\n- Height (string in inches)\n- Weight (string in lbs)\n- Categories (separated by comma)\n- Regular price in {{ $json.body.currency }}(integer, no currency symbol, no decimals)\n- color (string or \"various\")\n- material (string)\n- industry_notes (string, 1 sentence about industry use)\n- usage\n\nAdditionally, dynamically generate product attributes based on the product type and name.\n\nInclude the following fields:\n- Attribute 2 name\n- Attribute 2 value(s)\n- Attribute 3 name\n- Attribute 3 value(s)\n...\n- Attribute 8 name\n- Attribute 8 value(s)\n\nRules for attributes:\n- Attributes must be relevant to the product (e.g., tools include \"Set Includes\", \"Tool Types\", \"Compatibility\", etc.)\n- Do not leave attributes empty — generate meaningful values\n- Attribute names should be clear and commonly used in eCommerce\n- Attribute values can include multiple items separated by commas\n- Avoid repeating the same information already covered in other fields\n- Keep naming consistent across products where applicable\n\nExample:\nIf product is a sculpting tool kit:\n- Attribute 2 name: Set Includes\n- Attribute 2 value(s): 8 tools\n- Attribute 3 name: Tool Types\n- Attribute 3 value(s): loop tools, ribbon tools, needle tool, scraper\n\nEnsure all attributes are realistic and useful for catalog or Shopify-style product listings."
+              "content": "=This is batch {{ $json.batchNumber }} of {{ $json.totalBatches }}.\nGenerate {{ $json.batchCount }} unique {{ $json.productType }} products\n\nAlready used product names — DO NOT repeat any of these:\n{{ $json.generatedNames.length > 0 ? $json.generatedNames.join(', ') : 'none yet — this is the first batch' }}\n\nAll product names must be completely different from the list above.\n\nReturn a JSON array with exactly {{ $json.batchCount }} objects.\n\nEach object must have:\n- name (string , unique product name)\n- image_search_query: (6–8 words for finding a GENERIC final material/product-only photo)\n\nSTRICT RULES:\n1. NO brand names, NO packaging, NO labels\n2. NO humans, NO body parts, NO application or usage (e.g., no \"on face\", \"applying\", \"hands\", etc.)\n3. Focus ONLY on the product's physical appearance (texture, color, consistency, form)\n4. Prefer close-up, macro, or top-view descriptions\n5. The image should look like raw product material or plain product mass (e.g., cream texture, gel blob, powder, liquid)\n6. Avoid contextual words like: \"application\", \"routine\", \"spa\", \"bathroom\", \"model\"\n7. If the product is typically used on body (e.g., face mask), show ONLY the substance (e.g., clay texture, cream spread)\n8. Keep it generic and non-branded\n\nGOOD EXAMPLES:\n- \"smooth white cream texture swirl macro\"\n- \"green clay paste texture closeup top view\"\n\nBAD EXAMPLES:\n- \"face mask applied on woman face\"\n- \"person using lotion on hands\"\n- \"cosmetic product bottle on table\"\n\n- short_description: Write exactly 7 full sentences. Each sentence must be 25 words long.\n- long_description: Write exactly 10 full sentences. Each sentence must be 20 words long.\n- Length (string in inches)\n- Width (string in inches)\n- Height (string in inches)\n- Weight (string in lbs)\n- Categories (separated by comma)\n- Regular price in {{ $json.body.currency }}(integer, no currency symbol, no decimals, can't be blank)\n- color (string or \"various\")\n- material (string)\n- industry_notes (string, 1 sentence about industry use)\n- usage\n\nAdditionally, dynamically generate product attributes based on the product type and name.\n\nInclude the following fields:\n- Attribute 2 name\n- Attribute 2 value(s)\n- Attribute 3 name\n- Attribute 3 value(s)\n...\n- Attribute 8 name\n- Attribute 8 value(s)\n\nRules for attributes:\n- Attributes must be relevant to the product (e.g., tools include \"Set Includes\", \"Tool Types\", \"Compatibility\", etc.)\n- Do not leave attributes empty — generate meaningful values\n- Attribute names should be clear and commonly used in eCommerce\n- Attribute values can include multiple items separated by commas\n- Avoid repeating the same information already covered in other fields\n- Keep naming consistent across products where applicable\n\nExample:\nIf product is a sculpting tool kit:\n- Attribute 2 name: Set Includes\n- Attribute 2 value(s): 8 tools\n- Attribute 3 name: Tool Types\n- Attribute 3 value(s): loop tools, ribbon tools, needle tool, scraper\n\nEnsure all attributes are realistic and useful for catalog or Shopify-style product listings."
             }
           ]
         },
@@ -48,7 +48,7 @@
     },
     {
       "parameters": {
-        "jsCode": "let raw = $('Message a model').first().json.output[0].content[0].text;\n\n// Clean markdown if present\nraw = raw.replace(/```json/g, '').replace(/```/g, '').trim();\n\n// Check if response was cut off\nconst status = $('Message a model').first().json.output[0].status;\nif (status === 'incomplete') {\n  console.log('Warning: Response was cut off — attempting JSON repair');\n}\n\n// ─── Repair truncated JSON ────────────────────────────────────\nfunction repairJSON(str) {\n  str = str.trim();\n\n  // Try parsing as-is first\n  try {\n    return JSON.parse(str);\n  } catch(e) {}\n\n  // Make sure starts with [\n  if (!str.startsWith('[')) {\n    str = '[' + str;\n  }\n\n  // Find last COMPLETE product object — ends with }, or }]\n  const lastCompleteComma = str.lastIndexOf('},');\n  const lastCompleteEnd = str.lastIndexOf('}]');\n\n  let repaired = str;\n\n  if (lastCompleteEnd > -1) {\n    // Already has a closing — try trimming after it\n    repaired = str.substring(0, lastCompleteEnd + 2);\n  } else if (lastCompleteComma > -1) {\n    // Cut at last complete object and close array\n    repaired = str.substring(0, lastCompleteComma + 1) + ']';\n  } else {\n    // Last resort — just close array\n    repaired = str + ']';\n  }\n\n  try {\n    return JSON.parse(repaired);\n  } catch(e) {\n    throw new Error('JSON repair failed: ' + e.message + '\\nPreview: ' + str.substring(0, 300));\n  }\n}\n\nconst products = repairJSON(raw);\n\nif (!Array.isArray(products)) {\n  throw new Error('Expected array, got: ' + typeof products);\n}\n\n// ─── Return products keeping EXACT OpenAI field names ─────────\nreturn products.map((p, i) => ({\n  json: {\n    // ── Exact same fields OpenAI returned ──────────────────────\n    \"name\":                   p.name || `Product ${i+1}`,\n    \"image_search_query\":     p.image_search_query || p.name,\n    \"short_description\":      p.short_description || '',\n    \"long_description\":       p.long_description || '',\n    \"Length\":                 p.Length || '',\n    \"Width\":                  p.Width || '',\n    \"Height\":                 p.Height || '',\n    \"Weight\":                 p.Weight || '',\n    \"Categories\":             p.Categories || '',\n    \"Regular price\":          p['Regular price'] || '',\n    \"color\":                  p.color || '',\n    \"material\":               p.material || '',\n    \"industry_notes\":         p.industry_notes || '',\n    \"usage\":                  p.usage || '',\n\n    // ── Attributes — exact key names from OpenAI ──────────────\n    \"Attribute 2 name\":       p['Attribute 2 name'] || '',\n    \"Attribute 2 value(s)\":   p['Attribute 2 value(s)'] || '',\n    \"Attribute 3 name\":       p['Attribute 3 name'] || '',\n    \"Attribute 3 value(s)\":   p['Attribute 3 value(s)'] || '',\n    \"Attribute 4 name\":       p['Attribute 4 name'] || '',\n    \"Attribute 4 value(s)\":   p['Attribute 4 value(s)'] || '',\n    \"Attribute 5 name\":       p['Attribute 5 name'] || '',\n    \"Attribute 5 value(s)\":   p['Attribute 5 value(s)'] || '',\n    \"Attribute 6 name\":       p['Attribute 6 name'] || '',\n    \"Attribute 6 value(s)\":   p['Attribute 6 value(s)'] || '',\n    \"Attribute 7 name\":       p['Attribute 7 name'] || '',\n    \"Attribute 7 value(s)\":   p['Attribute 7 value(s)'] || '',\n    \"Attribute 8 name\":       p['Attribute 8 name'] || '',\n    \"Attribute 8 value(s)\":   p['Attribute 8 value(s)'] || ''\n  }\n}));"
+        "jsCode": "let raw = $('Message a model').first().json.output[0].content[0].text;\n\n// Clean markdown if present\nraw = raw.replace(/```json/g, '').replace(/```/g, '').trim();\n\n// Check if response was cut off\nconst status = $('Message a model').first().json.output[0].status;\nif (status === 'incomplete') {\n  console.log('Warning: Response was cut off — attempting JSON repair');\n}\n\n// ─── Repair truncated JSON ────────────────────────────────────\nfunction repairJSON(str) {\n  str = str.trim();\n  try { return JSON.parse(str); } catch(e) {}\n  if (!str.startsWith('[')) { str = '[' + str; }\n  const lastCompleteComma = str.lastIndexOf('},');\n  const lastCompleteEnd = str.lastIndexOf('}]');\n  let repaired = str;\n  if (lastCompleteEnd > -1) {\n    repaired = str.substring(0, lastCompleteEnd + 2);\n  } else if (lastCompleteComma > -1) {\n    repaired = str.substring(0, lastCompleteComma + 1) + ']';\n  } else {\n    repaired = str + ']';\n  }\n  try {\n    return JSON.parse(repaired);\n  } catch(e) {\n    throw new Error('JSON repair failed: ' + e.message + '\\nPreview: ' + str.substring(0, 300));\n  }\n}\n\nconst products = repairJSON(raw);\nif (!Array.isArray(products)) {\n  throw new Error('Expected array, got: ' + typeof products);\n}\n\n// ─── Collect names from previous batches + this batch ─────────\nconst existingNames = $('Loop Batches').first().json.generatedNames || [];\nconst newNames = products.map(p => p.name || '').filter(n => n !== '');\nconst allNames = [...existingNames, ...newNames];\n\nconsole.log('Batch', $('Loop Batches').first().json.batchNumber, '— names so far:', allNames);\n\n// ─── Return products keeping EXACT OpenAI field names ─────────\nreturn products.map((p, i) => ({\n  json: {\n    // ── Exact same fields OpenAI returned ──────────────────────\n    \"name\":                   p.name || `Product ${i+1}`,\n    \"image_search_query\":     p.image_search_query || p.name,\n    \"short_description\":      p.short_description || '',\n    \"long_description\":       p.long_description || '',\n    \"Length\":                 p.Length || '',\n    \"Width\":                  p.Width || '',\n    \"Height\":                 p.Height || '',\n    \"Weight\":                 p.Weight || '',\n    \"Categories\":             p.Categories || '',\n    \"Regular price\":          p['Regular price'] || '',\n    \"color\":                  p.color || '',\n    \"material\":               p.material || '',\n    \"industry_notes\":         p.industry_notes || '',\n    \"usage\":                  p.usage || '',\n    // ── Attributes ────────────────────────────────────────────\n    \"Attribute 2 name\":       p['Attribute 2 name'] || '',\n    \"Attribute 2 value(s)\":   p['Attribute 2 value(s)'] || '',\n    \"Attribute 3 name\":       p['Attribute 3 name'] || '',\n    \"Attribute 3 value(s)\":   p['Attribute 3 value(s)'] || '',\n    \"Attribute 4 name\":       p['Attribute 4 name'] || '',\n    \"Attribute 4 value(s)\":   p['Attribute 4 value(s)'] || '',\n    \"Attribute 5 name\":       p['Attribute 5 name'] || '',\n    \"Attribute 5 value(s)\":   p['Attribute 5 value(s)'] || '',\n    \"Attribute 6 name\":       p['Attribute 6 name'] || '',\n    \"Attribute 6 value(s)\":   p['Attribute 6 value(s)'] || '',\n    \"Attribute 7 name\":       p['Attribute 7 name'] || '',\n    \"Attribute 7 value(s)\":   p['Attribute 7 value(s)'] || '',\n    \"Attribute 8 name\":       p['Attribute 8 name'] || '',\n    \"Attribute 8 value(s)\":   p['Attribute 8 value(s)'] || '',\n    // ── Pass names forward to next batch ──────────────────────\n    \"generatedNames\":         allNames,\n    // ── Pass batch context forward ─────────────────────────────\n    \"batchNumber\":            $('Loop Batches').first().json.batchNumber,\n    \"totalBatches\":           $('Loop Batches').first().json.totalBatches,\n    \"productType\":            $('Loop Batches').first().json.productType,\n    \"currency\":               $('Loop Batches').first().json.currency,\n    \"domainName\":             $('Loop Batches').first().json.domainName,\n    \"sheet_id\":               $('Loop Batches').first().json.sheet_id,\n    \"folder_id\":              $('Loop Batches').first().json.folder_id,\n  }\n}));"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -105,7 +105,34 @@
             "Attribute 8 name": "={{ $('Loop Over Items').item.json['Attribute 8 name'] }}",
             "Attribute 8 value(s)": "={{ $('Loop Over Items').item.json['Attribute 8 value(s)'] }}",
             "Attribute 9 name": "Usage",
-            "Attribute 9 value(s)": "={{ $json.usage }}"
+            "Attribute 9 value(s)": "={{ $json.usage }}",
+            "Published": "1",
+            "Is featured?": "0",
+            "Visibility in catalog": "visible",
+            "Tax status": "taxable",
+            "In stock?": "1",
+            "Backorders allowed?": "0",
+            "Sold individually?": "0",
+            "Position": "0",
+            "Attribute 1 visible": "1",
+            "Attribute 1 global": "0",
+            "Attribute 2 visible": "1",
+            "Attribute 2 global": "0",
+            "Attribute 3 visible": "1",
+            "Attribute 3 global": "0",
+            "Attribute 4 visible": "1",
+            "Attribute 4 global": "0",
+            "Attribute 5 visible": "1",
+            "Attribute 5 global": "0",
+            "Attribute 6 visible": "1",
+            "Attribute 6 global": "0",
+            "Attribute 7 visible": "1",
+            "Attribute 7 global": "0",
+            "Attribute 8 visible": "1",
+            "Attribute 8 global": "0",
+            "Attribute 9 visible": "1",
+            "Attribute 9 global": "0",
+            "ID": "={{ $('Loop Over Items').item.json.index }}"
           },
           "matchingColumns": [
             "id"
@@ -2489,7 +2516,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $('Webhook').first().json.body;\nconst totalProducts = parseInt(input.productCount) || 10;\nconst batchSize = 10;\nconst batches = Math.ceil(totalProducts / batchSize);\nconst productType = input.productType;\n\nconst result = [];\nfor (let i = 0; i < batches; i++) {\n  const count = Math.min(batchSize, totalProducts - (i * batchSize));\n  result.push({\n    json: {\n      totalProducts: totalProducts,\n      batchNumber: i + 1,\n      batchCount: count,\n      totalBatches: batches,\n      productType:productType\n    }\n  });\n}\nreturn result;"
+        "jsCode": "const input = $('Webhook').first().json.body;\nconst totalProducts = parseInt(input.productCount) || 10;\nconst batchSize = 10;\nconst batches = Math.ceil(totalProducts / batchSize);\nconst productType = input.productType;\n\nconst result = [];\nfor (let i = 0; i < batches; i++) {\n  const count = Math.min(batchSize, totalProducts - (i * batchSize));\n  result.push({\n    json: {\n      totalProducts: totalProducts,\n      batchNumber: i + 1,\n      batchCount: count,\n      totalBatches: batches,\n      productType:productType,\n      generatedNames: []\n    }\n  });\n}\nreturn result;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -2558,8 +2585,8 @@
       "name": "Replace Me2",
       "typeVersion": 1,
       "position": [
-        -1168,
-        256
+        -1184,
+        -2624
       ],
       "id": "a0a3778c-287a-4249-9354-0aead031d10d",
       "placeholder": true,
@@ -2587,8 +2614,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1088,
-        32
+        -1104,
+        -2848
       ],
       "id": "e4be1959-bbc3-4745-896b-be6ed8b39ddf",
       "name": "HTTP Browserless",
@@ -2623,8 +2650,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -880,
-        32
+        -896,
+        -2848
       ],
       "id": "27dd3af5-6bb8-4efa-95e0-bdf9c43eba85",
       "name": "If - Test Passed?",
@@ -2665,8 +2692,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -672,
-        16
+        -688,
+        -2864
       ],
       "id": "321a70b3-b1b8-4b48-a75f-fa6754bc3c01",
       "name": "Set - PASSED",
@@ -2707,8 +2734,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -672,
-        256
+        -688,
+        -2624
       ],
       "id": "a59c248f-9829-4821-9d38-12b50ea01ef2",
       "name": "Set - FAILED",
@@ -2721,8 +2748,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -304,
-        96
+        -320,
+        -2784
       ],
       "id": "f7cc5f10-bd2c-4855-b8af-94300330a7dc",
       "name": "Code - Build Results",
@@ -2738,8 +2765,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        -96,
-        80
+        -112,
+        -2800
       ],
       "id": "b96f1332-13cc-43dc-8611-3c35d2498857",
       "name": "Send a message",
@@ -2761,8 +2788,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        64,
-        96
+        48,
+        -2784
       ],
       "id": "f3c7a35e-9584-42d2-8483-7b41a8b46775",
       "name": "Respond to Webhook1",
@@ -2780,8 +2807,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -1728,
-        16
+        -1744,
+        -2864
       ],
       "id": "91543b1c-e3f2-4bb8-b865-db3e47832034",
       "name": "Webhook1",
@@ -2795,8 +2822,8 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        -1424,
-        256
+        -1440,
+        -2624
       ],
       "id": "e9327be7-63ea-4d14-bf40-3050453b88f5",
       "name": "Loop Over Sites",
@@ -2809,8 +2836,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1520,
-        16
+        -1536,
+        -2864
       ],
       "id": "c5ae6c3a-b874-48d4-9ad9-31ddd82b1f82",
       "name": "Code - Build Body",
@@ -3331,7 +3358,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "ca4e0306-a7ba-47c0-9def-16ee42ab7edc",
+  "versionId": "2f8b67ee-7722-47a1-8ae4-57bb9328f93e",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

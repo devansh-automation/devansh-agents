@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-13T06:20:14.829Z",
+  "updatedAt": "2026-04-15T13:42:17.943Z",
   "createdAt": "2026-03-28T06:43:42.126Z",
   "id": "bBZNSE0efNQb7TEu",
   "name": "MCP – Execute Action v2",
@@ -36,7 +36,7 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        192,
+        208,
         16
       ],
       "id": "56d099f7-eb46-49c7-a5d0-f83e7900ba79",
@@ -73,7 +73,7 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        400,
+        432,
         16
       ],
       "id": "7b18e7fc-6127-40d8-a6b4-23e72dcc024e",
@@ -88,15 +88,15 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ JSON.stringify($json) }}\n\nThis is the json from the output of the read agent. You have to perform the following write instructions.",
+        "text": "={{ JSON.stringify($json) }}",
         "options": {
-          "systemMessage": "=You are a CRM write execution agent. You do not converse. You execute.\n\nYou receive a confirmed action proposal as a JSON object. Execute exactly what is specified.\n\n---\n\nUNDERSTANDING THE PROPOSAL\n\nThe JSON you receive contains:\n- action: operation to perform\n- module: Zoho module\n- record_id: the Zoho numeric ID of the record — used as path variable for all update and convert actions\n- fields: field values to write\n- step_queue: array of steps for multi-step operations\n- proposal_id: UUID for Supabase update\n- user_id: Telegram ID for notify_user\n\n---\n\nPATH VARIABLE RULES — CRITICAL\n\nFor every action on an existing record, record_id MUST be the path variable:\n- convert_lead → path_variables.leadId = record_id\n- update_deal → path_variables.dealId = record_id\n- update_contact → path_variables.contactId = record_id\n- update_account → path_variables.accountId = record_id\n- update_lead → path_variables.leadId = record_id\n\nNEVER use a record name as a path variable. Always use the numeric ID.\n\n---\n\nOWNER CHANGE RULE — CRITICAL\n\nAll records are created under the default API credential owner (Devansh).\nIf the Owner field in the proposal specifies a different person, you MUST\ncall changeSingleRecordOwner after the create or convert step to assign\nthe correct owner.\n\nThis applies to:\n- create_lead → after createRecords, call changeSingleRecordOwner with the new record ID\n- create_contact → after createRecords, call changeSingleRecordOwner\n- create_account → after createRecords, call changeSingleRecordOwner\n- create_deal → after createRecords, call changeSingleRecordOwner\n- convert_lead → after convertLead, call changeSingleRecordOwner on the new deal ID\n\nOnly skip changeSingleRecordOwner if Owner.id matches Devansh's ID: 5118344000004729073.\nFor all other Owner IDs, always call it.\n\n---\n\nEXECUTION RULES\n\nSingle step:\n- Call the MCP tool using action, module, record_id, fields\n- Use record_id as path variable as described above\n- If Owner requires a change, call changeSingleRecordOwner immediately after\n\nMulti-step:\n- Execute steps in order\n- After each step extract the returned record ID from the MCP response\n- Replace [[step_N_id]] placeholders in subsequent steps with the actual ID\n- Apply owner change rule after each create or convert step\n- If any step fails, stop immediately\n\n---\n\nACTION TO TOOL MAPPING\n\n- create_* → createRecords with correct module\n- update_* → updateRecord with record_id as path variable\n- convert_lead → convertLead with record_id as leadId\n- create_note → createNotes\n- create_task → createRecords Tasks module\n- ownership → changeSingleRecordOwner or changeOwnerBulk\n\n---\n\nCOMPLETION RULES — NON-NEGOTIABLE\n\nYou MUST call exactly two tools at the end of every execution:\n\n1. FIRST: update_proposal_status\n   - proposal_id from the JSON\n   - status = \"executed\" on success, \"failed\" on any failure\n   - completion_message = plain text summary\n\n2. SECOND: notify_user\n   - user_id from the JSON\n   - same message as above\n\nThese are mandatory. Outputting text is NOT a substitute for calling notify_user.\nThe user receives nothing if you skip it. Always call both even on failure.\n\n---\n\nOUTPUT\n\nPlain text, record names not IDs, no markdown, no bullets.\nSuccess: \"Converted Aarit Arora to a deal and created the project task.\"\nFailure: \"Step 1 failed: [specific reason]. [What succeeded before the failure, if anything].\"\n\nWhen reporting failures, describe what went wrong in plain human language. \nDo not include raw API error strings, JSON paths, field codes, or technical \nerror messages from Zoho. Translate them into simple language the user understands."
+          "systemMessage": "=You are a CRM write execution agent. You do not converse. You execute.\n\nYou receive a confirmed action proposal as a JSON object. Execute exactly what is specified.\n\n---\n\nUNDERSTANDING THE PROPOSAL\n\nThe JSON you receive contains:\n- action: operation to perform\n- module: Zoho module\n- record_id: the Zoho numeric ID of the record (AS A STRING) — used as path variable for all update and convert actions\n- fields: field values to write\n- step_queue: array of steps for multi-step operations\n- proposal_id: UUID for Supabase update\n- user_id: Telegram ID for notify_user\n\nCRITICAL: All Zoho IDs (record_id, Owner.id, etc.) are provided as STRINGS to preserve precision. When calling MCP tools, pass them as strings exactly as received. Do NOT convert them to numbers.\n\n---\n\nPATH VARIABLE RULES — CRITICAL\n\nFor every action on an existing record, record_id MUST be the path variable:\n- convert_lead → path_variables.leadId = record_id (as string)\n- update_deal → path_variables.dealId = record_id (as string)\n- update_contact → path_variables.contactId = record_id (as string)\n- update_account → path_variables.accountId = record_id (as string)\n- update_lead → path_variables.leadId = record_id (as string)\n\nNEVER use a record name as a path variable. Always use the numeric ID string as path variable in string not as numeric ID.\n\n---\n\nOWNER CHANGE RULE — CRITICAL\n\nAll records are created under the default API credential owner (Devansh).\nIf the Owner field in the proposal specifies a different person, you MUST\ncall changeSingleRecordOwner after the create or convert step to assign\nthe correct owner.\n\nThis applies to:\n- create_lead → after createRecords, call changeSingleRecordOwner with the new record ID\n- create_contact → after createRecords, call changeSingleRecordOwner\n- create_account → after createRecords, call changeSingleRecordOwner\n- create_deal → after createRecords, call changeSingleRecordOwner\n- convert_lead → after convertLead, call changeSingleRecordOwner on the new deal ID\n\nOnly skip changeSingleRecordOwner if Owner.id matches Devansh's ID: 5118344000004729073.\nFor all other Owner IDs, always call it.\n\n---\n\nOWNER PROPAGATION RULE — NOTES AND TASKS\n\nWhen a step_queue contains notes or tasks linked to a record being\ncreated or updated in the same queue, the Owner for those notes and\ntasks must match the Owner of the parent record.\n\nRules:\n- If a create_note or create_task step follows a create_* or update_*\n  step in the same queue, extract the Owner from the parent step's fields\n- Apply that same Owner to the note or task fields before calling createNotes\n  or createRecords for the task\n- Do NOT use the default credential owner (Devansh) for notes or tasks\n  if the parent record has a different owner specified\n\nExample:\nStep 1: create_deal with Owner = Manu (5118344000000350001)\nStep 2: create_task linked to that deal\n\nCorrect: create_task with Owner = Manu (5118344000000350001)\nWrong: create_task with Owner = Devansh (default credential owner)\n\nThis applies regardless of whether the Owner field is explicitly\nlisted in the note or task fields object. Always inherit from the\nparent step if not specified.\n\n---\n\nEXECUTION RULES\n\nSingle step:\n- Call the MCP tool using action, module, record_id, fields\n- Use record_id as path variable as described above (keep as string)\n- If Owner requires a change, call changeSingleRecordOwner immediately after\n\nMulti-step:\n- Execute steps in order\n- After each step extract the returned record ID from the MCP response\n- Replace [[step_N_id]] placeholders in subsequent steps with the actual ID\n- Apply owner change rule after each create or convert step\n- Apply owner propagation rule for any note or task steps\n- If any step fails, stop immediately\n\n---\n\nACTION TO TOOL MAPPING\n\n- create_* → createRecords with correct module\n- update_* → updateRecord with record_id as path variable\n- convert_lead → convertLead with record_id as leadId\n- create_note → createNotes\n- create_task → createRecords Tasks module\n- ownership → changeSingleRecordOwner or changeOwnerBulk\n\n---\n\nCOMPLETION RULES — NON-NEGOTIABLE\n\nYou MUST call exactly two tools at the end of every execution:\n\n1. FIRST: update_proposal_status\n   - proposal_id from the JSON\n   - status = \"executed\" on success, \"failed\" on any failure\n   - completion_message = plain text summary\n\n2. SECOND: notify_user\n   - user_id from the JSON\n   - same message as above\n\nThese are mandatory. Outputting text is NOT a substitute for calling notify_user.\nThe user receives nothing if you skip it. Always call both even on failure.\n\nDo not output any text before calling update_proposal_status.\nYour first action after the MCP write succeeds or fails must be\nthe update_proposal_status tool call, not a text response.\n\n---\n\nOUTPUT\n\nPlain text, record names not IDs, no markdown, no bullets.\nSuccess: \"Converted Aarit Arora to a deal and created the project task.\"\nFailure: \"Step 1 failed: [specific reason]. [What succeeded before the failure, if anything].\"\n\nWhen reporting failures, describe what went wrong in plain human language.\nDo not include raw API error strings, JSON paths, field codes, or technical\nerror messages from Zoho. Translate them into simple language the user understands."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        816,
+        864,
         16
       ],
       "id": "5372cacd-e604-41fe-8618-5dffdfd94f19",
@@ -116,8 +116,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        720,
-        240
+        -16,
+        352
       ],
       "id": "e0225c93-9c47-420a-9e18-cd1c3d3e15fd",
       "name": "OpenAI Chat Model",
@@ -139,8 +139,8 @@
       "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
       "typeVersion": 1.2,
       "position": [
-        912,
-        288
+        784,
+        240
       ],
       "id": "8f0f31c2-f536-4479-94b1-f5ec0df92bc3",
       "name": "Write Client",
@@ -154,13 +154,13 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "=proposal_id: {{ $('Get a row').first().json.id }}\nuser_id: {{ $('Get a row').first().json.user_id }}\nstatus: done\n",
+        "jsonOutput": "={\n  \"proposal_id\": \"{{ $('Get a row').first().json.id }}\",\n  \"user_id\": \"{{ $('Get a row').first().json.user_id }}\",\n  \"status\": \"done\"\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1168,
+        1248,
         16
       ],
       "id": "c1cbe98c-2106-40dc-aef8-23fba32c7ac9",
@@ -180,8 +180,8 @@
       "type": "n8n-nodes-base.telegramTool",
       "typeVersion": 1.2,
       "position": [
-        1024,
-        288
+        912,
+        240
       ],
       "id": "bf2783a8-d97e-4012-b542-d2caea33be3d",
       "name": "notify_user",
@@ -228,8 +228,8 @@
       "type": "n8n-nodes-base.supabaseTool",
       "typeVersion": 1,
       "position": [
-        1168,
-        288
+        1040,
+        240
       ],
       "id": "cab031e7-e6b1-49b1-8e25-26d446fadc4b",
       "name": "update_proposal_status",
@@ -239,6 +239,44 @@
           "name": "CRM_agent"
         }
       }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list",
+          "cachedResultName": "Claude Haiku 4.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        656,
+        240
+      ],
+      "id": "a20f4c4c-ac1c-42df-b16f-a9686612c985",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "TljuIQavEZGRuae2",
+          "name": "CRM agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\nconst rawId = item.record_id;\n\n// 1. Determine if we actually have an ID (ignore null, undefined, or empty strings)\nconst hasId = rawId && String(rawId).trim() !== \"\" && rawId !== 0;\n\n// 2. Determine the correct Key Name based on the module\nlet dynamicKey = \"recordId\"; \nif (item.module === 'Leads') dynamicKey = \"leadId\";\nelse if (item.module === 'Contacts') dynamicKey = \"contactId\";\nelse if (item.module === 'Accounts') dynamicKey = \"accountId\";\nelse if (item.module === 'Deals') dynamicKey = \"dealId\";\n\n// 3. Build the output\nconst output = { ...item };\n\nif (hasId) {\n  const stringId = String(rawId);\n  output.record_id = stringId; // Keep the original key as string\n  output[dynamicKey] = stringId; // Add the module-specific key (e.g., leadId)\n  output.is_new_record = false;\n} else {\n  // Ensure we don't pass an empty ID string that might confuse the API\n  delete output.record_id;\n  output.is_new_record = true;\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        16
+      ],
+      "id": "9471b818-4ff0-478b-a374-c611e9512510",
+      "name": "Code in JavaScript"
     }
   ],
   "connections": {
@@ -268,7 +306,7 @@
       "main": [
         [
           {
-            "node": "Write Agent",
+            "node": "Code in JavaScript",
             "type": "main",
             "index": 0
           }
@@ -277,13 +315,7 @@
     },
     "OpenAI Chat Model": {
       "ai_languageModel": [
-        [
-          {
-            "node": "Write Agent",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Write Agent": {
@@ -329,6 +361,28 @@
           }
         ]
       ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Write Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Write Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -344,7 +398,7 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "id": "9a9c18ed-4727-439a-8f38-fabd48dd11d4"
+          "id": "155bb3d3-2ff3-4fd1-8adb-69ecc111a387"
         },
         "pairedItem": {
           "item": 0
@@ -352,8 +406,8 @@
       }
     ]
   },
-  "versionId": "3ea88b00-f20a-46ce-915f-7bf94aef4cb0",
-  "activeVersionId": "3ea88b00-f20a-46ce-915f-7bf94aef4cb0",
+  "versionId": "d4ddb9cf-d9da-4e3e-ae4a-5b0cabec294e",
+  "activeVersionId": "757549c4-d2e6-4916-86be-4e5f6983e214",
   "triggerCount": 0,
   "shared": [
     {
@@ -365,9 +419,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-04-13T06:20:23.000Z",
-    "createdAt": "2026-04-13T06:20:14.830Z",
-    "versionId": "3ea88b00-f20a-46ce-915f-7bf94aef4cb0",
+    "updatedAt": "2026-04-15T12:19:37.000Z",
+    "createdAt": "2026-04-15T12:19:31.203Z",
+    "versionId": "757549c4-d2e6-4916-86be-4e5f6983e214",
     "workflowId": "bBZNSE0efNQb7TEu",
     "nodes": [
       {
@@ -454,7 +508,7 @@
           "promptType": "define",
           "text": "={{ JSON.stringify($json) }}\n\nThis is the json from the output of the read agent. You have to perform the following write instructions.",
           "options": {
-            "systemMessage": "=You are a CRM write execution agent. You do not converse. You execute.\n\nYou receive a confirmed action proposal as a JSON object. Execute exactly what is specified.\n\n---\n\nUNDERSTANDING THE PROPOSAL\n\nThe JSON you receive contains:\n- action: operation to perform\n- module: Zoho module\n- record_id: the Zoho numeric ID of the record — used as path variable for all update and convert actions\n- fields: field values to write\n- step_queue: array of steps for multi-step operations\n- proposal_id: UUID for Supabase update\n- user_id: Telegram ID for notify_user\n\n---\n\nPATH VARIABLE RULES — CRITICAL\n\nFor every action on an existing record, record_id MUST be the path variable:\n- convert_lead → path_variables.leadId = record_id\n- update_deal → path_variables.dealId = record_id\n- update_contact → path_variables.contactId = record_id\n- update_account → path_variables.accountId = record_id\n- update_lead → path_variables.leadId = record_id\n\nNEVER use a record name as a path variable. Always use the numeric ID.\n\n---\n\nOWNER CHANGE RULE — CRITICAL\n\nAll records are created under the default API credential owner (Devansh).\nIf the Owner field in the proposal specifies a different person, you MUST\ncall changeSingleRecordOwner after the create or convert step to assign\nthe correct owner.\n\nThis applies to:\n- create_lead → after createRecords, call changeSingleRecordOwner with the new record ID\n- create_contact → after createRecords, call changeSingleRecordOwner\n- create_account → after createRecords, call changeSingleRecordOwner\n- create_deal → after createRecords, call changeSingleRecordOwner\n- convert_lead → after convertLead, call changeSingleRecordOwner on the new deal ID\n\nOnly skip changeSingleRecordOwner if Owner.id matches Devansh's ID: 5118344000004729073.\nFor all other Owner IDs, always call it.\n\n---\n\nEXECUTION RULES\n\nSingle step:\n- Call the MCP tool using action, module, record_id, fields\n- Use record_id as path variable as described above\n- If Owner requires a change, call changeSingleRecordOwner immediately after\n\nMulti-step:\n- Execute steps in order\n- After each step extract the returned record ID from the MCP response\n- Replace [[step_N_id]] placeholders in subsequent steps with the actual ID\n- Apply owner change rule after each create or convert step\n- If any step fails, stop immediately\n\n---\n\nACTION TO TOOL MAPPING\n\n- create_* → createRecords with correct module\n- update_* → updateRecord with record_id as path variable\n- convert_lead → convertLead with record_id as leadId\n- create_note → createNotes\n- create_task → createRecords Tasks module\n- ownership → changeSingleRecordOwner or changeOwnerBulk\n\n---\n\nCOMPLETION RULES — NON-NEGOTIABLE\n\nYou MUST call exactly two tools at the end of every execution:\n\n1. FIRST: update_proposal_status\n   - proposal_id from the JSON\n   - status = \"executed\" on success, \"failed\" on any failure\n   - completion_message = plain text summary\n\n2. SECOND: notify_user\n   - user_id from the JSON\n   - same message as above\n\nThese are mandatory. Outputting text is NOT a substitute for calling notify_user.\nThe user receives nothing if you skip it. Always call both even on failure.\n\n---\n\nOUTPUT\n\nPlain text, record names not IDs, no markdown, no bullets.\nSuccess: \"Converted Aarit Arora to a deal and created the project task.\"\nFailure: \"Step 1 failed: [specific reason]. [What succeeded before the failure, if anything].\"\n\nWhen reporting failures, describe what went wrong in plain human language. \nDo not include raw API error strings, JSON paths, field codes, or technical \nerror messages from Zoho. Translate them into simple language the user understands."
+            "systemMessage": "=You are a CRM write execution agent. You do not converse. You execute.\n\nYou receive a confirmed action proposal as a JSON object. Execute exactly what is specified.\n\n---\n\nUNDERSTANDING THE PROPOSAL\n\nThe JSON you receive contains:\n- action: operation to perform\n- module: Zoho module\n- record_id: the Zoho numeric ID of the record — used as path variable for all update and convert actions\n- fields: field values to write\n- step_queue: array of steps for multi-step operations\n- proposal_id: UUID for Supabase update\n- user_id: Telegram ID for notify_user\n\n---\n\nPATH VARIABLE RULES — CRITICAL\n\nFor every action on an existing record, record_id MUST be the path variable:\n- convert_lead → path_variables.leadId = record_id\n- update_deal → path_variables.dealId = record_id\n- update_contact → path_variables.contactId = record_id\n- update_account → path_variables.accountId = record_id\n- update_lead → path_variables.leadId = record_id\n\nNEVER use a record name as a path variable. Always use the numeric ID.\n\n---\n\nOWNER CHANGE RULE — CRITICAL\n\nAll records are created under the default API credential owner (Devansh).\nIf the Owner field in the proposal specifies a different person, you MUST\ncall changeSingleRecordOwner after the create or convert step to assign\nthe correct owner.\n\nThis applies to:\n- create_lead → after createRecords, call changeSingleRecordOwner with the new record ID\n- create_contact → after createRecords, call changeSingleRecordOwner\n- create_account → after createRecords, call changeSingleRecordOwner\n- create_deal → after createRecords, call changeSingleRecordOwner\n- convert_lead → after convertLead, call changeSingleRecordOwner on the new deal ID\n\nOnly skip changeSingleRecordOwner if Owner.id matches Devansh's ID: 5118344000004729073.\nFor all other Owner IDs, always call it.\n\n---\n\nOWNER PROPAGATION RULE — NOTES AND TASKS\n\nWhen a step_queue contains notes or tasks linked to a record being\ncreated or updated in the same queue, the Owner for those notes and\ntasks must match the Owner of the parent record.\n\nRules:\n- If a create_note or create_task step follows a create_* or update_*\n  step in the same queue, extract the Owner from the parent step's fields\n- Apply that same Owner to the note or task fields before calling createNotes\n  or createRecords for the task\n- Do NOT use the default credential owner (Devansh) for notes or tasks\n  if the parent record has a different owner specified\n\nExample:\nStep 1: create_deal with Owner = Manu (5118344000000350001)\nStep 2: create_task linked to that deal\n\nCorrect: create_task with Owner = Manu (5118344000000350001)\nWrong: create_task with Owner = Devansh (default credential owner)\n\nThis applies regardless of whether the Owner field is explicitly\nlisted in the note or task fields object. Always inherit from the\nparent step if not specified.\n\n---\n\nEXECUTION RULES\n\nSingle step:\n- Call the MCP tool using action, module, record_id, fields\n- Use record_id as path variable as described above\n- If Owner requires a change, call changeSingleRecordOwner immediately after\n\nMulti-step:\n- Execute steps in order\n- After each step extract the returned record ID from the MCP response\n- Replace [[step_N_id]] placeholders in subsequent steps with the actual ID\n- Apply owner change rule after each create or convert step\n- Apply owner propagation rule for any note or task steps\n- If any step fails, stop immediately\n\n---\n\nACTION TO TOOL MAPPING\n\n- create_* → createRecords with correct module\n- update_* → updateRecord with record_id as path variable\n- convert_lead → convertLead with record_id as leadId\n- create_note → createNotes\n- create_task → createRecords Tasks module\n- ownership → changeSingleRecordOwner or changeOwnerBulk\n\n---\n\nCOMPLETION RULES — NON-NEGOTIABLE\n\nYou MUST call exactly two tools at the end of every execution:\n\n1. FIRST: update_proposal_status\n   - proposal_id from the JSON\n   - status = \"executed\" on success, \"failed\" on any failure\n   - completion_message = plain text summary\n\n2. SECOND: notify_user\n   - user_id from the JSON\n   - same message as above\n\nThese are mandatory. Outputting text is NOT a substitute for calling notify_user.\nThe user receives nothing if you skip it. Always call both even on failure.\n\nDo not output any text before calling update_proposal_status.\nYour first action after the MCP write succeeds or fails must be\nthe update_proposal_status tool call, not a text response.\n\n---\n\nOUTPUT\n\nPlain text, record names not IDs, no markdown, no bullets.\nSuccess: \"Converted Aarit Arora to a deal and created the project task.\"\nFailure: \"Step 1 failed: [specific reason]. [What succeeded before the failure, if anything].\"\n\nWhen reporting failures, describe what went wrong in plain human language.\nDo not include raw API error strings, JSON paths, field codes, or technical\nerror messages from Zoho. Translate them into simple language the user understands."
           }
         },
         "type": "@n8n/n8n-nodes-langchain.agent",
@@ -480,8 +534,8 @@
         "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
         "typeVersion": 1.3,
         "position": [
-          720,
-          240
+          480,
+          304
         ],
         "id": "e0225c93-9c47-420a-9e18-cd1c3d3e15fd",
         "name": "OpenAI Chat Model",
@@ -518,7 +572,7 @@
       {
         "parameters": {
           "mode": "raw",
-          "jsonOutput": "=proposal_id: {{ $('Get a row').first().json.id }}\nuser_id: {{ $('Get a row').first().json.user_id }}\nstatus: done\n",
+          "jsonOutput": "={\n  \"proposal_id\": \"{{ $('Get a row').first().json.id }}\",\n  \"user_id\": \"{{ $('Get a row').first().json.user_id }}\",\n  \"status\": \"done\"\n}",
           "options": {}
         },
         "type": "n8n-nodes-base.set",
@@ -603,6 +657,31 @@
             "name": "CRM_agent"
           }
         }
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "claude-haiku-4-5-20251001",
+            "mode": "list",
+            "cachedResultName": "Claude Haiku 4.5"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+        "typeVersion": 1.3,
+        "position": [
+          688,
+          224
+        ],
+        "id": "a20f4c4c-ac1c-42df-b16f-a9686612c985",
+        "name": "Anthropic Chat Model",
+        "credentials": {
+          "anthropicApi": {
+            "id": "TljuIQavEZGRuae2",
+            "name": "CRM agent"
+          }
+        }
       }
     ],
     "connections": {
@@ -641,13 +720,7 @@
       },
       "OpenAI Chat Model": {
         "ai_languageModel": [
-          [
-            {
-              "node": "Write Agent",
-              "type": "ai_languageModel",
-              "index": 0
-            }
-          ]
+          []
         ]
       },
       "Write Agent": {
@@ -693,10 +766,21 @@
             }
           ]
         ]
+      },
+      "Anthropic Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Write Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dev Scaleupally",
-    "name": "Version 3ea88b00",
+    "name": "Version 757549c4",
     "description": "",
     "autosaved": true
   },
