@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-16T06:58:39.586Z",
+  "updatedAt": "2026-04-17T06:54:13.397Z",
   "createdAt": "2026-04-06T06:35:51.069Z",
   "id": "iqytijpO36bnkdZl",
   "name": "Masking site n8n testing with frontend form",
@@ -21,7 +21,7 @@
               "content": "You are a product researcher. Return ONLY valid JSON, no markdown, no explanation."
             },
             {
-              "content": "=This is batch {{ $json.batchNumber }} of {{ $json.totalBatches }}.\nGenerate {{ $json.batchCount }} unique {{ $json.productType }} products\n\nAlready used product names — DO NOT repeat any of these:\n{{ $json.generatedNames.length > 0 ? $json.generatedNames.join(', ') : 'none yet — this is the first batch' }}\n\nAll product names must be completely different from the list above.\n\nReturn a JSON array with exactly {{ $json.batchCount }} objects.\n\nEach object must have:\n- name (string , unique product name)\n- image_search_query: (6–8 words for finding a GENERIC final material/product-only photo)\n\nSTRICT RULES:\n1. NO brand names, NO packaging, NO labels\n2. NO humans, NO body parts, NO application or usage (e.g., no \"on face\", \"applying\", \"hands\", etc.)\n3. Focus ONLY on the product's physical appearance (texture, color, consistency, form)\n4. Prefer close-up, macro, or top-view descriptions\n5. The image should look like raw product material or plain product mass (e.g., cream texture, gel blob, powder, liquid)\n6. Avoid contextual words like: \"application\", \"routine\", \"spa\", \"bathroom\", \"model\"\n7. If the product is typically used on body (e.g., face mask), show ONLY the substance (e.g., clay texture, cream spread)\n8. Keep it generic and non-branded\n\nGOOD EXAMPLES:\n- \"smooth white cream texture swirl macro\"\n- \"green clay paste texture closeup top view\"\n\nBAD EXAMPLES:\n- \"face mask applied on woman face\"\n- \"person using lotion on hands\"\n- \"cosmetic product bottle on table\"\n\n- short_description: Write exactly 7 full sentences. Each sentence must be 25 words long.\n- long_description: Write exactly 10 full sentences. Each sentence must be 20 words long.\n- Length (string in inches)\n- Width (string in inches)\n- Height (string in inches)\n- Weight (string in lbs)\n- Categories (separated by comma)\n- Regular price in {{ $json.body.currency }}(integer, no currency symbol, no decimals, can't be blank)\n- color (string or \"various\")\n- material (string)\n- industry_notes (string, 1 sentence about industry use)\n- usage\n\nAdditionally, dynamically generate product attributes based on the product type and name.\n\nInclude the following fields:\n- Attribute 2 name\n- Attribute 2 value(s)\n- Attribute 3 name\n- Attribute 3 value(s)\n...\n- Attribute 8 name\n- Attribute 8 value(s)\n\nRules for attributes:\n- Attributes must be relevant to the product (e.g., tools include \"Set Includes\", \"Tool Types\", \"Compatibility\", etc.)\n- Do not leave attributes empty — generate meaningful values\n- Attribute names should be clear and commonly used in eCommerce\n- Attribute values can include multiple items separated by commas\n- Avoid repeating the same information already covered in other fields\n- Keep naming consistent across products where applicable\n\nExample:\nIf product is a sculpting tool kit:\n- Attribute 2 name: Set Includes\n- Attribute 2 value(s): 8 tools\n- Attribute 3 name: Tool Types\n- Attribute 3 value(s): loop tools, ribbon tools, needle tool, scraper\n\nEnsure all attributes are realistic and useful for catalog or Shopify-style product listings."
+              "content": "=This is batch {{ $json.batchNumber }} of {{ $json.totalBatches }}.\nGenerate {{ $json.batchCount }} unique {{ $json.productType }} products\n\nAlready used product names — DO NOT repeat any of these:\n{{ $json.generatedNames.length > 0 ? $json.generatedNames.join(', ') : 'none yet — this is the first batch' }}\n\nAll product names must be completely different from the list above.\n\nReturn a JSON array with exactly {{ $json.batchCount }} objects.\n\nEach object must have:\n- name (string , unique product name)\n- image_search_query: (6–8 words for finding a  {{ $json.productType }} GENERIC final material/product-only photo)\n\nSTRICT RULES:\n1. NO brand names, NO packaging, NO labels\n2. NO humans, NO body parts, NO application or usage (e.g., no \"on face\", \"applying\", \"hands\", etc.)\n3. Focus ONLY on the product's physical appearance (texture, color, consistency, form)\n4. Prefer close-up, macro, or top-view descriptions\n5. The image should look like raw product material or plain product mass (e.g., cream texture, gel blob, powder, liquid)\n6. Avoid contextual words like: \"application\", \"routine\", \"spa\", \"bathroom\", \"model\"\n7. If the product is typically used on body (e.g., face mask), show ONLY the substance (e.g., clay texture, cream spread)\n8. Keep it generic and non-branded\n\nGOOD EXAMPLES:\n- \"smooth white cream texture swirl macro\"\n- \"green clay paste texture closeup top view\"\n\nBAD EXAMPLES:\n- \"face mask applied on woman face\"\n- \"person using lotion on hands\"\n- \"cosmetic product bottle on table\"\n\n- short_description: Write exactly 7 full sentences. Each sentence must be 25 words long.\n- long_description: Write exactly 10 full sentences. Each sentence must be 20 words long.\n- Length (string in inches)\n- Width (string in inches)\n- Height (string in inches)\n- Weight (string in lbs)\n- Categories (separated by comma)\n- Regular price in {{ $json.body.currency }}(integer, no currency symbol, no decimals, can't be blank)\n- color (string or \"various\")\n- material (string)\n- industry_notes (string, 1 sentence about industry use)\n- usage\n\nAdditionally, dynamically generate product attributes based on the product type and name.\n\nInclude the following fields:\n- Attribute 2 name\n- Attribute 2 value(s)\n- Attribute 3 name\n- Attribute 3 value(s)\n...\n- Attribute 8 name\n- Attribute 8 value(s)\n\nRules for attributes:\n- Attributes must be relevant to the product (e.g., tools include \"Set Includes\", \"Tool Types\", \"Compatibility\", etc.)\n- Do not leave attributes empty — generate meaningful values\n- Attribute names should be clear and commonly used in eCommerce\n- Attribute values can include multiple items separated by commas\n- Avoid repeating the same information already covered in other fields\n- Keep naming consistent across products where applicable\n\nExample:\nIf product is a sculpting tool kit:\n- Attribute 2 name: Set Includes\n- Attribute 2 value(s): 8 tools\n- Attribute 3 name: Tool Types\n- Attribute 3 value(s): loop tools, ribbon tools, needle tool, scraper\n\nEnsure all attributes are realistic and useful for catalog or Shopify-style product listings."
             }
           ]
         },
@@ -931,13 +931,13 @@
     },
     {
       "parameters": {
-        "url": "https://serpapi.com/search?tbs=isz:l&imgar=s&imgsz=70mp&num=1&image_type=photo&no_cache=true",
+        "url": "https://serpapi.com/search?imgar=s&image_type=photo&no_cache=true",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
             {
               "name": "api_key",
-              "value": "1fc9172f1a9ea22a3a7b6b91d87e6f62969bd1c43eeadf049a021df56331eb0e"
+              "value": "986befea6db434525b3b53582dbba2c26c5982fd875ec29275821deccb8e166e"
             },
             {
               "name": "engine",
@@ -3358,7 +3358,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "2f8b67ee-7722-47a1-8ae4-57bb9328f93e",
+  "versionId": "834aa8a0-cfd3-4f3b-98ea-62cc842bf92d",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
