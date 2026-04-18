@@ -1,0 +1,528 @@
+{
+  "updatedAt": "2026-04-18T06:10:39.664Z",
+  "createdAt": "2026-04-18T05:36:16.569Z",
+  "id": "k3rDM16EsJzm7UFK",
+  "name": "Refrens → Zoho CRM Invoice Sync",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "984d9ded-58e2-4ed3-bcdc-a503cbdb62b2",
+      "name": "Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1328,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst appId = 'REPLACE_WITH_APP_ID';\nconst appSecret = 'REPLACE_WITH_APP_SECRET';\nconst privateKeyB64 = 'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgRSunJaKB66aEHQnWDXfLuUgy8GzE/92GNBD4+G/lsHehRANCAAQ9pAoh0RYvYNB3vHhLgqWcXi+6Gqg0WhTuXdK7tnah2Phg0n+vONjiGyT/OdE3u5XMf0LsNegz5YEx4+1s4yzD';\n\nfunction b64url(s) {\n  return Buffer.from(s).toString('base64')\n    .replace(/=/g, '').replace(/\\+/g, '-').replace(/\\//g, '_');\n}\n\nconst header = b64url(JSON.stringify({ alg: 'ES256', typ: 'JWT' }));\nconst now = Math.floor(Date.now() / 1000);\nconst payload = b64url(JSON.stringify({ appId, appSecret, iat: now, exp: now + 3600 }));\nconst signingInput = header + '.' + payload;\n\nconst privateKey = crypto.createPrivateKey({\n  key: Buffer.from(privateKeyB64, 'base64'),\n  format: 'der',\n  type: 'pkcs8'\n});\n\nconst signature = crypto\n  .sign('sha256', Buffer.from(signingInput), { key: privateKey, dsaEncoding: 'ieee-p1363' })\n  .toString('base64')\n  .replace(/=/g, '').replace(/\\+/g, '-').replace(/\\//g, '_');\n\nconst token = signingInput + '.' + signature;\nreturn [{ json: { token } }];"
+      },
+      "id": "07a9f897-67a2-42a1-8ae9-73498d2eb66c",
+      "name": "Generate Refrens JWT",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1104,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.refrens.com/api/v1/businesses/REPLACE_WITH_URL_KEY/invoices",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $json.token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "36b70ae1-c900-4f42-bbd2-635bd10f1657",
+      "name": "Fetch Refrens Invoices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -880,
+        144
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "66561be3-f32a-4cf9-adea-762aa1ce15fa",
+      "name": "Loop Over Invoices",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -608,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.zohoapis.in/crm/v3/Contacts/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "email",
+              "value": "={{ $json.client.email }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer REPLACE_WITH_ZOHO_ACCESS_TOKEN"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "c3b10ca1-739b-4964-b3b1-a6cb1be38bcc",
+      "name": "Search Zoho Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -448,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-001",
+              "leftValue": "={{ Array.isArray($json.data) && $json.data.length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "55b3214d-c71e-4bca-adf9-4601585a1ef7",
+      "name": "Contact Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const contactId = $input.item.json.data[0].id;\nconst invoiceData = $('Loop Over Invoices').item.json;\nreturn { json: { contactId, invoiceData } };"
+      },
+      "id": "91b8b13f-b983-4622-a62b-603a6efdbfc0",
+      "name": "Set Contact ID (Existing)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.zohoapis.in/crm/v3/Contacts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer REPLACE_WITH_ZOHO_ACCESS_TOKEN"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data: [{ Last_Name: ($('Loop Over Invoices').item.json.client.name || 'Unknown'), Email: $('Loop Over Invoices').item.json.client.email }] }) }}",
+        "options": {}
+      },
+      "id": "78fa1de4-a9bf-4fb8-aa6d-79ab20faee29",
+      "name": "Create Zoho Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const contactId = $input.item.json.data[0].details.id;\nconst invoiceData = $('Loop Over Invoices').item.json;\nreturn { json: { contactId, invoiceData } };"
+      },
+      "id": "e2150f77-6f85-46ff-8a58-1f895cd2c4da",
+      "name": "Set Contact ID (New)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.zohoapis.in/crm/v3/Invoices/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "criteria",
+              "value": "={{ '(Subject:equals:' + $json.invoiceData.invoice_number + ')' }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer REPLACE_WITH_ZOHO_ACCESS_TOKEN"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "9a22f1f0-e5a5-47a2-8fd1-2f3d0182bef7",
+      "name": "Search Zoho Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        448,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-002",
+              "leftValue": "={{ Array.isArray($json.data) && $json.data.length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "54e0a2b2-e65b-4eb0-be69-517de0d7bb1c",
+      "name": "Invoice Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        672,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://www.zohoapis.in/crm/v3/Invoices/' + $json.data[0].id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer REPLACE_WITH_ZOHO_ACCESS_TOKEN"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data: [{ Subject: $('Loop Over Invoices').item.json.invoice_number, Grand_Total: $('Loop Over Invoices').item.json.total, Due_Date: $('Loop Over Invoices').item.json.due_date, Invoice_Status: $('Loop Over Invoices').item.json.status }] }) }}",
+        "options": {}
+      },
+      "id": "2c38fb7f-3123-4737-b8db-0961514d839c",
+      "name": "Update Zoho Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.zohoapis.in/crm/v3/Invoices",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer REPLACE_WITH_ZOHO_ACCESS_TOKEN"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data: [{ Subject: $json.invoiceData.invoice_number, Contact_Name: { id: $json.contactId }, Grand_Total: $json.invoiceData.total, Due_Date: $json.invoiceData.due_date, Invoice_Status: $json.invoiceData.status }] }) }}",
+        "options": {}
+      },
+      "id": "41d145c9-cc8c-47d5-ada0-f3f23cdcc96c",
+      "name": "Create Zoho Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        304
+      ]
+    }
+  ],
+  "connections": {
+    "Every 6 Hours": {
+      "main": [
+        [
+          {
+            "node": "Generate Refrens JWT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Refrens JWT": {
+      "main": [
+        [
+          {
+            "node": "Fetch Refrens Invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Refrens Invoices": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Invoices": {
+      "main": [
+        [
+          {
+            "node": "Search Zoho Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Zoho Contact": {
+      "main": [
+        [
+          {
+            "node": "Contact Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact Found?": {
+      "main": [
+        [
+          {
+            "node": "Set Contact ID (Existing)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Zoho Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Contact ID (Existing)": {
+      "main": [
+        [
+          {
+            "node": "Search Zoho Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Zoho Contact": {
+      "main": [
+        [
+          {
+            "node": "Set Contact ID (New)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Contact ID (New)": {
+      "main": [
+        [
+          {
+            "node": "Search Zoho Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Zoho Invoice": {
+      "main": [
+        [
+          {
+            "node": "Invoice Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invoice Found?": {
+      "main": [
+        [
+          {
+            "node": "Update Zoho Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Zoho Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Zoho Invoice": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Zoho Invoice": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "e7fb235d-6bab-46dd-97c0-41dc98a57ed8",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-04-18T05:36:16.572Z",
+      "createdAt": "2026-04-18T05:36:16.572Z",
+      "role": "workflow:owner",
+      "workflowId": "k3rDM16EsJzm7UFK",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
