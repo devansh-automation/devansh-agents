@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-18T06:10:39.664Z",
+  "updatedAt": "2026-04-18T10:44:27.188Z",
   "createdAt": "2026-04-18T05:36:16.569Z",
   "id": "k3rDM16EsJzm7UFK",
   "name": "Refrens → Zoho CRM Invoice Sync",
@@ -28,28 +28,26 @@
     },
     {
       "parameters": {
-        "jsCode": "const crypto = require('crypto');\nconst appId = 'REPLACE_WITH_APP_ID';\nconst appSecret = 'REPLACE_WITH_APP_SECRET';\nconst privateKeyB64 = 'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgRSunJaKB66aEHQnWDXfLuUgy8GzE/92GNBD4+G/lsHehRANCAAQ9pAoh0RYvYNB3vHhLgqWcXi+6Gqg0WhTuXdK7tnah2Phg0n+vONjiGyT/OdE3u5XMf0LsNegz5YEx4+1s4yzD';\n\nfunction b64url(s) {\n  return Buffer.from(s).toString('base64')\n    .replace(/=/g, '').replace(/\\+/g, '-').replace(/\\//g, '_');\n}\n\nconst header = b64url(JSON.stringify({ alg: 'ES256', typ: 'JWT' }));\nconst now = Math.floor(Date.now() / 1000);\nconst payload = b64url(JSON.stringify({ appId, appSecret, iat: now, exp: now + 3600 }));\nconst signingInput = header + '.' + payload;\n\nconst privateKey = crypto.createPrivateKey({\n  key: Buffer.from(privateKeyB64, 'base64'),\n  format: 'der',\n  type: 'pkcs8'\n});\n\nconst signature = crypto\n  .sign('sha256', Buffer.from(signingInput), { key: privateKey, dsaEncoding: 'ieee-p1363' })\n  .toString('base64')\n  .replace(/=/g, '').replace(/\\+/g, '-').replace(/\\//g, '_');\n\nconst token = signingInput + '.' + signature;\nreturn [{ json: { token } }];"
+        "jsCode": "const crypto = require('crypto');\nconst appId = 'scaleupally-fQavn';\n// const appSecret = 'J1lPpNlRF3y7DBzoofGOBV-H';\nconst privateKeyB64 = 'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgRSunJaKB66aEHQnWDXfLuUgy8GzE/92GNBD4+G/lsHehRANCAAQ9pAoh0RYvYNB3vHhLgqWcXi+6Gqg0WhTuXdK7tnah2Phg0n+vONjiGyT/OdE3u5XMf0LsNegz5YEx4+1s4yzD';\n\nfunction b64url(s) {\n  return Buffer.from(s).toString('base64')\n    .replace(/=/g,'').replace(/\\+/g,'-').replace(/\\//g,'_');\n}\n\nconst header = b64url(JSON.stringify({ alg: 'ES256', typ: 'JWT' }));\nconst now = Math.floor(Date.now() / 1000);\nconst payload = b64url(JSON.stringify({\n  iss: appId,\n  aud: 'serana',\n  sub: appId,\n  auth: {\n    entity: 'app',\n    strategy: 'app-iss-app-token'\n  },\n  iat: now,\n  exp: now + 3600\n}));\n\nconst signingInput = header + '.' + payload;\nconst privateKey = crypto.createPrivateKey({\n  key: Buffer.from(privateKeyB64, 'base64'),\n  format: 'der',\n  type: 'pkcs8'\n});\nconst signature = crypto\n  .sign('sha256', Buffer.from(signingInput), { key: privateKey, dsaEncoding: 'ieee-p1363' })\n  .toString('base64')\n  .replace(/=/g,'').replace(/\\+/g,'-').replace(/\\//g,'_');\n\nreturn [{ json: { token: signingInput + '.' + signature } }];"
       },
       "id": "07a9f897-67a2-42a1-8ae9-73498d2eb66c",
       "name": "Generate Refrens JWT",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1104,
-        144
+        -1088,
+        736
       ]
     },
     {
       "parameters": {
-        "url": "https://www.refrens.com/api/v1/businesses/REPLACE_WITH_URL_KEY/invoices",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "oAuth2Api",
+        "url": "https://api.refrens.com/businesses/scaleupally/invoices",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "={{ 'Bearer ' + $json.token }}"
+              "value": "={{ 'Bearer ' + $json.accessToken }}"
             }
           ]
         },
@@ -62,13 +60,7 @@
       "position": [
         -880,
         144
-      ],
-      "credentials": {
-        "oAuth2Api": {
-          "id": "kLkpyrqVf8bU8wEr",
-          "name": "Zoho CRM API"
-        }
-      }
+      ]
     },
     {
       "parameters": {
@@ -79,13 +71,15 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        -608,
-        272
+        -576,
+        384
       ]
     },
     {
       "parameters": {
         "url": "https://www.zohoapis.in/crm/v3/Contacts/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -119,7 +113,13 @@
       "position": [
         -448,
         144
-      ]
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      }
     },
     {
       "parameters": {
@@ -163,8 +163,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        0,
-        0
+        96,
+        -16
       ]
     },
     {
@@ -215,6 +215,8 @@
     {
       "parameters": {
         "url": "https://www.zohoapis.in/crm/v3/Invoices/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -248,7 +250,13 @@
       "position": [
         448,
         144
-      ]
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      }
     },
     {
       "parameters": {
@@ -286,6 +294,8 @@
       "parameters": {
         "method": "PUT",
         "url": "={{ 'https://www.zohoapis.in/crm/v3/Invoices/' + $json.data[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -311,12 +321,20 @@
       "position": [
         880,
         0
-      ]
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
         "url": "https://www.zohoapis.in/crm/v3/Invoices",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -340,9 +358,33 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        880,
-        304
-      ]
+        848,
+        384
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.refrens.com/authentication",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"strategy\": \"app-secret\",\n  \"appId\": \"scaleupally-fQavn\",\n  \"appSecret\": \"J1lPpNlRF3y7DBzoofGOBV-H\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1120,
+        144
+      ],
+      "id": "ff2ae16f-05eb-480e-b561-8f8844192fd1",
+      "name": "HTTP Request"
     }
   ],
   "connections": {
@@ -350,7 +392,7 @@
       "main": [
         [
           {
-            "node": "Generate Refrens JWT",
+            "node": "HTTP Request",
             "type": "main",
             "index": 0
           }
@@ -359,13 +401,7 @@
     },
     "Generate Refrens JWT": {
       "main": [
-        [
-          {
-            "node": "Fetch Refrens Invoices",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Fetch Refrens Invoices": {
@@ -502,6 +538,17 @@
           }
         ]
       ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Fetch Refrens Invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -511,7 +558,7 @@
   "staticData": null,
   "meta": null,
   "pinData": {},
-  "versionId": "e7fb235d-6bab-46dd-97c0-41dc98a57ed8",
+  "versionId": "0786e916-c49a-4141-911b-72fe0e65b714",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
