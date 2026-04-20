@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-18T10:44:27.188Z",
+  "updatedAt": "2026-04-20T09:22:30.858Z",
   "createdAt": "2026-04-18T05:36:16.569Z",
   "id": "k3rDM16EsJzm7UFK",
   "name": "Refrens → Zoho CRM Invoice Sync",
@@ -22,8 +22,8 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.1,
       "position": [
-        -1328,
-        144
+        -1408,
+        320
       ]
     },
     {
@@ -35,13 +35,30 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1088,
-        736
+        -1408,
+        592
       ]
     },
     {
       "parameters": {
         "url": "https://api.refrens.com/businesses/scaleupally/invoices",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "$limit",
+              "value": "100"
+            },
+            {
+              "name": "$skip",
+              "value": "={{ $node[\"Loop Over Invoices\"].context.currentRunIndex * 100 }}"
+            },
+            {
+              "name": "$sort[createdAt]",
+              "value": "-1"
+            }
+          ]
+        },
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -58,8 +75,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -880,
-        144
+        -960,
+        320
       ]
     },
     {
@@ -71,8 +88,8 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        -576,
-        384
+        -304,
+        320
       ]
     },
     {
@@ -85,7 +102,7 @@
           "parameters": [
             {
               "name": "email",
-              "value": "={{ $json.client.email }}"
+              "value": "={{ $json.billedTo.email }}"
             }
           ]
         },
@@ -94,15 +111,13 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer REPLACE_WITH_ZOHO_ACCESS_TOKEN"
+              "value": "={{ 'Bearer ' + $('HTTP Request').item.json.authentication.accessToken }}"
             }
           ]
         },
         "options": {
           "response": {
-            "response": {
-              "neverError": true
-            }
+            "response": {}
           }
         }
       },
@@ -111,8 +126,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -448,
-        144
+        -80,
+        80
       ],
       "credentials": {
         "oAuth2Api": {
@@ -127,7 +142,8 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "loose"
+            "typeValidation": "strict",
+            "version": 1
           },
           "conditions": [
             {
@@ -136,7 +152,8 @@
               "rightValue": true,
               "operator": {
                 "type": "boolean",
-                "operation": "equals"
+                "operation": "true",
+                "singleValue": true
               }
             }
           ],
@@ -149,8 +166,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -224,
-        144
+        144,
+        80
       ]
     },
     {
@@ -163,7 +180,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        96,
+        592,
         -16
       ]
     },
@@ -175,18 +192,18 @@
         "headerParameters": {
           "parameters": [
             {
-              "name": "Authorization",
-              "value": "=Bearer REPLACE_WITH_ZOHO_ACCESS_TOKEN"
-            },
-            {
               "name": "Content-Type",
               "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $('HTTP Request').item.json.authentication.accessToken }}"
             }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ data: [{ Last_Name: ($('Loop Over Invoices').item.json.client.name || 'Unknown'), Email: $('Loop Over Invoices').item.json.client.email }] }) }}",
+        "jsonBody": "={{ JSON.stringify({ data: [{ Last_Name: ($('Loop Over Invoices').item.json.billedTo.name || 'Unknown'), Email: $('Loop Over Invoices').item.json.billedTo.email }] }) }}",
         "options": {}
       },
       "id": "78fa1de4-a9bf-4fb8-aa6d-79ab20faee29",
@@ -194,8 +211,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        0,
-        304
+        -224,
+        816
       ]
     },
     {
@@ -208,8 +225,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        224,
-        304
+        112,
+        800
       ]
     },
     {
@@ -227,14 +244,6 @@
           ]
         },
         "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer REPLACE_WITH_ZOHO_ACCESS_TOKEN"
-            }
-          ]
-        },
         "options": {
           "response": {
             "response": {
@@ -248,8 +257,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        448,
-        144
+        816,
+        80
       ],
       "credentials": {
         "oAuth2Api": {
@@ -286,8 +295,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        672,
-        144
+        1040,
+        80
       ]
     },
     {
@@ -299,10 +308,6 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer REPLACE_WITH_ZOHO_ACCESS_TOKEN"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -319,8 +324,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        880,
-        0
+        1264,
+        160
       ],
       "credentials": {
         "oAuth2Api": {
@@ -339,10 +344,6 @@
         "headerParameters": {
           "parameters": [
             {
-              "name": "Authorization",
-              "value": "=Bearer REPLACE_WITH_ZOHO_ACCESS_TOKEN"
-            },
-            {
               "name": "Content-Type",
               "value": "application/json"
             }
@@ -358,8 +359,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        848,
-        384
+        1264,
+        368
       ],
       "credentials": {
         "oAuth2Api": {
@@ -380,11 +381,38 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1120,
-        144
+        -1184,
+        320
       ],
       "id": "ff2ae16f-05eb-480e-b561-8f8844192fd1",
       "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        320
+      ],
+      "id": "bb59fe23-661a-4f61-aae1-396586f1dc4b",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -528,
+        320
+      ],
+      "id": "fdae3aad-bef2-47b8-bf0f-3e1730560c4e",
+      "name": "Execute Workflow"
     }
   ],
   "connections": {
@@ -408,7 +436,7 @@
       "main": [
         [
           {
-            "node": "Loop Over Invoices",
+            "node": "Split Out",
             "type": "main",
             "index": 0
           }
@@ -417,6 +445,7 @@
     },
     "Loop Over Invoices": {
       "main": [
+        [],
         [
           {
             "node": "Search Zoho Contact",
@@ -446,13 +475,7 @@
             "index": 0
           }
         ],
-        [
-          {
-            "node": "Create Zoho Contact",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Set Contact ID (Existing)": {
@@ -479,13 +502,7 @@
     },
     "Set Contact ID (New)": {
       "main": [
-        [
-          {
-            "node": "Search Zoho Invoice",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Search Zoho Invoice": {
@@ -549,18 +566,49 @@
           }
         ]
       ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
   },
-  "staticData": null,
+  "staticData": {
+    "node:Every 6 Hours": {
+      "recurrenceRules": [
+        12
+      ]
+    }
+  },
   "meta": null,
   "pinData": {},
-  "versionId": "0786e916-c49a-4141-911b-72fe0e65b714",
+  "versionId": "5c914dd7-4c96-49d6-b6e6-6479c75125e8",
   "activeVersionId": null,
-  "triggerCount": 0,
+  "triggerCount": 1,
   "shared": [
     {
       "updatedAt": "2026-04-18T05:36:16.572Z",
