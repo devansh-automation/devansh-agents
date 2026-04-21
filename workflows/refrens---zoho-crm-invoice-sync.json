@@ -1,31 +1,11 @@
 {
-  "updatedAt": "2026-04-20T09:22:30.858Z",
+  "updatedAt": "2026-04-20T13:28:41.709Z",
   "createdAt": "2026-04-18T05:36:16.569Z",
   "id": "k3rDM16EsJzm7UFK",
   "name": "Refrens → Zoho CRM Invoice Sync",
   "active": false,
   "isArchived": false,
   "nodes": [
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "hours",
-              "hoursInterval": 6
-            }
-          ]
-        }
-      },
-      "id": "984d9ded-58e2-4ed3-bcdc-a503cbdb62b2",
-      "name": "Every 6 Hours",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.1,
-      "position": [
-        -1408,
-        320
-      ]
-    },
     {
       "parameters": {
         "jsCode": "const crypto = require('crypto');\nconst appId = 'scaleupally-fQavn';\n// const appSecret = 'J1lPpNlRF3y7DBzoofGOBV-H';\nconst privateKeyB64 = 'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgRSunJaKB66aEHQnWDXfLuUgy8GzE/92GNBD4+G/lsHehRANCAAQ9pAoh0RYvYNB3vHhLgqWcXi+6Gqg0WhTuXdK7tnah2Phg0n+vONjiGyT/OdE3u5XMf0LsNegz5YEx4+1s4yzD';\n\nfunction b64url(s) {\n  return Buffer.from(s).toString('base64')\n    .replace(/=/g,'').replace(/\\+/g,'-').replace(/\\//g,'_');\n}\n\nconst header = b64url(JSON.stringify({ alg: 'ES256', typ: 'JWT' }));\nconst now = Math.floor(Date.now() / 1000);\nconst payload = b64url(JSON.stringify({\n  iss: appId,\n  aud: 'serana',\n  sub: appId,\n  auth: {\n    entity: 'app',\n    strategy: 'app-iss-app-token'\n  },\n  iat: now,\n  exp: now + 3600\n}));\n\nconst signingInput = header + '.' + payload;\nconst privateKey = crypto.createPrivateKey({\n  key: Buffer.from(privateKeyB64, 'base64'),\n  format: 'der',\n  type: 'pkcs8'\n});\nconst signature = crypto\n  .sign('sha256', Buffer.from(signingInput), { key: privateKey, dsaEncoding: 'ieee-p1363' })\n  .toString('base64')\n  .replace(/=/g,'').replace(/\\+/g,'-').replace(/\\//g,'_');\n\nreturn [{ json: { token: signingInput + '.' + signature } }];"
@@ -36,67 +16,14 @@
       "typeVersion": 2,
       "position": [
         -1408,
-        592
-      ]
-    },
-    {
-      "parameters": {
-        "url": "https://api.refrens.com/businesses/scaleupally/invoices",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "$limit",
-              "value": "100"
-            },
-            {
-              "name": "$skip",
-              "value": "={{ $node[\"Loop Over Invoices\"].context.currentRunIndex * 100 }}"
-            },
-            {
-              "name": "$sort[createdAt]",
-              "value": "-1"
-            }
-          ]
-        },
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "={{ 'Bearer ' + $json.accessToken }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "36b70ae1-c900-4f42-bbd2-635bd10f1657",
-      "name": "Fetch Refrens Invoices",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        -960,
-        320
-      ]
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "id": "66561be3-f32a-4cf9-adea-762aa1ce15fa",
-      "name": "Loop Over Invoices",
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [
-        -304,
-        320
+        560
       ]
     },
     {
       "parameters": {
         "url": "https://www.zohoapis.in/crm/v3/Contacts/search",
         "authentication": "genericCredentialType",
-        "genericAuthType": "oAuth2Api",
+        "genericAuthType": "httpBearerAuth",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -126,13 +53,17 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -80,
-        80
+        -400,
+        160
       ],
       "credentials": {
         "oAuth2Api": {
           "id": "kLkpyrqVf8bU8wEr",
           "name": "Zoho CRM API"
+        },
+        "httpBearerAuth": {
+          "id": "ec7hHhRJYCMqszEp",
+          "name": "Bearer Auth account"
         }
       }
     },
@@ -166,8 +97,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        144,
-        80
+        -144,
+        160
       ]
     },
     {
@@ -180,8 +111,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        592,
-        -16
+        160,
+        144
       ]
     },
     {
@@ -211,8 +142,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -224,
-        816
+        -1408,
+        1008
       ]
     },
     {
@@ -225,8 +156,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        112,
-        800
+        -1184,
+        1008
       ]
     },
     {
@@ -244,6 +175,11 @@
           ]
         },
         "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
         "options": {
           "response": {
             "response": {
@@ -257,8 +193,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        816,
-        80
+        384,
+        144
       ],
       "credentials": {
         "oAuth2Api": {
@@ -295,8 +231,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1040,
-        80
+        608,
+        144
       ]
     },
     {
@@ -324,8 +260,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1264,
-        160
+        928,
+        -48
       ],
       "credentials": {
         "oAuth2Api": {
@@ -359,8 +295,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1264,
-        368
+        896,
+        256
       ],
       "credentials": {
         "oAuth2Api": {
@@ -371,88 +307,99 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://api.refrens.com/authentication",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "{\n  \"strategy\": \"app-secret\",\n  \"appId\": \"scaleupally-fQavn\",\n  \"appSecret\": \"J1lPpNlRF3y7DBzoofGOBV-H\"\n}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        -1184,
-        320
-      ],
-      "id": "ff2ae16f-05eb-480e-b561-8f8844192fd1",
-      "name": "HTTP Request"
-    },
-    {
-      "parameters": {
-        "fieldToSplitOut": "data",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.splitOut",
-      "typeVersion": 1,
-      "position": [
-        -736,
-        320
-      ],
-      "id": "bb59fe23-661a-4f61-aae1-396586f1dc4b",
-      "name": "Split Out"
-    },
-    {
-      "parameters": {
         "options": {}
       },
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -528,
-        320
+        -1408,
+        784
       ],
       "id": "fdae3aad-bef2-47b8-bf0f-3e1730560c4e",
       "name": "Execute Workflow"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -624,
+        160
+      ],
+      "id": "cc433d76-14b3-4ebb-9221-1e77a034fbc5",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE",
+          "mode": "list",
+          "cachedResultName": "Invoice Fields",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 438047698,
+          "mode": "list",
+          "cachedResultName": "Unmatched Contacts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE/edit#gid=438047698"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Invoice": "={{ $json.billedTo.name }}",
+            "Email": "={{ $json.billedTo.email }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Invoice",
+              "displayName": "Invoice",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        192,
+        416
+      ],
+      "id": "c236dc67-7456-49d2-a3a5-bfcb9f9ec26e",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "THdXW72Bb4AecTeb",
+          "name": "creds_for_invoice"
+        }
+      }
     }
   ],
   "connections": {
-    "Every 6 Hours": {
-      "main": [
-        [
-          {
-            "node": "HTTP Request",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Generate Refrens JWT": {
       "main": [
         []
-      ]
-    },
-    "Fetch Refrens Invoices": {
-      "main": [
-        [
-          {
-            "node": "Split Out",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Loop Over Invoices": {
-      "main": [
-        [],
-        [
-          {
-            "node": "Search Zoho Contact",
-            "type": "main",
-            "index": 0
-          }
-        ]
       ]
     },
     "Search Zoho Contact": {
@@ -475,7 +422,13 @@
             "index": 0
           }
         ],
-        []
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Set Contact ID (Existing)": {
@@ -536,53 +489,24 @@
     },
     "Update Zoho Invoice": {
       "main": [
-        [
-          {
-            "node": "Loop Over Invoices",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Create Zoho Invoice": {
       "main": [
-        [
-          {
-            "node": "Loop Over Invoices",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request": {
-      "main": [
-        [
-          {
-            "node": "Fetch Refrens Invoices",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Split Out": {
-      "main": [
-        [
-          {
-            "node": "Execute Workflow",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Execute Workflow": {
       "main": [
+        []
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
         [
           {
-            "node": "Loop Over Invoices",
+            "node": "Search Zoho Contact",
             "type": "main",
             "index": 0
           }
@@ -604,9 +528,11 @@
       ]
     }
   },
-  "meta": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
   "pinData": {},
-  "versionId": "5c914dd7-4c96-49d6-b6e6-6479c75125e8",
+  "versionId": "6da0505e-70ce-4d83-abce-9f550d927264",
   "activeVersionId": null,
   "triggerCount": 1,
   "shared": [
