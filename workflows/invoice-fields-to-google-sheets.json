@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-20T13:16:23.732Z",
+  "updatedAt": "2026-04-21T14:51:40.419Z",
   "createdAt": "2026-04-20T10:57:15.406Z",
   "id": "ArEK37NRuIJSM2lc",
   "name": "Invoice Fields to Google Sheets",
@@ -11,8 +11,7 @@
         "rule": {
           "interval": [
             {
-              "field": "hours",
-              "triggerAtMinute": 30
+              "field": "seconds"
             }
           ]
         }
@@ -20,8 +19,8 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        0,
-        0
+        -48,
+        -232
       ],
       "id": "28eb8759-4b9e-4161-aabb-de1f663cf460",
       "name": "Schedule Trigger"
@@ -43,8 +42,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        448,
-        0
+        384,
+        -96
       ],
       "id": "ef07ad6d-c742-434e-a20d-7f87a0ea2677",
       "name": "HTTP Request"
@@ -61,8 +60,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        208,
-        0
+        176,
+        -232
       ],
       "id": "34be6d24-a218-4ab2-b270-53b4786ab057",
       "name": "HTTP Request1"
@@ -81,18 +80,18 @@
           "__rl": true,
           "value": "gid=0",
           "mode": "list",
-          "cachedResultName": "Sheet1",
+          "cachedResultName": "Email Extraction",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE/edit#gid=0"
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Invoice": "={{ $json.billedTo.name }}",
-            "Invoice Number": "={{ $json.invoiceNumber }}",
-            "Email": "={{ $json.billedTo.email }}",
-            "Phone": "={{ $json.billedTo.phone }}",
-            "Address": "={{ $json.billedTo.state }}, {{ $json.billedTo.stateCode }}, {{ $json.billedTo.country }}",
-            "Amount": "={{ $json.items[0].amount }}"
+            "Invoice": "={{ $('Split Out').item.json.billedTo.name }}",
+            "Invoice Number": "={{ $('Split Out').item.json.invoiceNumber }}",
+            "Email": "={{ $('Split Out').item.json.billedTo.email }}",
+            "Phone": "={{ $('Split Out').item.json.billedTo.phone }}",
+            "Address": "={{ $('Split Out').item.json.billedTo.state }}, {{ $('Split Out').item.json.billedTo.stateCode }}, {{ $('Split Out').item.json.billedTo.country }}",
+            "Amount": "={{ $('Split Out').item.json.items[0].amount }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -165,8 +164,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        928,
-        0
+        1504,
+        -352
       ],
       "id": "eea95a92-1eab-44dd-ab44-40ef507b22a8",
       "name": "Append row in sheet",
@@ -185,8 +184,8 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        672,
-        0
+        1056,
+        -224
       ],
       "id": "02482566-e506-49c9-9f61-4dff516ec3b1",
       "name": "Split Out"
@@ -198,40 +197,146 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        928,
-        240
+        128,
+        160
       ],
       "id": "74f5ff2a-6b14-4c73-9491-5fdb75a33b26",
       "name": "Keys"
     },
     {
       "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "k3rDM16EsJzm7UFK",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/k3rDM16EsJzm7UFK",
-          "cachedResultName": "Refrens → Zoho CRM Invoice Sync"
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "37014fde-4f5d-4869-969a-c4f0e51cbad2",
+              "leftValue": "={{ $('Read Sheet').all().map(r => r.json['Invoice Numbers Covered']).includes($json.invoiceNumber) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
         },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "mode": "each",
         "options": {}
       },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
       "position": [
-        1136,
-        0
+        1296,
+        -240
       ],
-      "id": "0316f899-783b-468f-a21a-17ab02cad153",
-      "name": "Call 'Refrens → Zoho CRM Invoice Sync'"
+      "id": "e43194b8-dd1a-459b-8d0d-898393eddaa4",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE",
+          "mode": "list",
+          "cachedResultName": "Invoice Fields",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 420709446,
+          "mode": "list",
+          "cachedResultName": "Invoices Covered",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE/edit#gid=420709446"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        -304
+      ],
+      "id": "cdf0a1f9-e02a-4db6-b6b8-126b737afc86",
+      "name": "Read Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "THdXW72Bb4AecTeb",
+          "name": "creds_for_invoice"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE",
+          "mode": "list",
+          "cachedResultName": "Invoice Fields",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 420709446,
+          "mode": "list",
+          "cachedResultName": "Invoices Covered",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE/edit#gid=420709446"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Invoice Numbers Covered": "={{ $('Split Out').item.json.invoiceNumber }}"
+          },
+          "matchingColumns": [
+            "Invoice Numbers Covered"
+          ],
+          "schema": [
+            {
+              "id": "Invoice Numbers Covered",
+              "displayName": "Invoice Numbers Covered",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1728,
+        -352
+      ],
+      "id": "bffc3c8c-f183-4cad-be5e-87b6d5b59604",
+      "name": "Update Invoices Covered",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "THdXW72Bb4AecTeb",
+          "name": "creds_for_invoice"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        848,
+        -232
+      ],
+      "id": "a811940b-6787-400c-944c-14067cc028b5",
+      "name": "Merge"
     }
   ],
   "connections": {
@@ -261,9 +366,14 @@
       "main": [
         [
           {
-            "node": "Split Out",
+            "node": "Read Sheet",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
           }
         ]
       ]
@@ -272,7 +382,7 @@
       "main": [
         [
           {
-            "node": "Append row in sheet",
+            "node": "If",
             "type": "main",
             "index": 0
           }
@@ -288,7 +398,41 @@
       "main": [
         [
           {
-            "node": "Call 'Refrens → Zoho CRM Invoice Sync'",
+            "node": "Update Invoices Covered",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Read Sheet": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
             "type": "main",
             "index": 0
           }
@@ -311,9 +455,2713 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "pinData": {},
-  "versionId": "1cd2840d-cebb-40e3-aba2-48469c9fe0f3",
-  "activeVersionId": "0bf94662-078c-49d6-9622-884c17b59cd1",
+  "pinData": {
+    "Split Out": [
+      {
+        "json": {
+          "currency": "AED",
+          "invoiceTitle": "Credit Note",
+          "billType": "CREDITNOTE",
+          "status": "PAID",
+          "discount": {
+            "discountMethod": "EQUAL",
+            "discountType": "PERCENTAGE"
+          },
+          "terms": [],
+          "attachments": [],
+          "isExpenditure": false,
+          "taxType": "GLOBAL",
+          "locale": "en-AE",
+          "tags": [],
+          "_id": "69cb9f1cf62f93002b1d5688",
+          "invoiceNumber": "AD/Del/25-26/024",
+          "invoiceDate": "2026-03-30T18:30:03.000Z",
+          "billedBy": {
+            "customFields": {
+              "company-id": {
+                "label": "Company ID",
+                "name": "Company ID",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "U74999DL2017PTC316970"
+              },
+              "hsnsac": {
+                "label": "HSN/SAC",
+                "name": "HSN/SAC",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "998313"
+              }
+            },
+            "additionalIds": [],
+            "country": "IN",
+            "name": "Admito Technologies Private Limited",
+            "gstin": "07AAPCA5209B1ZY",
+            "panNumber": "AAPCA5209B",
+            "street": "RZ 154/284, 1st Floor, Street Number 2",
+            "city": "New Delhi",
+            "state": "Delhi",
+            "gstState": "07",
+            "pincode": "110046",
+            "email": "manu.jain@scaleupally.io",
+            "phone": "+919717087420",
+            "emailShowInInvoice": true,
+            "phoneShowInInvoice": true
+          },
+          "billedTo": {
+            "_id": "670639d0e6f01b0035164e01",
+            "name": "Zara USmani",
+            "state": null,
+            "stateCode": null,
+            "country": "AE",
+            "gstin": "",
+            "vatLabel": "VAT Number",
+            "panNumber": "",
+            "uniqueKey": "1728461150536",
+            "taxPayerType": "EXP",
+            "clientType": "INDIVIDUAL",
+            "clientId": "1728461150536"
+          },
+          "items": [
+            {
+              "discount": {
+                "discountType": "PERCENTAGE",
+                "amount": 0
+              },
+              "group": false,
+              "hidden": false,
+              "images": [],
+              "originalImages": [],
+              "isStockManaged": false,
+              "trackingMethod": "NONE",
+              "itc": "INELIGIBLE_OTHERS",
+              "unit": null,
+              "showSku": false,
+              "_id": "6819a460127632002e796cda",
+              "name": "Zara Power BI contract June Work",
+              "quantity": 1,
+              "rate": 2479,
+              "amount": 2479,
+              "subTotal": 2479,
+              "total": 2479,
+              "gstRate": 0,
+              "igst": 0,
+              "cgst": 0,
+              "sgst": 0,
+              "hsn": "",
+              "ledgerId": "",
+              "ledgerName": "",
+              "itemType": "product",
+              "sku": "o5kqrnxzci",
+              "params": {
+                "isPackage": false,
+                "packageItems": []
+              },
+              "amountRoundOff": 0,
+              "totalRoundOff": 0,
+              "description": "",
+              "allocations": null,
+              "inventory": "6819a461127632002e796d99",
+              "inventoryTxn": "687898ab69cd030018433612"
+            }
+          ],
+          "client": "670639d0e6f01b0035164e01",
+          "igst": true,
+          "createdAt": "2026-03-31T10:17:00.599Z",
+          "updatedAt": "2026-04-20T06:57:46.324Z",
+          "finalTotal": {
+            "total": 2479,
+            "amount": 2479,
+            "subTotal": 2479,
+            "igst": 0,
+            "cgst": 0,
+            "sgst": 0,
+            "amountRoundOff": 0,
+            "totalRoundOff": 0,
+            "cessTotal": {},
+            "discount": 0
+          },
+          "owner": {
+            "name": "Admito Technologies Private Limited",
+            "alias": "ScaleupAlly",
+            "urlKey": "scaleupally",
+            "timeZone": "Asia/Kolkata",
+            "premium": {
+              "activated": true,
+              "enabled": true,
+              "endDate": "2030-01-29T23:59:59.000Z",
+              "period": "5YEARLY",
+              "onTrial": false,
+              "trialActivated": false,
+              "productId": "65ba60540326d4a9691c9d63",
+              "paymentActivated": true
+            },
+            "createdAt": "2020-04-25T09:27:56.777Z",
+            "country": "IN",
+            "_schemaVersion": 3,
+            "_id": "5ea4029c456eba75fb1501b1",
+            "configuration": {
+              "isZatcaBusiness": false,
+              "tax": {
+                "taxName": "GST",
+                "taxType": "INDIA",
+                "defaultTaxRate": 18,
+                "allowTds": true
+              },
+              "hideHashInDocumentNumber": false,
+              "customFields": [
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347a",
+                  "label": "Full Name",
+                  "name": "Full Name",
+                  "key": "rl-contact-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "70991617"
+                },
+                {
+                  "dataType": "EMAIL",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347b",
+                  "label": "Email",
+                  "name": "Email",
+                  "key": "rl-contact-email-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "48344276"
+                },
+                {
+                  "dataType": "PHONE",
+                  "hideFlagEmoji": true,
+                  "isRequired": false,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347c",
+                  "label": "Phone number",
+                  "name": "Phone number",
+                  "key": "rl-contact-phone-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "03088406"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347d",
+                  "label": "Organisation Name",
+                  "name": "Organisation Name",
+                  "key": "rl-customer-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "11072456"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347e",
+                  "label": "Message",
+                  "name": "Message",
+                  "key": "rl-subject-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "97438886"
+                }
+              ],
+              "dueInDays": 7,
+              "einvoice": {
+                "irnNumber": true,
+                "irnAcknowledgementNumber": false,
+                "irnAcknowledgementDate": false,
+                "irnCancelledDate": false
+              },
+              "eway": {
+                "billNumber": true,
+                "billDate": true,
+                "billValidTillDate": true,
+                "billCancelledDate": false
+              },
+              "experimental": {
+                "scrollableLineItems": true,
+                "enableJs": true,
+                "performanceBlurOptimization": false,
+                "alternatePdfDownload": false,
+                "_id": "67ab1c6a7aed39ce86139a46",
+                "updatedAt": "2025-02-11T09:46:18.430Z",
+                "createdAt": "2025-02-11T09:46:18.430Z"
+              },
+              "_schemaVersion": 2,
+              "business": "5ea4029c456eba75fb1501b1",
+              "_id": "63639b74578b88532b72cfe7"
+            }
+          },
+          "source": "DASHBOARD",
+          "payments": [],
+          "voucherEntries": []
+        },
+        "pairedItem": {
+          "item": 30
+        }
+      },
+      {
+        "json": {
+          "currency": "AED",
+          "invoiceTitle": "Credit Note",
+          "billType": "CREDITNOTE",
+          "status": "PAID",
+          "discount": {
+            "discountMethod": "EQUAL",
+            "discountType": "PERCENTAGE"
+          },
+          "terms": [],
+          "attachments": [],
+          "isExpenditure": false,
+          "taxType": "GLOBAL",
+          "locale": "en-AE",
+          "tags": [],
+          "_id": "69cb9ee8f62f93002b1d2e13",
+          "invoiceNumber": "AD/Del/25-26/023",
+          "invoiceDate": "2026-03-30T18:30:02.000Z",
+          "billedBy": {
+            "customFields": {
+              "company-id": {
+                "label": "Company ID",
+                "name": "Company ID",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "U74999DL2017PTC316970"
+              },
+              "hsnsac": {
+                "label": "HSN/SAC",
+                "name": "HSN/SAC",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "998313"
+              }
+            },
+            "additionalIds": [],
+            "country": "IN",
+            "name": "Admito Technologies Private Limited",
+            "gstin": "07AAPCA5209B1ZY",
+            "panNumber": "AAPCA5209B",
+            "street": "RZ 154/284, 1st Floor, Street Number 2",
+            "city": "New Delhi",
+            "state": "Delhi",
+            "gstState": "07",
+            "pincode": "110046",
+            "email": "manu.jain@scaleupally.io",
+            "phone": "+919717087420",
+            "emailShowInInvoice": true,
+            "phoneShowInInvoice": true
+          },
+          "billedTo": {
+            "_id": "670639d0e6f01b0035164e01",
+            "name": "Zara USmani",
+            "state": null,
+            "stateCode": null,
+            "country": "AE",
+            "gstin": "",
+            "vatLabel": "VAT Number",
+            "panNumber": "",
+            "uniqueKey": "1728461150536",
+            "taxPayerType": "EXP",
+            "clientType": "INDIVIDUAL",
+            "clientId": "1728461150536"
+          },
+          "items": [
+            {
+              "discount": {
+                "discountType": "PERCENTAGE",
+                "amount": 0
+              },
+              "group": false,
+              "hidden": false,
+              "images": [],
+              "originalImages": [],
+              "isStockManaged": false,
+              "trackingMethod": "NONE",
+              "itc": "INELIGIBLE_OTHERS",
+              "unit": null,
+              "showSku": false,
+              "_id": "6819a460127632002e796cda",
+              "name": "Zara Power BI contract May Work",
+              "quantity": 1,
+              "rate": 3479.58,
+              "amount": 3479.58,
+              "subTotal": 3479.58,
+              "total": 3479.58,
+              "gstRate": 0,
+              "igst": 0,
+              "cgst": 0,
+              "sgst": 0,
+              "hsn": "",
+              "ledgerId": "",
+              "ledgerName": "",
+              "itemType": "product",
+              "sku": "o5kqrnxzci",
+              "params": {
+                "isPackage": false,
+                "packageItems": []
+              },
+              "amountRoundOff": 0,
+              "totalRoundOff": 0,
+              "description": "",
+              "allocations": null,
+              "inventory": "6819a461127632002e796d99",
+              "inventoryTxn": "687896cd69cd030018427ecc"
+            }
+          ],
+          "client": "670639d0e6f01b0035164e01",
+          "igst": true,
+          "createdAt": "2026-03-31T10:16:08.320Z",
+          "updatedAt": "2026-03-31T10:18:32.743Z",
+          "finalTotal": {
+            "total": 3479.58,
+            "amount": 3479.58,
+            "subTotal": 3479.58,
+            "igst": 0,
+            "cgst": 0,
+            "sgst": 0,
+            "amountRoundOff": 0,
+            "totalRoundOff": 0,
+            "cessTotal": {},
+            "discount": 0
+          },
+          "owner": {
+            "name": "Admito Technologies Private Limited",
+            "alias": "ScaleupAlly",
+            "urlKey": "scaleupally",
+            "timeZone": "Asia/Kolkata",
+            "premium": {
+              "activated": true,
+              "enabled": true,
+              "endDate": "2030-01-29T23:59:59.000Z",
+              "period": "5YEARLY",
+              "onTrial": false,
+              "trialActivated": false,
+              "productId": "65ba60540326d4a9691c9d63",
+              "paymentActivated": true
+            },
+            "createdAt": "2020-04-25T09:27:56.777Z",
+            "country": "IN",
+            "_schemaVersion": 3,
+            "_id": "5ea4029c456eba75fb1501b1",
+            "configuration": {
+              "isZatcaBusiness": false,
+              "tax": {
+                "taxName": "GST",
+                "taxType": "INDIA",
+                "defaultTaxRate": 18,
+                "allowTds": true
+              },
+              "hideHashInDocumentNumber": false,
+              "customFields": [
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347a",
+                  "label": "Full Name",
+                  "name": "Full Name",
+                  "key": "rl-contact-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "70991617"
+                },
+                {
+                  "dataType": "EMAIL",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347b",
+                  "label": "Email",
+                  "name": "Email",
+                  "key": "rl-contact-email-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "48344276"
+                },
+                {
+                  "dataType": "PHONE",
+                  "hideFlagEmoji": true,
+                  "isRequired": false,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347c",
+                  "label": "Phone number",
+                  "name": "Phone number",
+                  "key": "rl-contact-phone-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "03088406"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347d",
+                  "label": "Organisation Name",
+                  "name": "Organisation Name",
+                  "key": "rl-customer-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "11072456"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347e",
+                  "label": "Message",
+                  "name": "Message",
+                  "key": "rl-subject-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "97438886"
+                }
+              ],
+              "dueInDays": 7,
+              "einvoice": {
+                "irnNumber": true,
+                "irnAcknowledgementNumber": false,
+                "irnAcknowledgementDate": false,
+                "irnCancelledDate": false
+              },
+              "eway": {
+                "billNumber": true,
+                "billDate": true,
+                "billValidTillDate": true,
+                "billCancelledDate": false
+              },
+              "experimental": {
+                "scrollableLineItems": true,
+                "enableJs": true,
+                "performanceBlurOptimization": false,
+                "alternatePdfDownload": false,
+                "_id": "67ab1c6a7aed39ce86139a46",
+                "updatedAt": "2025-02-11T09:46:18.430Z",
+                "createdAt": "2025-02-11T09:46:18.430Z"
+              },
+              "_schemaVersion": 2,
+              "business": "5ea4029c456eba75fb1501b1",
+              "_id": "63639b74578b88532b72cfe7"
+            }
+          },
+          "source": "DASHBOARD",
+          "payments": [],
+          "voucherEntries": []
+        },
+        "pairedItem": {
+          "item": 30
+        }
+      },
+      {
+        "json": {
+          "currency": "USD",
+          "invoiceTitle": "Credit Note",
+          "billType": "CREDITNOTE",
+          "status": "PAID",
+          "discount": {
+            "discountMethod": "EQUAL",
+            "discountType": "PERCENTAGE"
+          },
+          "terms": [],
+          "attachments": [],
+          "isExpenditure": false,
+          "taxType": "INDIA",
+          "locale": "en-AE",
+          "tags": [],
+          "_id": "69cb9ea109c3730020eb4695",
+          "invoiceNumber": "AD/Del/25-26/022",
+          "invoiceDate": "2026-03-30T18:30:01.000Z",
+          "billedBy": {
+            "customFields": {
+              "company-id": {
+                "label": "Company ID",
+                "name": "Company ID",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "U74999DL2017PTC316970"
+              },
+              "hsnsac": {
+                "label": "HSN/SAC",
+                "name": "HSN/SAC",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "998313"
+              }
+            },
+            "additionalIds": [],
+            "country": "IN",
+            "name": "Admito Technologies Private Limited",
+            "gstin": "07AAPCA5209B1ZY",
+            "panNumber": "AAPCA5209B",
+            "street": "RZ 154/284, 1st Floor, Street Number 2",
+            "city": "New Delhi",
+            "state": "Delhi",
+            "gstState": "07",
+            "pincode": "110046",
+            "email": "manu.jain@scaleupally.io",
+            "phone": "+919717087420",
+            "emailShowInInvoice": true,
+            "phoneShowInInvoice": true
+          },
+          "billedTo": {
+            "_id": "674d80787d3e6e0106df0531",
+            "name": "CaratIQ",
+            "street": "1111b South Governors Avenue ste 21530",
+            "city": "Dover",
+            "pincode": "19904 ",
+            "stateCode": "DE",
+            "country": "US",
+            "vatLabel": "VAT Number",
+            "panNumber": null,
+            "uniqueKey": "1733132317659",
+            "taxPayerType": "EXP",
+            "clientType": "INDIVIDUAL",
+            "email": "ryan@caratiq.com",
+            "emailShowInInvoice": true,
+            "phone": "+16506877073",
+            "phoneShowInInvoice": true,
+            "clientId": "1733132317659"
+          },
+          "items": [
+            {
+              "discount": {
+                "discountType": "PERCENTAGE",
+                "amount": 0
+              },
+              "group": false,
+              "hidden": false,
+              "images": [],
+              "originalImages": [],
+              "isStockManaged": false,
+              "trackingMethod": "NONE",
+              "itc": null,
+              "unit": null,
+              "showSku": true,
+              "_id": "68595c468c9b1a001968cdd8",
+              "name": "CaratIQ (13th Oct To 19th Oct ) - Manish Hours:",
+              "description": "Apploye+ Meetings = 26 Hours",
+              "hsn": "",
+              "classification": "",
+              "quantity": 26,
+              "rate": 20,
+              "gstRate": 0,
+              "subTotal": 520,
+              "amount": 520,
+              "igst": 0,
+              "cgst": 0,
+              "sgst": 0,
+              "total": 520,
+              "ledgerId": "",
+              "ledgerName": "",
+              "totalRoundOff": 0,
+              "amountRoundOff": 0,
+              "params": {
+                "isPackage": false,
+                "packageItems": []
+              },
+              "itemType": "product",
+              "sku": "vryj00zqlj",
+              "allocations": null,
+              "inventory": "68595c468c9b1a001968ce56",
+              "inventoryTxn": "69049de5f6a1fb00122f0003"
+            }
+          ],
+          "client": "674d80787d3e6e0106df0531",
+          "igst": true,
+          "createdAt": "2026-03-31T10:14:57.495Z",
+          "updatedAt": "2026-04-20T06:57:46.308Z",
+          "finalTotal": {
+            "total": 520,
+            "amount": 520,
+            "subTotal": 520,
+            "igst": 0,
+            "cgst": 0,
+            "sgst": 0,
+            "amountRoundOff": 0,
+            "totalRoundOff": 0,
+            "cessTotal": {},
+            "discount": 0
+          },
+          "owner": {
+            "name": "Admito Technologies Private Limited",
+            "alias": "ScaleupAlly",
+            "urlKey": "scaleupally",
+            "timeZone": "Asia/Kolkata",
+            "premium": {
+              "activated": true,
+              "enabled": true,
+              "endDate": "2030-01-29T23:59:59.000Z",
+              "period": "5YEARLY",
+              "onTrial": false,
+              "trialActivated": false,
+              "productId": "65ba60540326d4a9691c9d63",
+              "paymentActivated": true
+            },
+            "createdAt": "2020-04-25T09:27:56.777Z",
+            "country": "IN",
+            "_schemaVersion": 3,
+            "_id": "5ea4029c456eba75fb1501b1",
+            "configuration": {
+              "isZatcaBusiness": false,
+              "tax": {
+                "taxName": "GST",
+                "taxType": "INDIA",
+                "defaultTaxRate": 18,
+                "allowTds": true
+              },
+              "hideHashInDocumentNumber": false,
+              "customFields": [
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347a",
+                  "label": "Full Name",
+                  "name": "Full Name",
+                  "key": "rl-contact-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "70991617"
+                },
+                {
+                  "dataType": "EMAIL",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347b",
+                  "label": "Email",
+                  "name": "Email",
+                  "key": "rl-contact-email-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "48344276"
+                },
+                {
+                  "dataType": "PHONE",
+                  "hideFlagEmoji": true,
+                  "isRequired": false,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347c",
+                  "label": "Phone number",
+                  "name": "Phone number",
+                  "key": "rl-contact-phone-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "03088406"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347d",
+                  "label": "Organisation Name",
+                  "name": "Organisation Name",
+                  "key": "rl-customer-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "11072456"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347e",
+                  "label": "Message",
+                  "name": "Message",
+                  "key": "rl-subject-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "97438886"
+                }
+              ],
+              "dueInDays": 7,
+              "einvoice": {
+                "irnNumber": true,
+                "irnAcknowledgementNumber": false,
+                "irnAcknowledgementDate": false,
+                "irnCancelledDate": false
+              },
+              "eway": {
+                "billNumber": true,
+                "billDate": true,
+                "billValidTillDate": true,
+                "billCancelledDate": false
+              },
+              "experimental": {
+                "scrollableLineItems": true,
+                "enableJs": true,
+                "performanceBlurOptimization": false,
+                "alternatePdfDownload": false,
+                "_id": "67ab1c6a7aed39ce86139a46",
+                "updatedAt": "2025-02-11T09:46:18.430Z",
+                "createdAt": "2025-02-11T09:46:18.430Z"
+              },
+              "_schemaVersion": 2,
+              "business": "5ea4029c456eba75fb1501b1",
+              "_id": "63639b74578b88532b72cfe7"
+            }
+          },
+          "source": "DASHBOARD",
+          "payments": [],
+          "voucherEntries": []
+        },
+        "pairedItem": {
+          "item": 30
+        }
+      },
+      {
+        "json": {
+          "currency": "CAD",
+          "invoiceTitle": "Credit Note",
+          "billType": "CREDITNOTE",
+          "status": "PAID",
+          "discount": {
+            "discountMethod": "EQUAL",
+            "discountType": "PERCENTAGE"
+          },
+          "terms": [],
+          "attachments": [],
+          "isExpenditure": false,
+          "taxType": "INDIA",
+          "locale": "en-AE",
+          "tags": [],
+          "_id": "69c0fc346a978d002b35589c",
+          "invoiceNumber": "AD/Del/25-26/021",
+          "invoiceDate": "2026-03-22T18:30:01.000Z",
+          "billedBy": {
+            "customFields": {
+              "company-id": {
+                "label": "Company ID",
+                "name": "Company ID",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "U74999DL2017PTC316970"
+              },
+              "hsnsac": {
+                "label": "HSN/SAC",
+                "name": "HSN/SAC",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "998313"
+              }
+            },
+            "additionalIds": [],
+            "country": "IN",
+            "name": "Admito Technologies Private Limited",
+            "gstin": "07AAPCA5209B1ZY",
+            "panNumber": "AAPCA5209B",
+            "street": "RZ 154/284, 1st Floor, Street Number 2",
+            "city": "New Delhi",
+            "state": "Delhi",
+            "gstState": "07",
+            "pincode": "110046",
+            "email": "manu.jain@scaleupally.io",
+            "phone": "+919717087420",
+            "emailShowInInvoice": true,
+            "phoneShowInInvoice": true
+          },
+          "billedTo": {
+            "_id": "65cef0f3149bd40027010c25",
+            "name": "Earth One Mycology Supply Inc.",
+            "street": "5613 Emerson Rd.",
+            "city": "Sechelt BC",
+            "pincode": "V7Z 0R8",
+            "country": "CA",
+            "gstin": "",
+            "vatLabel": "VAT Number",
+            "panNumber": "",
+            "additionalIds": [],
+            "taxPayerType": "EXP",
+            "clientType": "INDIVIDUAL"
+          },
+          "items": [
+            {
+              "discount": {
+                "discountType": "PERCENTAGE",
+                "amount": 0
+              },
+              "group": false,
+              "hidden": false,
+              "images": [],
+              "originalImages": [],
+              "isStockManaged": false,
+              "trackingMethod": "NONE",
+              "itc": "INELIGIBLE_OTHERS",
+              "unit": null,
+              "showSku": false,
+              "_id": "69ae8a8436765f002b42b129",
+              "name": "MM 1st Subscription",
+              "quantity": 1,
+              "rate": 1126.38,
+              "amount": 1126.38,
+              "subTotal": 1126.38,
+              "total": 1126.38,
+              "gstRate": 18,
+              "igst": 0,
+              "cgst": 0,
+              "sgst": 0,
+              "hsn": "",
+              "ledgerId": "",
+              "ledgerName": "",
+              "itemType": "product",
+              "sku": "lnvssqkdw7",
+              "params": {
+                "isPackage": false,
+                "packageItems": []
+              },
+              "amountRoundOff": 0,
+              "totalRoundOff": 0,
+              "allocations": null,
+              "inventory": "69ae8a8536765f002b42b221",
+              "inventoryTxn": "69ae8a8536765f002b42b22c"
+            }
+          ],
+          "client": "65cef0f3149bd40027010c25",
+          "igst": true,
+          "createdAt": "2026-03-23T08:39:16.435Z",
+          "updatedAt": "2026-03-23T08:40:04.644Z",
+          "finalTotal": {
+            "total": 1126.38,
+            "amount": 1126.38,
+            "subTotal": 1126.38,
+            "igst": 0,
+            "cgst": 0,
+            "sgst": 0,
+            "amountRoundOff": 0,
+            "totalRoundOff": 0,
+            "cessTotal": {},
+            "discount": 0
+          },
+          "owner": {
+            "name": "Admito Technologies Private Limited",
+            "alias": "ScaleupAlly",
+            "urlKey": "scaleupally",
+            "timeZone": "Asia/Kolkata",
+            "premium": {
+              "activated": true,
+              "enabled": true,
+              "endDate": "2030-01-29T23:59:59.000Z",
+              "period": "5YEARLY",
+              "onTrial": false,
+              "trialActivated": false,
+              "productId": "65ba60540326d4a9691c9d63",
+              "paymentActivated": true
+            },
+            "createdAt": "2020-04-25T09:27:56.777Z",
+            "country": "IN",
+            "_schemaVersion": 3,
+            "_id": "5ea4029c456eba75fb1501b1",
+            "configuration": {
+              "isZatcaBusiness": false,
+              "tax": {
+                "taxName": "GST",
+                "taxType": "INDIA",
+                "defaultTaxRate": 18,
+                "allowTds": true
+              },
+              "hideHashInDocumentNumber": false,
+              "customFields": [
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347a",
+                  "label": "Full Name",
+                  "name": "Full Name",
+                  "key": "rl-contact-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "70991617"
+                },
+                {
+                  "dataType": "EMAIL",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347b",
+                  "label": "Email",
+                  "name": "Email",
+                  "key": "rl-contact-email-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "48344276"
+                },
+                {
+                  "dataType": "PHONE",
+                  "hideFlagEmoji": true,
+                  "isRequired": false,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347c",
+                  "label": "Phone number",
+                  "name": "Phone number",
+                  "key": "rl-contact-phone-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "03088406"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347d",
+                  "label": "Organisation Name",
+                  "name": "Organisation Name",
+                  "key": "rl-customer-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "11072456"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347e",
+                  "label": "Message",
+                  "name": "Message",
+                  "key": "rl-subject-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "97438886"
+                }
+              ],
+              "dueInDays": 7,
+              "einvoice": {
+                "irnNumber": true,
+                "irnAcknowledgementNumber": false,
+                "irnAcknowledgementDate": false,
+                "irnCancelledDate": false
+              },
+              "eway": {
+                "billNumber": true,
+                "billDate": true,
+                "billValidTillDate": true,
+                "billCancelledDate": false
+              },
+              "experimental": {
+                "scrollableLineItems": true,
+                "enableJs": true,
+                "performanceBlurOptimization": false,
+                "alternatePdfDownload": false,
+                "_id": "67ab1c6a7aed39ce86139a46",
+                "updatedAt": "2025-02-11T09:46:18.430Z",
+                "createdAt": "2025-02-11T09:46:18.430Z"
+              },
+              "_schemaVersion": 2,
+              "business": "5ea4029c456eba75fb1501b1",
+              "_id": "63639b74578b88532b72cfe7"
+            }
+          },
+          "source": "DASHBOARD",
+          "payments": [],
+          "voucherEntries": []
+        },
+        "pairedItem": {
+          "item": 30
+        }
+      },
+      {
+        "json": {
+          "currency": "USD",
+          "invoiceTitle": "Credit Note",
+          "billType": "CREDITNOTE",
+          "status": "PAID",
+          "discount": {
+            "discountMethod": "EQUAL",
+            "discountType": "PERCENTAGE"
+          },
+          "terms": [],
+          "attachments": [],
+          "isExpenditure": false,
+          "taxType": "INDIA",
+          "locale": "en-AE",
+          "tags": [],
+          "_id": "698ac51e3f41b10011f1621d",
+          "invoiceNumber": "AD/Del/25-26/019",
+          "invoiceDate": "2026-01-30T18:30:02.000Z",
+          "billedBy": {
+            "customFields": {
+              "company-id": {
+                "label": "Company ID",
+                "name": "Company ID",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "U74999DL2017PTC316970"
+              },
+              "hsnsac": {
+                "label": "HSN/SAC",
+                "name": "HSN/SAC",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "998313"
+              }
+            },
+            "additionalIds": [],
+            "country": "IN",
+            "name": "Admito Technologies Private Limited",
+            "gstin": "07AAPCA5209B1ZY",
+            "panNumber": "AAPCA5209B",
+            "street": "RZ 154/284, 1st Floor, Street Number 2",
+            "city": "New Delhi",
+            "state": "Delhi",
+            "gstState": "07",
+            "pincode": "110046",
+            "email": "manu.jain@scaleupally.io",
+            "phone": "+919717087420",
+            "emailShowInInvoice": true,
+            "phoneShowInInvoice": true
+          },
+          "billedTo": {
+            "_id": "688c4aa5993b4a0019578847",
+            "name": "Altitude Pay",
+            "street": "Zabeel 2,Tower 1 flat number 3005",
+            "city": "",
+            "state": null,
+            "stateCode": "DU",
+            "country": "AE",
+            "gstin": "",
+            "vatLabel": "VAT Number",
+            "panNumber": "",
+            "additionalIds": [],
+            "uniqueKey": "1754024657942",
+            "taxPayerType": "EXP",
+            "clientType": "INDIVIDUAL",
+            "clientId": "1754024657942"
+          },
+          "items": [
+            {
+              "discount": {
+                "discountType": "PERCENTAGE",
+                "amount": 0
+              },
+              "group": false,
+              "hidden": false,
+              "images": [],
+              "originalImages": [],
+              "isStockManaged": false,
+              "trackingMethod": "NONE",
+              "itc": null,
+              "unit": null,
+              "showSku": true,
+              "_id": "69084ceb60457a002be67abe",
+              "name": "Sale revert",
+              "description": "",
+              "hsn": "",
+              "classification": "",
+              "quantity": 1,
+              "rate": 2935,
+              "gstRate": 18,
+              "subTotal": 2935,
+              "amount": 2935,
+              "igst": 0,
+              "cgst": 0,
+              "sgst": 0,
+              "total": 2935,
+              "ledgerId": "",
+              "ledgerName": "",
+              "totalRoundOff": 0,
+              "amountRoundOff": 0,
+              "params": {
+                "isPackage": false,
+                "packageItems": []
+              },
+              "itemType": "product",
+              "sku": "",
+              "allocations": null
+            }
+          ],
+          "client": "688c4aa5993b4a0019578847",
+          "igst": true,
+          "createdAt": "2026-02-10T05:41:50.760Z",
+          "updatedAt": "2026-02-10T05:43:06.609Z",
+          "finalTotal": {
+            "total": 2935,
+            "amount": 2935,
+            "subTotal": 2935,
+            "igst": 0,
+            "cgst": 0,
+            "sgst": 0,
+            "amountRoundOff": 0,
+            "totalRoundOff": 0,
+            "cessTotal": {},
+            "discount": 0
+          },
+          "owner": {
+            "name": "Admito Technologies Private Limited",
+            "alias": "ScaleupAlly",
+            "urlKey": "scaleupally",
+            "timeZone": "Asia/Kolkata",
+            "premium": {
+              "activated": true,
+              "enabled": true,
+              "endDate": "2030-01-29T23:59:59.000Z",
+              "period": "5YEARLY",
+              "onTrial": false,
+              "trialActivated": false,
+              "productId": "65ba60540326d4a9691c9d63",
+              "paymentActivated": true
+            },
+            "createdAt": "2020-04-25T09:27:56.777Z",
+            "country": "IN",
+            "_schemaVersion": 3,
+            "_id": "5ea4029c456eba75fb1501b1",
+            "configuration": {
+              "isZatcaBusiness": false,
+              "tax": {
+                "taxName": "GST",
+                "taxType": "INDIA",
+                "defaultTaxRate": 18,
+                "allowTds": true
+              },
+              "hideHashInDocumentNumber": false,
+              "customFields": [
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347a",
+                  "label": "Full Name",
+                  "name": "Full Name",
+                  "key": "rl-contact-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "70991617"
+                },
+                {
+                  "dataType": "EMAIL",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347b",
+                  "label": "Email",
+                  "name": "Email",
+                  "key": "rl-contact-email-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "48344276"
+                },
+                {
+                  "dataType": "PHONE",
+                  "hideFlagEmoji": true,
+                  "isRequired": false,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347c",
+                  "label": "Phone number",
+                  "name": "Phone number",
+                  "key": "rl-contact-phone-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "03088406"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347d",
+                  "label": "Organisation Name",
+                  "name": "Organisation Name",
+                  "key": "rl-customer-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "11072456"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347e",
+                  "label": "Message",
+                  "name": "Message",
+                  "key": "rl-subject-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "97438886"
+                }
+              ],
+              "dueInDays": 7,
+              "einvoice": {
+                "irnNumber": true,
+                "irnAcknowledgementNumber": false,
+                "irnAcknowledgementDate": false,
+                "irnCancelledDate": false
+              },
+              "eway": {
+                "billNumber": true,
+                "billDate": true,
+                "billValidTillDate": true,
+                "billCancelledDate": false
+              },
+              "experimental": {
+                "scrollableLineItems": true,
+                "enableJs": true,
+                "performanceBlurOptimization": false,
+                "alternatePdfDownload": false,
+                "_id": "67ab1c6a7aed39ce86139a46",
+                "updatedAt": "2025-02-11T09:46:18.430Z",
+                "createdAt": "2025-02-11T09:46:18.430Z"
+              },
+              "_schemaVersion": 2,
+              "business": "5ea4029c456eba75fb1501b1",
+              "_id": "63639b74578b88532b72cfe7"
+            }
+          },
+          "source": "DASHBOARD",
+          "payments": [],
+          "voucherEntries": []
+        },
+        "pairedItem": {
+          "item": 30
+        }
+      },
+      {
+        "json": {
+          "currency": "USD",
+          "invoiceTitle": "Credit Note",
+          "billType": "CREDITNOTE",
+          "status": "PAID",
+          "discount": {
+            "discountMethod": "EQUAL",
+            "discountType": "PERCENTAGE"
+          },
+          "terms": [],
+          "attachments": [],
+          "isExpenditure": false,
+          "taxType": "INDIA",
+          "locale": "en-AE",
+          "tags": [],
+          "_id": "698ac4ca9cb103001f9402c2",
+          "invoiceNumber": "AD/Del/25-26/018",
+          "invoiceDate": "2026-01-30T18:30:01.000Z",
+          "billedBy": {
+            "customFields": {
+              "company-id": {
+                "label": "Company ID",
+                "name": "Company ID",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "U74999DL2017PTC316970"
+              },
+              "hsnsac": {
+                "label": "HSN/SAC",
+                "name": "HSN/SAC",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "998313"
+              }
+            },
+            "additionalIds": [],
+            "country": "IN",
+            "name": "Admito Technologies Private Limited",
+            "gstin": "07AAPCA5209B1ZY",
+            "panNumber": "AAPCA5209B",
+            "street": "RZ 154/284, 1st Floor, Street Number 2",
+            "city": "New Delhi",
+            "state": "Delhi",
+            "gstState": "07",
+            "pincode": "110046",
+            "email": "manu.jain@scaleupally.io",
+            "phone": "+919717087420",
+            "emailShowInInvoice": true,
+            "phoneShowInInvoice": true
+          },
+          "billedTo": {
+            "_id": "688c4aa5993b4a0019578847",
+            "name": "Altitude Pay",
+            "street": "Zabeel 2,Tower 1 flat number 3005",
+            "city": "",
+            "state": null,
+            "stateCode": "DU",
+            "country": "AE",
+            "gstin": "",
+            "vatLabel": "VAT Number",
+            "panNumber": "",
+            "additionalIds": [],
+            "uniqueKey": "1754024657942",
+            "taxPayerType": "EXP",
+            "clientType": "INDIVIDUAL",
+            "clientId": "1754024657942"
+          },
+          "items": [
+            {
+              "discount": {
+                "discountType": "PERCENTAGE",
+                "amount": 0
+              },
+              "group": false,
+              "hidden": false,
+              "images": [],
+              "originalImages": [],
+              "isStockManaged": false,
+              "trackingMethod": "NONE",
+              "itc": null,
+              "unit": null,
+              "showSku": true,
+              "_id": "69084ceb60457a002be67abe",
+              "name": "Sale Correction",
+              "description": "",
+              "hsn": "",
+              "classification": "",
+              "quantity": 1,
+              "rate": 5500,
+              "gstRate": 18,
+              "subTotal": 5500,
+              "amount": 5500,
+              "igst": 0,
+              "cgst": 0,
+              "sgst": 0,
+              "total": 5500,
+              "ledgerId": "",
+              "ledgerName": "",
+              "totalRoundOff": 0,
+              "amountRoundOff": 0,
+              "params": {
+                "isPackage": false,
+                "packageItems": []
+              },
+              "itemType": "product",
+              "sku": "",
+              "allocations": null
+            }
+          ],
+          "client": "688c4aa5993b4a0019578847",
+          "igst": true,
+          "createdAt": "2026-02-10T05:40:26.576Z",
+          "updatedAt": "2026-02-10T05:45:45.325Z",
+          "finalTotal": {
+            "total": 5500,
+            "amount": 5500,
+            "subTotal": 5500,
+            "igst": 0,
+            "cgst": 0,
+            "sgst": 0,
+            "amountRoundOff": 0,
+            "totalRoundOff": 0,
+            "cessTotal": {},
+            "discount": 0
+          },
+          "owner": {
+            "name": "Admito Technologies Private Limited",
+            "alias": "ScaleupAlly",
+            "urlKey": "scaleupally",
+            "timeZone": "Asia/Kolkata",
+            "premium": {
+              "activated": true,
+              "enabled": true,
+              "endDate": "2030-01-29T23:59:59.000Z",
+              "period": "5YEARLY",
+              "onTrial": false,
+              "trialActivated": false,
+              "productId": "65ba60540326d4a9691c9d63",
+              "paymentActivated": true
+            },
+            "createdAt": "2020-04-25T09:27:56.777Z",
+            "country": "IN",
+            "_schemaVersion": 3,
+            "_id": "5ea4029c456eba75fb1501b1",
+            "configuration": {
+              "isZatcaBusiness": false,
+              "tax": {
+                "taxName": "GST",
+                "taxType": "INDIA",
+                "defaultTaxRate": 18,
+                "allowTds": true
+              },
+              "hideHashInDocumentNumber": false,
+              "customFields": [
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347a",
+                  "label": "Full Name",
+                  "name": "Full Name",
+                  "key": "rl-contact-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "70991617"
+                },
+                {
+                  "dataType": "EMAIL",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347b",
+                  "label": "Email",
+                  "name": "Email",
+                  "key": "rl-contact-email-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "48344276"
+                },
+                {
+                  "dataType": "PHONE",
+                  "hideFlagEmoji": true,
+                  "isRequired": false,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347c",
+                  "label": "Phone number",
+                  "name": "Phone number",
+                  "key": "rl-contact-phone-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "03088406"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347d",
+                  "label": "Organisation Name",
+                  "name": "Organisation Name",
+                  "key": "rl-customer-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "11072456"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347e",
+                  "label": "Message",
+                  "name": "Message",
+                  "key": "rl-subject-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "97438886"
+                }
+              ],
+              "dueInDays": 7,
+              "einvoice": {
+                "irnNumber": true,
+                "irnAcknowledgementNumber": false,
+                "irnAcknowledgementDate": false,
+                "irnCancelledDate": false
+              },
+              "eway": {
+                "billNumber": true,
+                "billDate": true,
+                "billValidTillDate": true,
+                "billCancelledDate": false
+              },
+              "experimental": {
+                "scrollableLineItems": true,
+                "enableJs": true,
+                "performanceBlurOptimization": false,
+                "alternatePdfDownload": false,
+                "_id": "67ab1c6a7aed39ce86139a46",
+                "updatedAt": "2025-02-11T09:46:18.430Z",
+                "createdAt": "2025-02-11T09:46:18.430Z"
+              },
+              "_schemaVersion": 2,
+              "business": "5ea4029c456eba75fb1501b1",
+              "_id": "63639b74578b88532b72cfe7"
+            }
+          },
+          "source": "DASHBOARD",
+          "payments": [],
+          "voucherEntries": []
+        },
+        "pairedItem": {
+          "item": 30
+        }
+      },
+      {
+        "json": {
+          "currency": "USD",
+          "invoiceTitle": "Credit Note",
+          "billType": "CREDITNOTE",
+          "status": "PAID",
+          "discount": {
+            "discountMethod": "EQUAL",
+            "discountType": "PERCENTAGE"
+          },
+          "terms": [],
+          "attachments": [],
+          "isExpenditure": false,
+          "taxType": "INDIA",
+          "locale": "en-AE",
+          "tags": [],
+          "_id": "698ac480643f25001895dd6a",
+          "invoiceNumber": "AD/Del/25-26/017",
+          "invoiceDate": "2026-01-29T18:30:01.000Z",
+          "billedBy": {
+            "customFields": {
+              "company-id": {
+                "label": "Company ID",
+                "name": "Company ID",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "U74999DL2017PTC316970"
+              },
+              "hsnsac": {
+                "label": "HSN/SAC",
+                "name": "HSN/SAC",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "998313"
+              }
+            },
+            "additionalIds": [],
+            "country": "IN",
+            "name": "Admito Technologies Private Limited",
+            "gstin": "07AAPCA5209B1ZY",
+            "panNumber": "AAPCA5209B",
+            "street": "RZ 154/284, 1st Floor, Street Number 2",
+            "city": "New Delhi",
+            "state": "Delhi",
+            "gstState": "07",
+            "pincode": "110046",
+            "email": "manu.jain@scaleupally.io",
+            "phone": "+919717087420",
+            "emailShowInInvoice": true,
+            "phoneShowInInvoice": true
+          },
+          "billedTo": {
+            "_id": "688c4aa5993b4a0019578847",
+            "name": "Altitude Pay",
+            "street": "Zabeel 2,Tower 1 flat number 3005",
+            "city": "",
+            "state": null,
+            "stateCode": "DU",
+            "country": "AE",
+            "gstin": "",
+            "vatLabel": "VAT Number",
+            "panNumber": "",
+            "additionalIds": [],
+            "uniqueKey": "1754024657942",
+            "taxPayerType": "EXP",
+            "clientType": "INDIVIDUAL",
+            "clientId": "1754024657942"
+          },
+          "items": [
+            {
+              "discount": {
+                "discountType": "PERCENTAGE",
+                "amount": 0
+              },
+              "group": false,
+              "hidden": false,
+              "images": [],
+              "originalImages": [],
+              "isStockManaged": false,
+              "trackingMethod": "NONE",
+              "itc": null,
+              "unit": null,
+              "showSku": true,
+              "_id": "69084ceb60457a002be67abe",
+              "name": "Sale Correction",
+              "description": "",
+              "hsn": "",
+              "classification": "",
+              "quantity": 1,
+              "rate": 7200,
+              "gstRate": 18,
+              "subTotal": 7200,
+              "amount": 7200,
+              "igst": 0,
+              "cgst": 0,
+              "sgst": 0,
+              "total": 7200,
+              "ledgerId": "",
+              "ledgerName": "",
+              "totalRoundOff": 0,
+              "amountRoundOff": 0,
+              "params": {
+                "isPackage": false,
+                "packageItems": []
+              },
+              "itemType": "product",
+              "sku": "",
+              "allocations": null
+            }
+          ],
+          "client": "688c4aa5993b4a0019578847",
+          "igst": true,
+          "createdAt": "2026-02-10T05:39:12.179Z",
+          "updatedAt": "2026-02-10T05:43:25.064Z",
+          "finalTotal": {
+            "total": 7200,
+            "amount": 7200,
+            "subTotal": 7200,
+            "igst": 0,
+            "cgst": 0,
+            "sgst": 0,
+            "amountRoundOff": 0,
+            "totalRoundOff": 0,
+            "cessTotal": {},
+            "discount": 0
+          },
+          "owner": {
+            "name": "Admito Technologies Private Limited",
+            "alias": "ScaleupAlly",
+            "urlKey": "scaleupally",
+            "timeZone": "Asia/Kolkata",
+            "premium": {
+              "activated": true,
+              "enabled": true,
+              "endDate": "2030-01-29T23:59:59.000Z",
+              "period": "5YEARLY",
+              "onTrial": false,
+              "trialActivated": false,
+              "productId": "65ba60540326d4a9691c9d63",
+              "paymentActivated": true
+            },
+            "createdAt": "2020-04-25T09:27:56.777Z",
+            "country": "IN",
+            "_schemaVersion": 3,
+            "_id": "5ea4029c456eba75fb1501b1",
+            "configuration": {
+              "isZatcaBusiness": false,
+              "tax": {
+                "taxName": "GST",
+                "taxType": "INDIA",
+                "defaultTaxRate": 18,
+                "allowTds": true
+              },
+              "hideHashInDocumentNumber": false,
+              "customFields": [
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347a",
+                  "label": "Full Name",
+                  "name": "Full Name",
+                  "key": "rl-contact-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "70991617"
+                },
+                {
+                  "dataType": "EMAIL",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347b",
+                  "label": "Email",
+                  "name": "Email",
+                  "key": "rl-contact-email-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "48344276"
+                },
+                {
+                  "dataType": "PHONE",
+                  "hideFlagEmoji": true,
+                  "isRequired": false,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347c",
+                  "label": "Phone number",
+                  "name": "Phone number",
+                  "key": "rl-contact-phone-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "03088406"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347d",
+                  "label": "Organisation Name",
+                  "name": "Organisation Name",
+                  "key": "rl-customer-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "11072456"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347e",
+                  "label": "Message",
+                  "name": "Message",
+                  "key": "rl-subject-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "97438886"
+                }
+              ],
+              "dueInDays": 7,
+              "einvoice": {
+                "irnNumber": true,
+                "irnAcknowledgementNumber": false,
+                "irnAcknowledgementDate": false,
+                "irnCancelledDate": false
+              },
+              "eway": {
+                "billNumber": true,
+                "billDate": true,
+                "billValidTillDate": true,
+                "billCancelledDate": false
+              },
+              "experimental": {
+                "scrollableLineItems": true,
+                "enableJs": true,
+                "performanceBlurOptimization": false,
+                "alternatePdfDownload": false,
+                "_id": "67ab1c6a7aed39ce86139a46",
+                "updatedAt": "2025-02-11T09:46:18.430Z",
+                "createdAt": "2025-02-11T09:46:18.430Z"
+              },
+              "_schemaVersion": 2,
+              "business": "5ea4029c456eba75fb1501b1",
+              "_id": "63639b74578b88532b72cfe7"
+            }
+          },
+          "source": "DASHBOARD",
+          "payments": [],
+          "voucherEntries": []
+        },
+        "pairedItem": {
+          "item": 30
+        }
+      },
+      {
+        "json": {
+          "currency": "USD",
+          "invoiceTitle": "Credit Note",
+          "billType": "CREDITNOTE",
+          "status": "PAID",
+          "discount": {
+            "discountMethod": "EQUAL",
+            "discountType": "PERCENTAGE"
+          },
+          "terms": [],
+          "attachments": [],
+          "isExpenditure": false,
+          "taxType": "GLOBAL",
+          "locale": "en-AE",
+          "tags": [],
+          "_id": "6943bc394d9d28002a1921f9",
+          "invoiceNumber": "AD/Del/25-26/016",
+          "invoiceDate": "2025-12-14T18:30:04.000Z",
+          "billedBy": {
+            "customFields": {
+              "company-id": {
+                "label": "Company ID",
+                "name": "Company ID",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "U74999DL2017PTC316970"
+              },
+              "hsnsac": {
+                "label": "HSN/SAC",
+                "name": "HSN/SAC",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "998313"
+              }
+            },
+            "country": "IN",
+            "name": "Admito Technologies Private Limited",
+            "gstin": "07AAPCA5209B1ZY",
+            "panNumber": "AAPCA5209B",
+            "street": "RZ 154/284, 1st Floor, Street Number 2",
+            "city": "New Delhi",
+            "state": "Delhi",
+            "gstState": "07",
+            "pincode": "110046",
+            "additionalIds": [],
+            "email": "manu.jain@scaleupally.io",
+            "phone": "+919717087420",
+            "emailShowInInvoice": true,
+            "phoneShowInInvoice": true
+          },
+          "billedTo": {
+            "_id": "68af0d9ba52521004c89655a",
+            "name": "FOGION LTD",
+            "street": "85 Great Portland Street, First Floor, Westminster",
+            "city": "London",
+            "pincode": "W1W 7LT",
+            "stateCode": null,
+            "country": "GB",
+            "gstin": "",
+            "vatLabel": "VAT Number",
+            "panNumber": "",
+            "additionalIds": [],
+            "uniqueKey": "1756302692512",
+            "taxPayerType": "EXP",
+            "clientType": "INDIVIDUAL",
+            "clientId": "1756302692512"
+          },
+          "items": [
+            {
+              "discount": {
+                "discountType": "PERCENTAGE",
+                "amount": 0
+              },
+              "group": false,
+              "hidden": false,
+              "images": [],
+              "originalImages": [],
+              "isStockManaged": false,
+              "trackingMethod": "NONE",
+              "itc": null,
+              "unit": null,
+              "showSku": true,
+              "_id": "68af0de6b212b70057f9135d",
+              "name": "Collaboration Support",
+              "description": "",
+              "hsn": "",
+              "classification": "",
+              "quantity": 1,
+              "rate": 35,
+              "gstRate": 0,
+              "subTotal": 35,
+              "amount": 35,
+              "igst": 0,
+              "cgst": 0,
+              "sgst": 0,
+              "total": 35,
+              "ledgerId": "",
+              "ledgerName": "",
+              "totalRoundOff": 0,
+              "amountRoundOff": 0,
+              "params": {
+                "isPackage": false,
+                "packageItems": []
+              },
+              "itemType": "product",
+              "sku": "viitqemnvd",
+              "allocations": null,
+              "inventory": "68af0de7b212b70057f913b8",
+              "inventoryTxn": "68af0de7b212b70057f913be"
+            }
+          ],
+          "client": "68af0d9ba52521004c89655a",
+          "igst": true,
+          "createdAt": "2025-12-18T08:32:57.786Z",
+          "updatedAt": "2026-02-10T05:36:57.206Z",
+          "finalTotal": {
+            "total": 35,
+            "amount": 35,
+            "subTotal": 35,
+            "igst": 0,
+            "cgst": 0,
+            "sgst": 0,
+            "amountRoundOff": 0,
+            "totalRoundOff": 0,
+            "cessTotal": {},
+            "discount": 0
+          },
+          "owner": {
+            "name": "Admito Technologies Private Limited",
+            "alias": "ScaleupAlly",
+            "urlKey": "scaleupally",
+            "timeZone": "Asia/Kolkata",
+            "premium": {
+              "activated": true,
+              "enabled": true,
+              "endDate": "2030-01-29T23:59:59.000Z",
+              "period": "5YEARLY",
+              "onTrial": false,
+              "trialActivated": false,
+              "productId": "65ba60540326d4a9691c9d63",
+              "paymentActivated": true
+            },
+            "createdAt": "2020-04-25T09:27:56.777Z",
+            "country": "IN",
+            "_schemaVersion": 3,
+            "_id": "5ea4029c456eba75fb1501b1",
+            "configuration": {
+              "isZatcaBusiness": false,
+              "tax": {
+                "taxName": "GST",
+                "taxType": "INDIA",
+                "defaultTaxRate": 18,
+                "allowTds": true
+              },
+              "hideHashInDocumentNumber": false,
+              "customFields": [
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347a",
+                  "label": "Full Name",
+                  "name": "Full Name",
+                  "key": "rl-contact-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "70991617"
+                },
+                {
+                  "dataType": "EMAIL",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347b",
+                  "label": "Email",
+                  "name": "Email",
+                  "key": "rl-contact-email-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "48344276"
+                },
+                {
+                  "dataType": "PHONE",
+                  "hideFlagEmoji": true,
+                  "isRequired": false,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347c",
+                  "label": "Phone number",
+                  "name": "Phone number",
+                  "key": "rl-contact-phone-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "03088406"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347d",
+                  "label": "Organisation Name",
+                  "name": "Organisation Name",
+                  "key": "rl-customer-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "11072456"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347e",
+                  "label": "Message",
+                  "name": "Message",
+                  "key": "rl-subject-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "97438886"
+                }
+              ],
+              "dueInDays": 7,
+              "einvoice": {
+                "irnNumber": true,
+                "irnAcknowledgementNumber": false,
+                "irnAcknowledgementDate": false,
+                "irnCancelledDate": false
+              },
+              "eway": {
+                "billNumber": true,
+                "billDate": true,
+                "billValidTillDate": true,
+                "billCancelledDate": false
+              },
+              "experimental": {
+                "scrollableLineItems": true,
+                "enableJs": true,
+                "performanceBlurOptimization": false,
+                "alternatePdfDownload": false,
+                "_id": "67ab1c6a7aed39ce86139a46",
+                "updatedAt": "2025-02-11T09:46:18.430Z",
+                "createdAt": "2025-02-11T09:46:18.430Z"
+              },
+              "_schemaVersion": 2,
+              "business": "5ea4029c456eba75fb1501b1",
+              "_id": "63639b74578b88532b72cfe7"
+            }
+          },
+          "source": "DASHBOARD",
+          "payments": [],
+          "voucherEntries": []
+        },
+        "pairedItem": {
+          "item": 30
+        }
+      },
+      {
+        "json": {
+          "currency": "USD",
+          "invoiceTitle": "Credit Note",
+          "billType": "CREDITNOTE",
+          "status": "PAID",
+          "discount": {
+            "discountMethod": "EQUAL",
+            "discountType": "PERCENTAGE"
+          },
+          "terms": [],
+          "attachments": [],
+          "isExpenditure": false,
+          "taxType": "GLOBAL",
+          "locale": "en-AE",
+          "tags": [],
+          "_id": "693fe705f55f24002aef7adc",
+          "invoiceNumber": "AD/Del/25-26/015",
+          "invoiceDate": "2025-12-14T18:30:01.000Z",
+          "billedBy": {
+            "customFields": {
+              "company-id": {
+                "label": "Company ID",
+                "name": "Company ID",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "U74999DL2017PTC316970"
+              },
+              "hsnsac": {
+                "label": "HSN/SAC",
+                "name": "HSN/SAC",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "998313"
+              }
+            },
+            "country": "IN",
+            "name": "Admito Technologies Private Limited",
+            "gstin": "07AAPCA5209B1ZY",
+            "panNumber": "AAPCA5209B",
+            "street": "RZ 154/284, 1st Floor, Street Number 2",
+            "city": "New Delhi",
+            "state": "Delhi",
+            "gstState": "07",
+            "pincode": "110046",
+            "email": "manu.jain@scaleupally.io",
+            "phone": "+919717087420",
+            "emailShowInInvoice": true,
+            "phoneShowInInvoice": true
+          },
+          "billedTo": {
+            "_id": "65841cdf3ae003002b2b416d",
+            "name": "Alexander Vereš",
+            "street": null,
+            "city": "Novozámocká 349/85 95112 Ivanka pri Nitre",
+            "pincode": null,
+            "state": null,
+            "country": "SK",
+            "gstin": "",
+            "vatNumber": "SK1078238546",
+            "vatLabel": "VAT Number",
+            "panNumber": "",
+            "uniqueKey": "1703156862036",
+            "taxPayerType": "EXP",
+            "email": "chillix@chillix.sk",
+            "emailShowInInvoice": true,
+            "clientId": "1703156862036"
+          },
+          "items": [
+            {
+              "discount": {
+                "discountType": "PERCENTAGE",
+                "amount": 0
+              },
+              "group": false,
+              "hidden": false,
+              "images": [],
+              "originalImages": [],
+              "isStockManaged": false,
+              "trackingMethod": "NONE",
+              "itc": null,
+              "unit": null,
+              "showSku": false,
+              "_id": "66a8af2c51252f008271076c",
+              "name": "Enhancement in Admin panel",
+              "description": "",
+              "hsn": "",
+              "quantity": 1,
+              "rate": 200,
+              "gstRate": 0,
+              "subTotal": 200,
+              "amount": 200,
+              "igst": 0,
+              "cgst": 0,
+              "sgst": 0,
+              "total": 200,
+              "ledgerId": "",
+              "ledgerName": "",
+              "totalRoundOff": 0,
+              "amountRoundOff": 0,
+              "inventory": "66a8af2d51252f00827107be",
+              "inventoryTxn": "66a8af2d51252f00827107c3",
+              "sku": "01531",
+              "allocations": [],
+              "itemType": "service"
+            }
+          ],
+          "client": "65841cdf3ae003002b2b416d",
+          "igst": true,
+          "createdAt": "2025-12-15T10:46:29.403Z",
+          "updatedAt": "2025-12-18T08:32:42.263Z",
+          "finalTotal": {
+            "total": 200,
+            "amount": 200,
+            "subTotal": 200,
+            "igst": 0,
+            "cgst": 0,
+            "sgst": 0,
+            "amountRoundOff": 0,
+            "totalRoundOff": 0,
+            "cessTotal": {},
+            "discount": 0
+          },
+          "owner": {
+            "name": "Admito Technologies Private Limited",
+            "alias": "ScaleupAlly",
+            "urlKey": "scaleupally",
+            "timeZone": "Asia/Kolkata",
+            "premium": {
+              "activated": true,
+              "enabled": true,
+              "endDate": "2030-01-29T23:59:59.000Z",
+              "period": "5YEARLY",
+              "onTrial": false,
+              "trialActivated": false,
+              "productId": "65ba60540326d4a9691c9d63",
+              "paymentActivated": true
+            },
+            "createdAt": "2020-04-25T09:27:56.777Z",
+            "country": "IN",
+            "_schemaVersion": 3,
+            "_id": "5ea4029c456eba75fb1501b1",
+            "configuration": {
+              "isZatcaBusiness": false,
+              "tax": {
+                "taxName": "GST",
+                "taxType": "INDIA",
+                "defaultTaxRate": 18,
+                "allowTds": true
+              },
+              "hideHashInDocumentNumber": false,
+              "customFields": [
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347a",
+                  "label": "Full Name",
+                  "name": "Full Name",
+                  "key": "rl-contact-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "70991617"
+                },
+                {
+                  "dataType": "EMAIL",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347b",
+                  "label": "Email",
+                  "name": "Email",
+                  "key": "rl-contact-email-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "48344276"
+                },
+                {
+                  "dataType": "PHONE",
+                  "hideFlagEmoji": true,
+                  "isRequired": false,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347c",
+                  "label": "Phone number",
+                  "name": "Phone number",
+                  "key": "rl-contact-phone-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "03088406"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347d",
+                  "label": "Organisation Name",
+                  "name": "Organisation Name",
+                  "key": "rl-customer-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "11072456"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347e",
+                  "label": "Message",
+                  "name": "Message",
+                  "key": "rl-subject-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "97438886"
+                }
+              ],
+              "dueInDays": 7,
+              "einvoice": {
+                "irnNumber": true,
+                "irnAcknowledgementNumber": false,
+                "irnAcknowledgementDate": false,
+                "irnCancelledDate": false
+              },
+              "eway": {
+                "billNumber": true,
+                "billDate": true,
+                "billValidTillDate": true,
+                "billCancelledDate": false
+              },
+              "experimental": {
+                "scrollableLineItems": true,
+                "enableJs": true,
+                "performanceBlurOptimization": false,
+                "alternatePdfDownload": false,
+                "_id": "67ab1c6a7aed39ce86139a46",
+                "updatedAt": "2025-02-11T09:46:18.430Z",
+                "createdAt": "2025-02-11T09:46:18.430Z"
+              },
+              "_schemaVersion": 2,
+              "business": "5ea4029c456eba75fb1501b1",
+              "_id": "63639b74578b88532b72cfe7"
+            }
+          },
+          "source": "DASHBOARD",
+          "payments": [],
+          "voucherEntries": []
+        },
+        "pairedItem": {
+          "item": 30
+        }
+      },
+      {
+        "json": {
+          "currency": "USD",
+          "invoiceTitle": "Credit Note",
+          "billType": "CREDITNOTE",
+          "status": "PAID",
+          "discount": {
+            "discountMethod": "EQUAL",
+            "discountType": "PERCENTAGE"
+          },
+          "terms": [],
+          "attachments": [],
+          "isExpenditure": false,
+          "taxType": "GLOBAL",
+          "locale": "en-AE",
+          "tags": [],
+          "_id": "6936cafddfbd400026f73e77",
+          "invoiceNumber": "AD/Del/25-26/014",
+          "invoiceDate": "2025-12-05T18:30:02.000Z",
+          "billedBy": {
+            "customFields": {
+              "company-id": {
+                "label": "Company ID",
+                "name": "Company ID",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "U74999DL2017PTC316970"
+              },
+              "hsnsac": {
+                "label": "HSN/SAC",
+                "name": "HSN/SAC",
+                "dataType": "TEXT",
+                "params": {
+                  "showInInvoice": true
+                },
+                "value": "998313"
+              }
+            },
+            "additionalIds": [],
+            "country": "IN",
+            "name": "Admito Technologies Private Limited",
+            "gstin": "07AAPCA5209B1ZY",
+            "panNumber": "AAPCA5209B",
+            "street": "RZ 154/284, 1st Floor, Street Number 2",
+            "city": "New Delhi",
+            "state": "Delhi",
+            "gstState": "07",
+            "pincode": "110046",
+            "email": "manu.jain@scaleupally.io",
+            "phone": "+919717087420",
+            "emailShowInInvoice": true,
+            "phoneShowInInvoice": true
+          },
+          "billedTo": {
+            "_id": "68130e987634420020145e54",
+            "name": "LightyShare",
+            "street": "61 rue de Lyon, 75012 Paris,",
+            "city": "Paris",
+            "pincode": "75012",
+            "state": "Paris",
+            "stateCode": null,
+            "country": "FR",
+            "gstin": "",
+            "vatLabel": "VAT Number",
+            "panNumber": "",
+            "additionalIds": [],
+            "uniqueKey": "1746079171557",
+            "taxPayerType": "EXP",
+            "clientType": "INDIVIDUAL",
+            "email": "jonathan@lightyshare.com",
+            "emailShowInInvoice": true,
+            "phone": "+33619272481",
+            "phoneShowInInvoice": true,
+            "clientId": "1746079171557"
+          },
+          "items": [
+            {
+              "discount": {
+                "discountType": "PERCENTAGE",
+                "amount": 0
+              },
+              "group": false,
+              "hidden": false,
+              "images": [],
+              "originalImages": [],
+              "isStockManaged": false,
+              "trackingMethod": "NONE",
+              "itc": "INELIGIBLE_OTHERS",
+              "unit": null,
+              "showSku": false,
+              "_id": "68663157c9ae6c00432c5c33",
+              "name": "Stripe integration Final Milestone (20%)",
+              "quantity": 1,
+              "rate": 500,
+              "amount": 500,
+              "subTotal": 500,
+              "total": 500,
+              "gstRate": 0,
+              "igst": 0,
+              "cgst": 0,
+              "sgst": 0,
+              "hsn": "",
+              "ledgerId": "",
+              "ledgerName": "",
+              "itemType": "product",
+              "sku": "dlvzd6b0xo",
+              "params": {
+                "isPackage": false,
+                "packageItems": []
+              },
+              "amountRoundOff": 0,
+              "totalRoundOff": 0,
+              "allocations": null,
+              "inventory": "68663158c9ae6c00432c5cc4",
+              "inventoryTxn": "6867cc61f424e500207e4118"
+            }
+          ],
+          "client": "68130e987634420020145e54",
+          "igst": true,
+          "createdAt": "2025-12-08T12:56:29.215Z",
+          "updatedAt": "2025-12-15T08:52:28.190Z",
+          "finalTotal": {
+            "total": 500,
+            "amount": 500,
+            "subTotal": 500,
+            "igst": 0,
+            "cgst": 0,
+            "sgst": 0,
+            "amountRoundOff": 0,
+            "totalRoundOff": 0,
+            "cessTotal": {},
+            "discount": 0
+          },
+          "owner": {
+            "name": "Admito Technologies Private Limited",
+            "alias": "ScaleupAlly",
+            "urlKey": "scaleupally",
+            "timeZone": "Asia/Kolkata",
+            "premium": {
+              "activated": true,
+              "enabled": true,
+              "endDate": "2030-01-29T23:59:59.000Z",
+              "period": "5YEARLY",
+              "onTrial": false,
+              "trialActivated": false,
+              "productId": "65ba60540326d4a9691c9d63",
+              "paymentActivated": true
+            },
+            "createdAt": "2020-04-25T09:27:56.777Z",
+            "country": "IN",
+            "_schemaVersion": 3,
+            "_id": "5ea4029c456eba75fb1501b1",
+            "configuration": {
+              "isZatcaBusiness": false,
+              "tax": {
+                "taxName": "GST",
+                "taxType": "INDIA",
+                "defaultTaxRate": 18,
+                "allowTds": true
+              },
+              "hideHashInDocumentNumber": false,
+              "customFields": [
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347a",
+                  "label": "Full Name",
+                  "name": "Full Name",
+                  "key": "rl-contact-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "70991617"
+                },
+                {
+                  "dataType": "EMAIL",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347b",
+                  "label": "Email",
+                  "name": "Email",
+                  "key": "rl-contact-email-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "48344276"
+                },
+                {
+                  "dataType": "PHONE",
+                  "hideFlagEmoji": true,
+                  "isRequired": false,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347c",
+                  "label": "Phone number",
+                  "name": "Phone number",
+                  "key": "rl-contact-phone-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "03088406"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347d",
+                  "label": "Organisation Name",
+                  "name": "Organisation Name",
+                  "key": "rl-customer-name-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "11072456"
+                },
+                {
+                  "dataType": "TEXT",
+                  "hideFlagEmoji": true,
+                  "isRequired": true,
+                  "isHidden": false,
+                  "isArchived": false,
+                  "isDefault": true,
+                  "isVisibleInForm": true,
+                  "_id": "649d8b3a94ce5b2d439a347e",
+                  "label": "Message",
+                  "name": "Message",
+                  "key": "rl-subject-63639b74578b88532b72d003",
+                  "options": [],
+                  "uniqueKey": "97438886"
+                }
+              ],
+              "dueInDays": 7,
+              "einvoice": {
+                "irnNumber": true,
+                "irnAcknowledgementNumber": false,
+                "irnAcknowledgementDate": false,
+                "irnCancelledDate": false
+              },
+              "eway": {
+                "billNumber": true,
+                "billDate": true,
+                "billValidTillDate": true,
+                "billCancelledDate": false
+              },
+              "experimental": {
+                "scrollableLineItems": true,
+                "enableJs": true,
+                "performanceBlurOptimization": false,
+                "alternatePdfDownload": false,
+                "_id": "67ab1c6a7aed39ce86139a46",
+                "updatedAt": "2025-02-11T09:46:18.430Z",
+                "createdAt": "2025-02-11T09:46:18.430Z"
+              },
+              "_schemaVersion": 2,
+              "business": "5ea4029c456eba75fb1501b1",
+              "_id": "63639b74578b88532b72cfe7"
+            }
+          },
+          "source": "DASHBOARD",
+          "payments": [],
+          "voucherEntries": []
+        },
+        "pairedItem": {
+          "item": 30
+        }
+      }
+    ]
+  },
+  "versionId": "7af25aac-f7b6-48d5-a001-4f68d8139d56",
+  "activeVersionId": "315d3b09-21ae-438e-b41b-5c4159d2ec1a",
   "triggerCount": 1,
   "shared": [
     {
@@ -325,9 +3173,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-04-20T12:44:47.000Z",
-    "createdAt": "2026-04-20T12:43:41.713Z",
-    "versionId": "0bf94662-078c-49d6-9622-884c17b59cd1",
+    "updatedAt": "2026-04-21T14:01:32.000Z",
+    "createdAt": "2026-04-21T14:01:30.138Z",
+    "versionId": "315d3b09-21ae-438e-b41b-5c4159d2ec1a",
     "workflowId": "ArEK37NRuIJSM2lc",
     "nodes": [
       {
@@ -335,8 +3183,7 @@
           "rule": {
             "interval": [
               {
-                "field": "hours",
-                "triggerAtMinute": 30
+                "field": "seconds"
               }
             ]
           }
@@ -344,8 +3191,8 @@
         "type": "n8n-nodes-base.scheduleTrigger",
         "typeVersion": 1.3,
         "position": [
-          0,
-          0
+          -48,
+          -224
         ],
         "id": "28eb8759-4b9e-4161-aabb-de1f663cf460",
         "name": "Schedule Trigger"
@@ -367,8 +3214,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          448,
-          0
+          400,
+          -224
         ],
         "id": "ef07ad6d-c742-434e-a20d-7f87a0ea2677",
         "name": "HTTP Request"
@@ -385,8 +3232,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
         "position": [
-          208,
-          0
+          176,
+          -224
         ],
         "id": "34be6d24-a218-4ab2-b270-53b4786ab057",
         "name": "HTTP Request1"
@@ -405,18 +3252,18 @@
             "__rl": true,
             "value": "gid=0",
             "mode": "list",
-            "cachedResultName": "Sheet1",
+            "cachedResultName": "Email Extraction",
             "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE/edit#gid=0"
           },
           "columns": {
             "mappingMode": "defineBelow",
             "value": {
-              "Invoice": "={{ $json.billedTo.name }}",
-              "Invoice Number": "={{ $json.invoiceNumber }}",
-              "Email": "={{ $json.billedTo.email }}",
-              "Phone": "={{ $json.billedTo.phone }}",
-              "Address": "={{ $json.billedTo.state }}, {{ $json.billedTo.stateCode }}, {{ $json.billedTo.country }}",
-              "Amount": "={{ $json.items[0].amount }}"
+              "Invoice": "={{ $('Split Out').item.json.billedTo.name }}",
+              "Invoice Number": "={{ $('Split Out').item.json.invoiceNumber }}",
+              "Email": "={{ $('Split Out').item.json.billedTo.email }}",
+              "Phone": "={{ $('Split Out').item.json.billedTo.phone }}",
+              "Address": "={{ $('Split Out').item.json.billedTo.state }}, {{ $('Split Out').item.json.billedTo.stateCode }}, {{ $('Split Out').item.json.billedTo.country }}",
+              "Amount": "={{ $('Split Out').item.json.items[0].amount }}"
             },
             "matchingColumns": [],
             "schema": [
@@ -489,8 +3336,8 @@
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4.7,
         "position": [
-          976,
-          0
+          1344,
+          -128
         ],
         "id": "eea95a92-1eab-44dd-ab44-40ef507b22a8",
         "name": "Append row in sheet",
@@ -509,8 +3356,8 @@
         "type": "n8n-nodes-base.splitOut",
         "typeVersion": 1,
         "position": [
-          672,
-          0
+          704,
+          48
         ],
         "id": "02482566-e506-49c9-9f61-4dff516ec3b1",
         "name": "Split Out"
@@ -522,11 +3369,102 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          928,
-          240
+          -48,
+          0
         ],
         "id": "74f5ff2a-6b14-4c73-9491-5fdb75a33b26",
         "name": "Keys"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "37014fde-4f5d-4869-969a-c4f0e51cbad2",
+                "leftValue": "={{ $('Read Sheet').all().map(r => r.json['Invoice Numbers Covered']).includes($json.invoiceNumber) }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1072,
+          -224
+        ],
+        "id": "e43194b8-dd1a-459b-8d0d-898393eddaa4",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "operation": "appendOrUpdate",
+          "documentId": {
+            "__rl": true,
+            "value": "1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE",
+            "mode": "list",
+            "cachedResultName": "Invoice Fields",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 420709446,
+            "mode": "list",
+            "cachedResultName": "Invoices Covered",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE/edit#gid=420709446"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Invoice Numbers Covered": "={{ $json.data[0].invoiceNumber }}"
+            },
+            "matchingColumns": [
+              "Invoice Numbers Covered"
+            ],
+            "schema": [
+              {
+                "id": "Invoice Numbers Covered",
+                "displayName": "Invoice Numbers Covered",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          624,
+          -320
+        ],
+        "id": "cdf0a1f9-e02a-4db6-b6b8-126b737afc86",
+        "name": "Read Sheet",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "THdXW72Bb4AecTeb",
+            "name": "creds_for_invoice"
+          }
+        }
       }
     ],
     "connections": {
@@ -556,6 +3494,11 @@
         "main": [
           [
             {
+              "node": "Read Sheet",
+              "type": "main",
+              "index": 0
+            },
+            {
               "node": "Split Out",
               "type": "main",
               "index": 0
@@ -567,7 +3510,7 @@
         "main": [
           [
             {
-              "node": "Append row in sheet",
+              "node": "If",
               "type": "main",
               "index": 0
             }
@@ -578,10 +3521,38 @@
         "main": [
           []
         ]
+      },
+      "Append row in sheet": {
+        "main": [
+          []
+        ]
+      },
+      "If": {
+        "main": [
+          [],
+          [
+            {
+              "node": "Append row in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Read Sheet": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dev Scaleupally",
-    "name": "Version 0bf94662",
+    "name": "Version 315d3b09",
     "description": "",
     "autosaved": true
   },
