@@ -1,10 +1,10 @@
 {
-  "updatedAt": "2026-04-21T12:14:05.476Z",
+  "updatedAt": "2026-04-23T07:08:14.000Z",
   "createdAt": "2026-04-21T12:13:54.708Z",
   "id": "hGTrI9PcA4UK6gLg",
   "name": "Refrens Invoice -> Zoho CRM",
   "active": false,
-  "isArchived": false,
+  "isArchived": true,
   "nodes": [
     {
       "parameters": {
@@ -448,7 +448,7 @@
   "staticData": null,
   "meta": null,
   "pinData": {},
-  "versionId": "c207607e-12f2-421d-8430-fcd1cfaabddc",
+  "versionId": "0a55cb4a-750e-40ac-9b80-12cb9fdb3bb3",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
