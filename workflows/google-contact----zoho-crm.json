@@ -1,0 +1,387 @@
+{
+  "updatedAt": "2026-04-28T08:26:36.905Z",
+  "createdAt": "2026-04-28T05:41:11.091Z",
+  "id": "NXFyJF2PrmITBlBe",
+  "name": "Google Contact -> Zoho CRM",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 12
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        16,
+        -144
+      ],
+      "id": "81e881c1-23a5-4bef-8198-be332424bc2e",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ed830801-41f5-4d7a-a72f-ec791a80037c",
+              "leftValue": "={{ $json.contacts[0].data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        272
+      ],
+      "id": "600f2716-7206-4ed5-9322-651618073384",
+      "name": "Contact Exists?"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 500,
+        "fields": [
+          "emailAddresses",
+          "names",
+          "phoneNumbers"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleContacts",
+      "typeVersion": 1,
+      "position": [
+        112,
+        80
+      ],
+      "id": "9470a2ac-d18c-4cd5-9ca3-6e03719f70d2",
+      "name": "Get Google Contacts",
+      "credentials": {
+        "googleContactsOAuth2Api": {
+          "id": "JOpdH7AbPptAOBhj",
+          "name": "temp_creds"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "Yid1J9mDYfJbxSkH",
+          "mode": "list",
+          "cachedResultName": "Contacts",
+          "cachedResultUrl": "/projects/4byo5YlJWidsMFA8/datatables/Yid1J9mDYfJbxSkH"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "contactID": "={{ $json.contactId }}",
+            "displayName": "={{ $json.names.displayName }}",
+            "displayNameLastFirst": "={{ $json.names.displayNameLastFirst }}",
+            "mobile_no_1": "={{ $json.phoneNumbers.mobile[0] }}",
+            "mobile_no_2": "={{ $json.phoneNumbers.mobile[1] }}",
+            "Email": "={{ $json.emailAddresses.home[0] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "contactID",
+              "displayName": "contactID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "displayName",
+              "displayName": "displayName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "displayNameLastFirst",
+              "displayName": "displayNameLastFirst",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "mobile_no_1",
+              "displayName": "mobile_no_1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "mobile_no_2",
+              "displayName": "mobile_no_2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        -320
+      ],
+      "id": "cdb28581-6364-4ed6-a8f6-ad2b5228e5eb",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0cf172f6-bd26-4dde-b7fb-81a626df624b",
+              "leftValue": "={{ $json.names.displayName.toLowerCase().trim() }}",
+              "rightValue": "client",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        544,
+        -144
+      ],
+      "id": "40f0bebc-6b15-4134-8dad-6603c8d28f4a",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1136,
+        -176
+      ],
+      "id": "72168f89-7516-49a0-a559-06832a4ec80a",
+      "name": "HTTP Request",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "JIQYOtIcpdMTcITW",
+          "name": "Zoho CRM OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.zohoapis.com/crm/v8/Contacts?personFields=names,emailAddresses,phone",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        288,
+        -144
+      ],
+      "id": "d380f271-fe48-42fd-be8d-edf5ae5f8fbc",
+      "name": "HTTP Request1",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7a605828-0443-47c2-88f2-ebd442199901",
+              "leftValue": "={{ $('HTTP Request1').item.json.contactID }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        768,
+        -224
+      ],
+      "id": "acce4fb9-ec77-4991-ae61-0bfc7bd03222",
+      "name": "If"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact Exists?": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "Get Google Contacts": {
+      "main": [
+        []
+      ]
+    },
+    "Insert row": {
+      "main": [
+        []
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "9502e8f1-3778-43c1-80a7-20b4768a25cb",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-04-28T05:41:11.099Z",
+      "createdAt": "2026-04-28T05:41:11.099Z",
+      "role": "workflow:owner",
+      "workflowId": "NXFyJF2PrmITBlBe",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
