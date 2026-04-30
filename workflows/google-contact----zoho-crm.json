@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-28T08:26:36.905Z",
+  "updatedAt": "2026-04-30T05:20:08.450Z",
   "createdAt": "2026-04-28T05:41:11.091Z",
   "id": "NXFyJF2PrmITBlBe",
   "name": "Google Contact -> Zoho CRM",
@@ -73,8 +73,8 @@
       "type": "n8n-nodes-base.googleContacts",
       "typeVersion": 1,
       "position": [
-        112,
-        80
+        480,
+        128
       ],
       "id": "9470a2ac-d18c-4cd5-9ca3-6e03719f70d2",
       "name": "Get Google Contacts",
@@ -238,15 +238,9 @@
     },
     {
       "parameters": {
-        "url": "https://www.zohoapis.com/crm/v8/Contacts?personFields=names,emailAddresses,phone",
+        "url": "https://www.zohoapis.com/crm/v2/Contacts/search",
         "authentication": "genericCredentialType",
         "genericAuthType": "oAuth2Api",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {}
-          ]
-        },
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -370,7 +364,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "9502e8f1-3778-43c1-80a7-20b4768a25cb",
+  "versionId": "3ddc8632-8b96-427d-a358-2e0f4c9aae82",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
