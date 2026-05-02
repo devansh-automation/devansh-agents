@@ -1,10 +1,10 @@
 {
-  "updatedAt": "2026-03-30T13:02:54.528Z",
+  "updatedAt": "2026-05-01T12:49:37.000Z",
   "createdAt": "2025-10-31T10:19:28.009Z",
   "id": "IsHKcnDUhryqC3p0",
   "name": "Sync New Zoho CRM Prospects to Google Sheets",
   "active": false,
-  "isArchived": false,
+  "isArchived": true,
   "nodes": [],
   "connections": {},
   "settings": {
@@ -16,7 +16,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "f22a0efb-8049-4a4a-9023-79c37336a920",
+  "versionId": "8f386d46-7bc1-403b-8695-9cb6cad7b817",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

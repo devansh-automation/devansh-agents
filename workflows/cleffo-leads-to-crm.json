@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-09T07:08:18.571Z",
+  "updatedAt": "2026-05-01T09:28:36.020Z",
   "createdAt": "2026-03-27T13:42:26.955Z",
   "id": "fTcqzKrx5k1bB0Yb",
   "name": "Cleffo leads to CRM",
@@ -9,21 +9,149 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "=contactcleffo",
+        "path": "contact-cleffo",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -272,
-        -80
+        -544,
+        -64
       ],
-      "id": "a8e4800d-1009-4a1a-96a3-62abc1a37781",
+      "id": "adb46cbe-f2cc-425b-9ad3-f6afabcf384b",
       "name": "Webhook",
-      "webhookId": "8a0bc721-286e-4284-bc36-f1dfe531da3f"
+      "webhookId": "78c97ceb-e755-45da-a789-ff9be5701adf"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $input.first().json.body.html;\n\nconst rows = [...html.matchAll(/<tr[^>]*>[\\s\\S]*?<\\/tr>/gi)];\nconst data = {};\n\nfor (const row of rows) {\n  const cells = [...row[0].matchAll(/<td[^>]*>([\\s\\S]*?)<\\/td>/gi)];\n  if (cells.length === 2) {\n    const key = cells[0][1].replace(/<[^>]+>/g, '').trim();\n    const value = cells[1][1].replace(/<[^>]+>/g, '').trim();\n    if (key && value) data[key] = value;\n  }\n}\n\nreturn [{\n  json: {\n    name: data['Name'],\n    email: data['Email'],\n    mobile: data['Mobile No.'],\n    country: data['Country'],\n    businessName: data['Business Name'],\n    yearsInBusiness: data['Years in Business'],\n    website: data['Website'],\n    businessType: data['Business Type'],\n    platform: data['Website Platform'],\n    monthlySales: data['Estimated Monthly Sales'],\n    source: data['How did you hear about us?'],\n    comments: data['Questions / Comments'],\n    subject: $input.first().json.body.subject,\n    receivedAt: $input.first().json.body.sentDateInGMT,\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        -64
+      ],
+      "id": "6e3bcab4-6626-4ff1-bd06-c8abad239d74",
+      "name": "Get HTML rows"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a8acda5c-968f-42f7-997b-b203ab23a2a5",
+              "leftValue": "={{ $json.comments.toLowerCase() === 'test' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "fafabb72-e22d-43a0-bef0-e87d5801f2ef",
+              "leftValue": "={{ $json.email.includes('@mailinator.com') }}",
+              "rightValue": "@mailinator.com",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "36cb4506-5f18-4536-8c06-4070b6e7262c",
+              "leftValue": "={{ $json.email.includes('@yopmail.com') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -144,
+        -64
+      ],
+      "id": "4b08df8a-68ae-43ab-b6e7-564f03c81e3b",
+      "name": "Check test Mails"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.zohoapis.com/crm/v2/Leads",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": [\n    {\n      \"Last_Name\": \"{{ $json.name }}\",\n      \"Email\": \"{{ $json.email }}\",\n      \"Phone\": \"{{ $json.mobile }}\",\n      \"Country\": \"{{ $json.country }}\",\n      \"Company\": \"{{ $json.businessName }}\",\n      \"Website\": \"{{ $json.website }}\",\n      \"Lead_Source\": \"Website Inbound(HRB)\",\n      \"Description\": \"{{ $json.comments }}\",\n      \"Lead_Status\": \"New Lead\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        64,
+        32
+      ],
+      "id": "3a7f543d-c2dc-4f7a-a787-50600c4efcd0",
+      "name": "HTTP Request",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "JIQYOtIcpdMTcITW",
+          "name": "Zoho CRM OAuth2"
+        }
+      }
     }
   ],
-  "connections": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get HTML rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get HTML rows": {
+      "main": [
+        [
+          {
+            "node": "Check test Mails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check test Mails": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
@@ -32,9 +160,64 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "pinData": {},
-  "versionId": "2f0a4a4f-e455-43fa-8323-ece82389aa61",
-  "activeVersionId": "5c7138cc-3994-4afa-b30c-c7f1004d683c",
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "devscaleup.app.n8n.cloud",
+            "user-agent": "Apache-HttpClient/4.5.14 (Java/17.0.18)",
+            "content-length": "26679",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "136.143.177.64",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "US",
+            "cf-ray": "9f4cefac4a93a384-SEA",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json; charset=UTF-8",
+            "x-forwarded-for": "136.143.177.64, 104.22.42.149",
+            "x-forwarded-host": "devscaleup.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-70-b9cddcbb8-vbrs2",
+            "x-hook-signature": "L75A44vU2HAeDsVoKMtnSLlYFrnNnT+cCpsyt1lRH6A=",
+            "x-is-trusted": "yes",
+            "x-real-ip": "136.143.177.64",
+            "zsec_user_import_url": "true"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "summary": "Hello! New Business Inquiry Received You have received a new business inquiry through the contact form. Please review the details below and take the necessary action. Contact Information Name Scaleupally mis.scaleupally Email mis.scaleupally@gmail.c",
+            "sentDateInGMT": 1777644302000,
+            "subject": "New Business Inquiry – Admito",
+            "Mode": 0,
+            "messageId": 1777619105757142000,
+            "toAddress": "<contact@cleffo.com>",
+            "folderId": 1603742000000008000,
+            "zuid": 909317602,
+            "hasAttachment": "No",
+            "size": 26705,
+            "sender": "Cleffo",
+            "receivedTime": 1777619105747,
+            "fromAddress": "dev1scaleupally@gmail.com",
+            "html": "\r\n\r\n\r\n\r\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n<meta content=\"text/html; charset=UTF-8\">\r\n<meta content=\"light\">\r\n<meta content=\"light\">\r\n<style></style>\r\n\r\n<div style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; background-color: rgb(255, 255, 255); color: rgb(113, 128, 150); min-height: 100%; line-height: 1.4; margin: 0; padding: 0; width: 100% !important\" class=\"zm_5772314883573231694_parse_3153952067394165884\">\r\n\r\n<table class=\"x_450086553wrapper\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; background-color: rgb(237, 242, 247); margin: 0; padding: 0; width: 100%\">\r\n<tbody><tr>\r\n<td align=\"center\" style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">\r\n<table class=\"x_450086553content\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; margin: 0; padding: 0; width: 100%\">\r\n<tbody><tr>\r\n<td class=\"x_450086553header\" style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; padding: 25px 0; text-align: center\">\r\n<a href=\"https://apis.cleffo.com\" style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; color: rgb(61, 72, 82); font-size: 19px; font-weight: bold; text-decoration: none; display: inline-block\" target=\"_blank\">\r\n<img src=\"https://apis.cleffo.com/asset/images/cleffo-logo.png\" style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; max-width: 100%; border: none; width: 181px\" alt=\"Cleffo\">\r\n</a>\r\n</td>\r\n</tr>\r\n\r\n\r\n<tr>\r\n<td class=\"x_450086553body\" width=\"100%\" style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; background-color: rgb(237, 242, 247); border-bottom: 1px solid rgb(237, 242, 247); border-top: 1px solid rgb(237, 242, 247); margin: 0; padding: 0; width: 100%; border: hidden !important\">\r\n<table class=\"x_450086553inner-body\" align=\"center\" width=\"570\" cellpadding=\"0\" cellspacing=\"0\" style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; background-color: rgb(255, 255, 255); border-color: rgb(232, 229, 239); border-radius: 2px; border-width: 1px; box-shadow: 0 2px 0, 2px 4px 0; margin: 0 auto; padding: 0; width: 570px\">\r\n\r\n<tbody><tr>\r\n<td class=\"x_450086553content-cell\" style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; padding: 32px\">\r\n<h1 style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; color: rgb(61, 72, 82); font-size: 18px; font-weight: bold; margin-top: 0; text-align: left\">Hello!</h1>\r\n<h2 style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; font-weight: bold; margin-top: 0; text-align: left; font-size: 22px; margin-bottom: 10px\">New Business Inquiry Received</h2>\r\n<p style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; font-size: 16px; line-height: 1.5em; margin-top: 0; text-align: left; margin-bottom: 15px\">\r\n                    You have received a new business inquiry through the contact form. \r\n                    Please review the details below and take the necessary action.\r\n                </p>\r\n<table style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; width: 100%; border-collapse: collapse; border: 1px solid rgb(221, 221, 221); margin-bottom: 20px\">\r\n<tbody><tr style=\"background: rgb(248, 248, 248)\">\r\n                    <td colspan=\"2\" style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 10px\">\r\n                        <strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Contact Information</strong>\r\n                    </td>\r\n                </tr>\r\n<tr>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\"><strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Name</strong></td>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\">Scaleupally mis.scaleupally</td>\r\n                </tr>\r\n<tr>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\"><strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Email</strong></td>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\"><a href=\"mailto:mis.scaleupally@gmail.com\" target=\"_blank\">mis.scaleupally@gmail.com</a></td>\r\n                </tr>\r\n<tr>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\"><strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Mobile No.</strong></td>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\">7013472819</td>\r\n                </tr>\r\n<tr>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\"><strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Country</strong></td>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\">India</td>\r\n                </tr>\r\n<tr style=\"background: rgb(248, 248, 248)\">\r\n                    <td colspan=\"2\" style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 10px\">\r\n                        <strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Business Information</strong>\r\n                    </td>\r\n                </tr>\r\n<tr>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\"><strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Business Name</strong></td>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\">Admito</td>\r\n                </tr>\r\n<tr>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\"><strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Years in Business</strong></td>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\">5-10 Years</td>\r\n                </tr>\r\n<tr>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\"><strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Website</strong></td>\r\n<td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\">\r\n                                <a href=\"https://scalex.com\" target=\"_blank\" style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; color: rgb(56, 105, 212)\">\r\n                                    https://scalex.com\r\n                                </a>\r\n                        </td>\r\n</tr>\r\n<tr>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\"><strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Business Type</strong></td>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\">ecommerce</td>\r\n                </tr>\r\n<tr>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\"><strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Website Platform</strong></td>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\">bigcommerce</td>\r\n                </tr>\r\n<tr style=\"background: rgb(248, 248, 248)\">\r\n                    <td colspan=\"2\" style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 10px\">\r\n                        <strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Sales &amp; Payment Information</strong>\r\n                    </td>\r\n                </tr>\r\n<tr>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\"><strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Estimated Monthly Sales</strong></td>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\">50k-100k USD</td>\r\n                </tr>\r\n<tr>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\"><strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Merchant Account Closures</strong></td>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\">no</td>\r\n                </tr>\r\n<tr>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\"><strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Currently Accepting Cards</strong></td>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\">no</td>\r\n                </tr>\r\n<tr style=\"background: rgb(248, 248, 248)\">\r\n                    <td colspan=\"2\" style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 10px\">\r\n                        <strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Additional Information</strong>\r\n                    </td>\r\n                </tr>\r\n<tr>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\"><strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">How did you hear about us?</strong></td>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\">referral</td>\r\n                </tr>\r\n<tr>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\"><strong style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">Questions / Comments</strong></td>\r\n                    <td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; border: 1px solid rgb(221, 221, 221); padding: 8px\">axasaas </td>\r\n                </tr>\r\n</tbody></table>\r\n<p style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; font-size: 16px; line-height: 1.5em; text-align: left; margin-top: 15px\">\r\n                    This inquiry was submitted via the contact form. \r\n                    Please respond to the customer at your earliest convenience.\r\n                </p>\r\n<p style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; font-size: 16px; line-height: 1.5em; margin-top: 0; text-align: left\">Regards,<br>\r\nCleffo</p>\r\n\r\n\r\n\r\n</td>\r\n</tr>\r\n</tbody></table>\r\n</td>\r\n</tr>\r\n\r\n<tr>\r\n<td style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative\">\r\n<table class=\"x_450086553footer\" align=\"center\" width=\"570\" cellpadding=\"0\" cellspacing=\"0\" style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; margin: 0 auto; padding: 0; text-align: center; width: 570px\">\r\n<tbody><tr>\r\n<td class=\"x_450086553content-cell\" align=\"center\" style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; padding: 32px\">\r\n<p style=\"box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; position: relative; line-height: 1.5em; margin-top: 0; color: rgb(176, 173, 197); font-size: 12px; text-align: center\">© 2026 Cleffo. All rights reserved.</p>\r\n\r\n</td>\r\n</tr>\r\n</tbody></table>\r\n</td>\r\n</tr>\r\n</tbody></table>\r\n</td>\r\n</tr>\r\n</tbody></table>\r\n</div>\r\n",
+            "messageIdString": "1777619105757142000",
+            "IntegIdList": "1777618968233160200,"
+          },
+          "webhookUrl": "https://devscaleup.app.n8n.cloud/webhook/contact-cleffo",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "b51dcd63-65de-4af4-ae8a-2becd3f361a8",
+  "activeVersionId": "b51dcd63-65de-4af4-ae8a-2becd3f361a8",
   "triggerCount": 1,
   "shared": [
     {
@@ -46,31 +229,159 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-04-07T07:04:44.000Z",
-    "createdAt": "2026-04-07T06:59:37.717Z",
-    "versionId": "5c7138cc-3994-4afa-b30c-c7f1004d683c",
+    "updatedAt": "2026-05-01T09:28:43.000Z",
+    "createdAt": "2026-05-01T09:28:36.021Z",
+    "versionId": "b51dcd63-65de-4af4-ae8a-2becd3f361a8",
     "workflowId": "fTcqzKrx5k1bB0Yb",
     "nodes": [
       {
         "parameters": {
           "httpMethod": "POST",
-          "path": "=contactcleffo",
+          "path": "contact-cleffo",
           "options": {}
         },
         "type": "n8n-nodes-base.webhook",
         "typeVersion": 2.1,
         "position": [
-          0,
-          0
+          -544,
+          -64
         ],
-        "id": "a8e4800d-1009-4a1a-96a3-62abc1a37781",
+        "id": "adb46cbe-f2cc-425b-9ad3-f6afabcf384b",
         "name": "Webhook",
-        "webhookId": "8a0bc721-286e-4284-bc36-f1dfe531da3f"
+        "webhookId": "78c97ceb-e755-45da-a789-ff9be5701adf"
+      },
+      {
+        "parameters": {
+          "jsCode": "const html = $input.first().json.body.html;\n\nconst rows = [...html.matchAll(/<tr[^>]*>[\\s\\S]*?<\\/tr>/gi)];\nconst data = {};\n\nfor (const row of rows) {\n  const cells = [...row[0].matchAll(/<td[^>]*>([\\s\\S]*?)<\\/td>/gi)];\n  if (cells.length === 2) {\n    const key = cells[0][1].replace(/<[^>]+>/g, '').trim();\n    const value = cells[1][1].replace(/<[^>]+>/g, '').trim();\n    if (key && value) data[key] = value;\n  }\n}\n\nreturn [{\n  json: {\n    name: data['Name'],\n    email: data['Email'],\n    mobile: data['Mobile No.'],\n    country: data['Country'],\n    businessName: data['Business Name'],\n    yearsInBusiness: data['Years in Business'],\n    website: data['Website'],\n    businessType: data['Business Type'],\n    platform: data['Website Platform'],\n    monthlySales: data['Estimated Monthly Sales'],\n    source: data['How did you hear about us?'],\n    comments: data['Questions / Comments'],\n    subject: $input.first().json.body.subject,\n    receivedAt: $input.first().json.body.sentDateInGMT,\n  }\n}];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -352,
+          -64
+        ],
+        "id": "6e3bcab4-6626-4ff1-bd06-c8abad239d74",
+        "name": "Get HTML rows"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "a8acda5c-968f-42f7-997b-b203ab23a2a5",
+                "leftValue": "={{ $json.comments.toLowerCase() === 'test' }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "fafabb72-e22d-43a0-bef0-e87d5801f2ef",
+                "leftValue": "={{ $json.email.includes('@mailinator.com') }}",
+                "rightValue": "@mailinator.com",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "36cb4506-5f18-4536-8c06-4070b6e7262c",
+                "leftValue": "={{ $json.email.includes('@yopmail.com') }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -144,
+          -64
+        ],
+        "id": "4b08df8a-68ae-43ab-b6e7-564f03c81e3b",
+        "name": "Check test Mails"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://www.zohoapis.com/crm/v2/Leads",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"data\": [\n    {\n      \"Last_Name\": \"{{ $json.name }}\",\n      \"Email\": \"{{ $json.email }}\",\n      \"Phone\": \"{{ $json.mobile }}\",\n      \"Country\": \"{{ $json.country }}\",\n      \"Company\": \"{{ $json.businessName }}\",\n      \"Website\": \"{{ $json.website }}\",\n      \"Lead_Source\": \"Website Inbound(HRB)\",\n      \"Description\": \"{{ $json.comments }}\",\n      \"Lead_Status\": \"New Lead\"\n    }\n  ]\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          64,
+          32
+        ],
+        "id": "3a7f543d-c2dc-4f7a-a787-50600c4efcd0",
+        "name": "HTTP Request",
+        "credentials": {
+          "oAuth2Api": {
+            "id": "JIQYOtIcpdMTcITW",
+            "name": "Zoho CRM OAuth2"
+          }
+        }
       }
     ],
-    "connections": {},
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get HTML rows",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get HTML rows": {
+        "main": [
+          [
+            {
+              "node": "Check test Mails",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check test Mails": {
+        "main": [
+          [],
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
     "authors": "Dev Scaleupally",
-    "name": "Version 5c7138cc",
+    "name": "Version b51dcd63",
     "description": "",
     "autosaved": true
   },
