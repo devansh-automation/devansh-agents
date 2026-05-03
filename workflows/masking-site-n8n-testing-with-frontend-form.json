@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-30T12:36:24.450Z",
+  "updatedAt": "2026-05-02T07:13:36.009Z",
   "createdAt": "2026-04-06T06:35:51.069Z",
   "id": "iqytijpO36bnkdZl",
   "name": "Masking site n8n testing with frontend form",
@@ -937,7 +937,7 @@
           "parameters": [
             {
               "name": "api_key",
-              "value": "99b93493e3e5d4c60fb49f6652ad5cf1b9aeaf7b65a6a372cf80d42eaaf92114"
+              "value": "e079b81eb68857266e80d686ba2c1a22d1d561892cccd8c7785b3a3458f51c0c"
             },
             {
               "name": "engine",
@@ -6357,7 +6357,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "9e9b9359-0243-40fa-b975-0080e5882a79",
+  "versionId": "9bf8488f-314e-4332-b1a9-10d102c4b554",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

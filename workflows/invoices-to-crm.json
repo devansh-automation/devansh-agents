@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-27T10:11:29.868Z",
+  "updatedAt": "2026-05-02T08:59:38.355Z",
   "createdAt": "2026-04-20T10:57:15.406Z",
   "id": "ArEK37NRuIJSM2lc",
   "name": "Invoices to CRM",
@@ -26,7 +26,7 @@
       "typeVersion": 1.3,
       "position": [
         -256,
-        -448
+        -472
       ]
     },
     {
@@ -44,41 +44,8 @@
       "typeVersion": 4.4,
       "position": [
         -32,
-        -448
+        -472
       ]
-    },
-    {
-      "parameters": {
-        "documentId": {
-          "__rl": true,
-          "mode": "list",
-          "value": "1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE",
-          "cachedResultName": "Invoice Fields"
-        },
-        "sheetName": {
-          "__rl": true,
-          "mode": "list",
-          "value": "420709446",
-          "cachedResultName": "Invoices Covered"
-        },
-        "options": {}
-      },
-      "id": "9de0f4dc-8fe0-46ff-b893-83376d475b6f",
-      "name": "Read Covered Invoices",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        192,
-        -448
-      ],
-      "executeOnce": true,
-      "alwaysOutputData": true,
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "THdXW72Bb4AecTeb",
-          "name": "creds_for_invoice"
-        }
-      }
     },
     {
       "parameters": {
@@ -93,6 +60,14 @@
             {
               "name": "$skip",
               "value": "={{ $json.skip }}"
+            },
+            {
+              "name": "updatedAt[$gte]",
+              "value": "={{ $('Read Last Run Time').first().json.last_run }}"
+            },
+            {
+              "name": "updatedAt[$lte]",
+              "value": "={{ $now.format('yyyy-MM-dd') }}"
             }
           ]
         },
@@ -113,7 +88,7 @@
       "typeVersion": 4.4,
       "position": [
         864,
-        -448
+        -472
       ],
       "executeOnce": false
     },
@@ -128,51 +103,7 @@
       "typeVersion": 1,
       "position": [
         1088,
-        -520
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "dedup",
-              "leftValue": "={{ $('Read Covered Invoices').all().map(r => r.json['Invoice Numbers Covered']).includes($json.invoiceNumber) }}",
-              "rightValue": false,
-              "operator": {
-                "type": "boolean",
-                "operation": "false",
-                "singleValue": true
-              }
-            },
-            {
-              "id": "5c5abe96-fc0d-48b3-896f-5b5c5c2469e2",
-              "leftValue": "={{ $('Read Unmatched Contacts').all().map(r => r.json['Email']).includes($json.data) }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "false",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "or"
-        },
-        "options": {}
-      },
-      "id": "2574f4be-e6a5-4ac9-a1ac-a63d24e8ff49",
-      "name": "Already Covered?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        1312,
-        -520
+        -544
       ]
     },
     {
@@ -204,8 +135,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1536,
-        -520
+        1312,
+        -544
       ]
     },
     {
@@ -235,7 +166,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1760,
+        1536,
         -592
       ],
       "credentials": {
@@ -275,7 +206,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1984,
+        1760,
         -592
       ]
     },
@@ -287,7 +218,7 @@
         "genericAuthType": "oAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n  data: [{\n    Invoice_Number: $('Has Email?').item.json.invoiceNumber,\n    Invoice_Date: $('Has Email?').item.json.invoiceDate.split('T')[0],\n    Amount: $('Has Email?').item.json.items[0].total,\n    Currency: $('Has Email?').item.json.currency,\n    Name: $('Has Email?').item.json.invoiceNumber + ' - ' + $('Has Email?').item.json.billedTo.name,\n    Item_Description: $('Has Email?').item.json.items.map(i => i.name).join(', '),\n    Status: $('Has Email?').item.json.status,\n    Bill_Type: $('Has Email?').item.json.billType,\n    Invoice_URL: 'https://www.refrens.com/app/invoices/' + $('Has Email?').item.json._id,\n    Contact: { id: $json.data[0].id }\n  }]\n}) }}",
+        "jsonBody": "={{ JSON.stringify({\n  data: [{\n    Invoice_Number: $('Has Email?').item.json.invoiceNumber,\n    Invoice_Date: $('Has Email?').item.json.invoiceDate.split('T')[0],\n    Amount: $('Has Email?').item.json.finalTotal.total,\n    Currency: $('Has Email?').item.json.currency,\n    Name: $('Has Email?').item.json.invoiceNumber + ' - ' + $('Has Email?').item.json.billedTo.name,\n    Item_Description: $('Has Email?').item.json.items.map(i => i.name).join(', '),\n    Status: $('Has Email?').item.json.status,\n    Bill_Type: $('Has Email?').item.json.billType,\n    Invoice_URL: 'https://www.refrens.com/app/invoices/' + $('Has Email?').item.json._id,\n    Contact: { id: $json.data[0].id },\n    duplicate_check_fields: ['Invoice_Number']\n  }]\n}) }}",
         "options": {}
       },
       "id": "655421a4-73a5-4325-9193-0261defb306a",
@@ -295,134 +226,13 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        2208,
-        -640
+        1984,
+        -592
       ],
       "credentials": {
         "oAuth2Api": {
           "id": "JIQYOtIcpdMTcITW",
           "name": "Zoho CRM OAuth2"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "mode": "raw",
-        "jsonOutput": "={{ { 'Invoice Numbers Covered': $('Split Invoices').item.json.invoiceNumber } }}",
-        "options": {}
-      },
-      "id": "b147a11f-87dd-4257-9e34-83f6ce925d72",
-      "name": "Prepare Covered (Matched)",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        2432,
-        -640
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "append",
-        "documentId": {
-          "__rl": true,
-          "mode": "list",
-          "value": "1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE",
-          "cachedResultName": "Invoice Fields"
-        },
-        "sheetName": {
-          "__rl": true,
-          "mode": "list",
-          "value": "420709446",
-          "cachedResultName": "Invoices Covered"
-        },
-        "columns": {
-          "0": "{",
-          "1": "{",
-          "2": " ",
-          "3": "{",
-          "4": "\"",
-          "5": "m",
-          "6": "a",
-          "7": "p",
-          "8": "p",
-          "9": "i",
-          "10": "n",
-          "11": "g",
-          "12": "M",
-          "13": "o",
-          "14": "d",
-          "15": "e",
-          "16": "\"",
-          "17": ":",
-          "18": "\"",
-          "19": "a",
-          "20": "u",
-          "21": "t",
-          "22": "o",
-          "23": "M",
-          "24": "a",
-          "25": "p",
-          "26": "I",
-          "27": "n",
-          "28": "p",
-          "29": "u",
-          "30": "t",
-          "31": "D",
-          "32": "a",
-          "33": "t",
-          "34": "a",
-          "35": "\"",
-          "36": ",",
-          "37": "\"",
-          "38": "v",
-          "39": "a",
-          "40": "l",
-          "41": "u",
-          "42": "e",
-          "43": "\"",
-          "44": ":",
-          "45": "{",
-          "46": "}",
-          "47": "}",
-          "48": " ",
-          "49": "}",
-          "50": "}",
-          "mappingMode": "defineBelow",
-          "value": {
-            "Invoice Numbers Covered": "={{ $('Split Invoices').item.json.invoiceNumber }}"
-          },
-          "matchingColumns": [
-            "Invoice Numbers Covered"
-          ],
-          "schema": [
-            {
-              "id": "Invoice Numbers Covered",
-              "displayName": "Invoice Numbers Covered",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "id": "7aa53dfb-6ada-43e0-a6dc-121357d8ed16",
-      "name": "Mark Covered (Matched)",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        2656,
-        -640
-      ],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "THdXW72Bb4AecTeb",
-          "name": "creds_for_invoice"
         }
       }
     },
@@ -437,8 +247,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2208,
-        -424
+        1984,
+        -352
       ],
       "executeOnce": false
     },
@@ -591,8 +401,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        2432,
-        -424
+        2208,
+        -352
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -604,17 +414,18 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "{\n  \"limit\": \"10\",\n  \"skip\": \"0\"\n}\n",
+        "jsonOutput": "{\n  \"limit\": \"30\",\n  \"skip\": \"0\"\n}\n",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
         640,
-        -448
+        -472
       ],
       "id": "8c805649-14d2-4d30-a5b6-e4995e44e7e8",
-      "name": "Set"
+      "name": "Set",
+      "executeOnce": true
     },
     {
       "parameters": {
@@ -638,7 +449,7 @@
       "typeVersion": 4.7,
       "position": [
         416,
-        -448
+        -472
       ],
       "id": "1c5191d8-1a18-49c8-ac3d-23a6d176fbbe",
       "name": "Read Unmatched Contacts",
@@ -663,7 +474,7 @@
           "conditions": [
             {
               "id": "38e05f83-435e-4ef2-8bfe-492d4c0b98af",
-              "leftValue": "={{ $('Fetch Invoices').first().json.data.length === 10 }}",
+              "leftValue": "={{ $('Fetch Invoices').first().json.data.length === 30 }}",
               "rightValue": "",
               "operator": {
                 "type": "boolean",
@@ -692,13 +503,13 @@
             {
               "id": "2faef98a-f6b9-47ba-8944-fcdde6b68305",
               "name": "skip",
-              "value": "={{ $('Fetch Invoices').first().json.skip + 10 }}",
+              "value": "={{ $('Fetch Invoices').first().json.skip + 30 }}",
               "type": "number"
             },
             {
               "id": "c0f01f86-1ef5-4f1a-ad14-347f53ebe5d7",
               "name": "limit",
-              "value": "=10",
+              "value": "=30",
               "type": "number"
             }
           ]
@@ -709,7 +520,7 @@
       "typeVersion": 3.4,
       "position": [
         3328,
-        -448
+        -512
       ],
       "id": "dbbb5b9d-e49d-4b0f-80cd-291400899f13",
       "name": "increment skip",
@@ -725,6 +536,188 @@
       ],
       "id": "2769d119-f0ec-4d6d-a315-e5c6710502f9",
       "name": "Merge"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE",
+          "mode": "list",
+          "cachedResultName": "Invoice Logging",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1571092352,
+          "mode": "list",
+          "cachedResultName": "Config",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE/edit#gid=1571092352"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        192,
+        -472
+      ],
+      "id": "14bdc2d9-f142-4e69-96f6-955af4f12459",
+      "name": "Read Last Run Time",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cby4gQ9hDXfjYT1n",
+          "name": "Mis_Google_Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "99361f70-622c-45e8-9b7a-79537e42759a",
+              "leftValue": "={{$json.found === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2432,
+        -592
+      ],
+      "id": "7d944873-cb2e-4030-94c2-de6b96861030",
+      "name": "Row found?"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const invoiceNumber = $input.item.json.Invoice_Number || \n                      $('Has Email?').item.json.invoiceNumber;\nconst unmatchedRows = $('Read Unmatched Contacts').all();\nconst matchingRow = unmatchedRows.find(\n  row => row.json['Invoice Number'] === invoiceNumber\n);\n\nif (matchingRow && matchingRow.json['row_number']) {\n  return  { row_number: matchingRow.json['row_number'], found: true };\n}\nreturn  { found: false } ;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2208,
+        -592
+      ],
+      "id": "148c4ddb-f08e-4145-8f54-7cee5f150497",
+      "name": "Find Unmatched Row"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE",
+          "mode": "list",
+          "cachedResultName": "Invoice Logging",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 438047698,
+          "mode": "list",
+          "cachedResultName": "Unmatched Contacts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE/edit#gid=438047698"
+        },
+        "startIndex": "={{ $json.row_number }}"
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2656,
+        -640
+      ],
+      "id": "bb428481-024e-4239-a840-07a34005e13c",
+      "name": "Delete rows or columns from sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cby4gQ9hDXfjYT1n",
+          "name": "Mis_Google_Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE",
+          "mode": "list",
+          "cachedResultName": "Invoice Logging",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1571092352,
+          "mode": "list",
+          "cachedResultName": "Config",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dfZ-jIXPNbVllPvtAmpZNj9X8yrevsNTPrAgEoARvQE/edit#gid=1571092352"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "last_run": "={{$now.toISO().split('T')[0]}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "last_run",
+              "displayName": "last_run",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3328,
+        -256
+      ],
+      "id": "a8b26616-1337-4124-ac42-385a86a0b704",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cby4gQ9hDXfjYT1n",
+          "name": "Mis_Google_Account"
+        }
+      }
     }
   ],
   "connections": {
@@ -743,18 +736,7 @@
       "main": [
         [
           {
-            "node": "Read Covered Invoices",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Read Covered Invoices": {
-      "main": [
-        [
-          {
-            "node": "Read Unmatched Contacts",
+            "node": "Read Last Run Time",
             "type": "main",
             "index": 0
           }
@@ -773,17 +755,6 @@
       ]
     },
     "Split Invoices": {
-      "main": [
-        [
-          {
-            "node": "Already Covered?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Already Covered?": {
       "main": [
         [
           {
@@ -845,18 +816,7 @@
       "main": [
         [
           {
-            "node": "Prepare Covered (Matched)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Covered (Matched)": {
-      "main": [
-        [
-          {
-            "node": "Mark Covered (Matched)",
+            "node": "Find Unmatched Row",
             "type": "main",
             "index": 0
           }
@@ -907,17 +867,6 @@
         ]
       ]
     },
-    "Mark Covered (Matched)": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "increment skip": {
       "main": [
         [
@@ -937,6 +886,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -945,6 +901,57 @@
         [
           {
             "node": "More Pages?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Last Run Time": {
+      "main": [
+        [
+          {
+            "node": "Read Unmatched Contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Row found?": {
+      "main": [
+        [
+          {
+            "node": "Delete rows or columns from sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Unmatched Row": {
+      "main": [
+        [
+          {
+            "node": "Row found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete rows or columns from sheet": {
+      "main": [
+        [
+          {
+            "node": "Merge",
             "type": "main",
             "index": 0
           }
@@ -993,7 +1000,7 @@
       }
     ]
   },
-  "versionId": "3883d358-45a8-4391-8414-e7128d1d0632",
+  "versionId": "762e56de-2be8-47f6-9fdd-29547fc15edc",
   "activeVersionId": "3883d358-45a8-4391-8414-e7128d1d0632",
   "triggerCount": 1,
   "shared": [
