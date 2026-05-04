@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-30T13:03:21.151Z",
+  "updatedAt": "2026-05-04T05:13:16.418Z",
   "createdAt": "2026-04-28T05:41:11.091Z",
   "id": "NXFyJF2PrmITBlBe",
   "name": "Google Contact -> Zoho CRM",
@@ -20,7 +20,7 @@
       "typeVersion": 1.3,
       "position": [
         0,
-        -200
+        -208
       ],
       "id": "81e881c1-23a5-4bef-8198-be332424bc2e",
       "name": "Schedule Trigger"
@@ -74,10 +74,12 @@
       "typeVersion": 1,
       "position": [
         448,
-        -200
+        -208
       ],
       "id": "9470a2ac-d18c-4cd5-9ca3-6e03719f70d2",
       "name": "Get Google Contacts",
+      "alwaysOutputData": false,
+      "executeOnce": false,
       "credentials": {
         "googleContactsOAuth2Api": {
           "id": "ZwdUX65o60JKNlp1",
@@ -209,7 +211,7 @@
       "typeVersion": 2.3,
       "position": [
         672,
-        -200
+        -208
       ],
       "id": "40f0bebc-6b15-4134-8dad-6603c8d28f4a",
       "name": "If1"
@@ -243,7 +245,7 @@
       "typeVersion": 2.3,
       "position": [
         1120,
-        -200
+        -208
       ],
       "id": "acce4fb9-ec77-4991-ae61-0bfc7bd03222",
       "name": "If"
@@ -281,7 +283,7 @@
       "typeVersion": 2,
       "position": [
         1568,
-        -200
+        -208
       ],
       "id": "bdfd6a51-74bf-49d7-8a9e-7925772397e2",
       "name": "Code in JavaScript"
@@ -314,7 +316,7 @@
       "typeVersion": 2.3,
       "position": [
         1792,
-        -200
+        -208
       ],
       "id": "923f6e9b-8855-4d7b-a001-a4102f35bf66",
       "name": "If2"
@@ -496,7 +498,7 @@
       "typeVersion": 3.4,
       "position": [
         224,
-        -200
+        -208
       ],
       "id": "cf6f9794-e9f7-44ca-a3f5-51f8ec1acea4",
       "name": "Edit Fields"
@@ -638,7 +640,7 @@
       "typeVersion": 1.1,
       "position": [
         896,
-        -200
+        -208
       ],
       "id": "e528b5f6-50c0-4d6e-8d7c-1f0b8ff73944",
       "name": "Insert row1"
@@ -654,7 +656,7 @@
       "typeVersion": 4.4,
       "position": [
         1344,
-        -200
+        -208
       ],
       "id": "db1d5853-6979-4697-8a37-503f5a63678a",
       "name": "Get Zoho Contacts",
@@ -711,8 +713,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        2016,
-        -272
+        2000,
+        -336
       ],
       "id": "cb1faa1b-a7d2-4654-9511-2e19648f34c9",
       "name": "If3"
@@ -928,7 +930,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "cfc0a960-a29b-46ec-a44c-80f22a9b134e",
+  "versionId": "de16739b-c53a-421a-a932-532679dba8d5",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
