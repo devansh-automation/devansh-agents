@@ -1,10 +1,10 @@
 {
-  "updatedAt": "2026-04-03T07:25:12.238Z",
+  "updatedAt": "2026-05-04T09:57:51.000Z",
   "createdAt": "2026-04-03T06:40:51.495Z",
   "id": "9O4E4H85M116GXQy",
   "name": "creds test",
   "active": false,
-  "isArchived": false,
+  "isArchived": true,
   "nodes": [
     {
       "parameters": {
@@ -54,7 +54,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "9d129ead-ebba-4441-82f7-1633359418ec",
+  "versionId": "670aff75-b381-45be-947f-b7a36a3f5dd1",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

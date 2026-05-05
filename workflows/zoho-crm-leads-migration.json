@@ -1,10 +1,10 @@
 {
-  "updatedAt": "2025-09-22T12:34:19.000Z",
+  "updatedAt": "2026-05-04T06:07:35.000Z",
   "createdAt": "2025-09-11T06:11:17.782Z",
   "id": "l6V3b4Dgsch4Wik6",
   "name": "Zoho-CRM leads migration",
   "active": false,
-  "isArchived": false,
+  "isArchived": true,
   "nodes": [
     {
       "parameters": {
@@ -341,7 +341,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "1824030e-e951-4159-8b14-3984334b4152",
+  "versionId": "7a81b9bc-4d62-4218-b435-7f20dbce4d4b",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

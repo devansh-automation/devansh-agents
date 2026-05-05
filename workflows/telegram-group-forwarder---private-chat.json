@@ -1,0 +1,152 @@
+{
+  "updatedAt": "2026-05-04T14:12:10.660Z",
+  "createdAt": "2026-05-04T08:20:19.814Z",
+  "id": "ljZ59MyS2YndAPwC",
+  "name": "Telegram Group Forwarder → Private Chat",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Get the incoming message details\nconst msg = $input.first().json.message;\n\nif (!msg) return [];\n\nconst chatId = String(msg.chat?.id || '');\nconst chatTitle = msg.chat?.title || 'Unknown Group';\nconst senderName = msg.from?.first_name || '';\nconst senderLast = msg.from?.last_name || '';\nconst senderUsername = msg.from?.username ? `@${msg.from.username}` : '';\nconst senderFull = [senderName, senderLast].filter(Boolean).join(' ');\nconst text = msg.text || msg.caption || '[Non-text message]';\nconst messageId = msg.message_id;\nconst date = new Date(msg.date * 1000).toLocaleString('en-GB', { timeZone: 'Asia/Kolkata' });\n\n// Define allowed source groups\nconst allowedGroups = {\n  '-5039679858': 'Group 1',\n  '-5277697339': 'Group 3'\n};\n\n// Check if message is from one of the allowed groups\nconst groupLabel = allowedGroups[chatId];\n\nif (!groupLabel) {\n  // Message not from a monitored group — skip\n  return [];\n}\n\nreturn [{\n  json: {\n    chatId,\n    groupLabel,\n    chatTitle,\n    senderFull,\n    senderUsername,\n    text,\n    messageId,\n    date\n  }\n}];"
+      },
+      "id": "1af7a830-e2fd-43af-979c-c2bf342ca9e6",
+      "name": "Filter & Extract",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "8720872726",
+        "text": "={{ '📨 *New message from ' + $json.groupLabel + '* (' + $json.chatTitle + ')\\n\\n👤 *From:* ' + $json.senderFull + ($json.senderUsername ? ' (' + $json.senderUsername + ')' : '') + '\\n🕐 *Time:* ' + $json.date + '\\n\\n💬 *Message:*\\n' + $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "e578ee72-fe5f-4b38-9f0d-29932b64f337",
+      "name": "Forward to Private Chat",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        176
+      ],
+      "webhookId": "9d28a19d-5043-4a36-881c-0cb099cd5f27",
+      "credentials": {
+        "telegramApi": {
+          "id": "NMb4w2atvc0aFCc6",
+          "name": "testingdemo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "-5039679858,-5277697339",
+        "text": "={{ '📨 *New message from ' + $json.groupLabel + '* (' + $json.chatTitle + ')\\n\\n👤 *From:* ' + $json.senderFull + ($json.senderUsername ? ' (' + $json.senderUsername + ')' : '') + '\\n🕐 *Time:* ' + $json.date + '\\n\\n💬 *Message:*\\n' + $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "2d9cbb61-d7d8-4dc2-9301-f382a34ff506",
+      "name": "Forward to Private Chat1",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -832,
+        224
+      ],
+      "webhookId": "9d28a19d-5043-4a36-881c-0cb099cd5f27",
+      "credentials": {
+        "telegramApi": {
+          "id": "NMb4w2atvc0aFCc6",
+          "name": "testingdemo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "ed0dd856-8baf-41cd-8264-b33c5f416d78",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1120,
+        224
+      ],
+      "webhookId": "telegram-forwarder-webhook-001",
+      "credentials": {
+        "telegramApi": {
+          "id": "NMb4w2atvc0aFCc6",
+          "name": "testingdemo"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Filter & Extract": {
+      "main": [
+        [
+          {
+            "node": "Forward to Private Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Forward to Private Chat1": {
+      "main": [
+        [
+          {
+            "node": "Filter & Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Forward to Private Chat1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "ec39483f-fe5c-4f25-b705-2efb20a4e814",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-05-04T08:20:19.816Z",
+      "createdAt": "2026-05-04T08:20:19.816Z",
+      "role": "workflow:owner",
+      "workflowId": "ljZ59MyS2YndAPwC",
+      "projectId": "4byo5YlJWidsMFA8"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

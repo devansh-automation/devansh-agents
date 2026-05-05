@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-27T09:43:38.549Z",
+  "updatedAt": "2026-05-04T06:30:27.308Z",
   "createdAt": "2026-02-09T12:51:25.387Z",
   "id": "4XzWwBPDQSJ7CInx",
   "name": "MCP – Execute Action",
@@ -1651,8 +1651,8 @@
       "type": "n8n-nodes-base.errorTrigger",
       "typeVersion": 1,
       "position": [
-        -2432,
-        -880
+        -4240,
+        -1008
       ],
       "id": "0abea726-530a-41be-8e96-eb96dee77b4a",
       "name": "Error Trigger"
@@ -3852,7 +3852,7 @@
       }
     ]
   },
-  "versionId": "0646316a-4d31-491d-a12f-ab6c3c49ebf5",
+  "versionId": "a39c3311-3b02-4ed6-8566-4343ecd0e28c",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [

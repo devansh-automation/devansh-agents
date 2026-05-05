@@ -1,10 +1,10 @@
 {
-  "updatedAt": "2025-09-26T10:37:35.000Z",
+  "updatedAt": "2026-05-04T06:07:42.000Z",
   "createdAt": "2025-09-06T06:10:33.366Z",
   "id": "K013xuRZA3NIoNz7",
   "name": "Bids Migration",
   "active": false,
-  "isArchived": false,
+  "isArchived": true,
   "nodes": [
     {
       "parameters": {
@@ -944,7 +944,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "088d9edf-4a3e-4bec-b214-4f7ae62d0978",
+  "versionId": "6271ea0c-549c-44c9-9637-dff0afef0038",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
