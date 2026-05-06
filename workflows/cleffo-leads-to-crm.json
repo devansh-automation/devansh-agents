@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-01T09:28:36.020Z",
+  "updatedAt": "2026-05-05T10:56:14.977Z",
   "createdAt": "2026-03-27T13:42:26.955Z",
   "id": "fTcqzKrx5k1bB0Yb",
   "name": "Cleffo leads to CRM",
@@ -97,7 +97,7 @@
         "genericAuthType": "oAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"data\": [\n    {\n      \"Last_Name\": \"{{ $json.name }}\",\n      \"Email\": \"{{ $json.email }}\",\n      \"Phone\": \"{{ $json.mobile }}\",\n      \"Country\": \"{{ $json.country }}\",\n      \"Company\": \"{{ $json.businessName }}\",\n      \"Website\": \"{{ $json.website }}\",\n      \"Lead_Source\": \"Website Inbound(HRB)\",\n      \"Description\": \"{{ $json.comments }}\",\n      \"Lead_Status\": \"New Lead\"\n    }\n  ]\n}",
+        "jsonBody": "={\n  \"data\": [\n    {\n      \"Last_Name\": \"{{ $json.name }}\",\n      \"Email\": \"{{ $json.email }}\",\n      \"Phone\": \"{{ $json.mobile }}\",\n      \"Country\": \"{{ $json.country }}\",\n      \"Company\": \"{{ $json.businessName }}\",\n      \"Website\": \"{{ $json.website }}\",\n      \"Lead_Source\": \"Website Inbound(HRB)\",\n      \"Description\": \"{{ $json.comments }}\",\n      \"Lead_Status\": \"New Lead\",\n      \"Owner\": \"5118344000003068065\"\n    }\n  ]\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -216,8 +216,8 @@
       }
     ]
   },
-  "versionId": "b51dcd63-65de-4af4-ae8a-2becd3f361a8",
-  "activeVersionId": "b51dcd63-65de-4af4-ae8a-2becd3f361a8",
+  "versionId": "b50b3b93-8878-4f85-8398-ce5a8c7b4c80",
+  "activeVersionId": "b50b3b93-8878-4f85-8398-ce5a8c7b4c80",
   "triggerCount": 1,
   "shared": [
     {
@@ -229,9 +229,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-05-01T09:28:43.000Z",
-    "createdAt": "2026-05-01T09:28:36.021Z",
-    "versionId": "b51dcd63-65de-4af4-ae8a-2becd3f361a8",
+    "updatedAt": "2026-05-05T10:56:22.000Z",
+    "createdAt": "2026-05-05T10:56:14.978Z",
+    "versionId": "b50b3b93-8878-4f85-8398-ce5a8c7b4c80",
     "workflowId": "fTcqzKrx5k1bB0Yb",
     "nodes": [
       {
@@ -325,7 +325,7 @@
           "genericAuthType": "oAuth2Api",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={\n  \"data\": [\n    {\n      \"Last_Name\": \"{{ $json.name }}\",\n      \"Email\": \"{{ $json.email }}\",\n      \"Phone\": \"{{ $json.mobile }}\",\n      \"Country\": \"{{ $json.country }}\",\n      \"Company\": \"{{ $json.businessName }}\",\n      \"Website\": \"{{ $json.website }}\",\n      \"Lead_Source\": \"Website Inbound(HRB)\",\n      \"Description\": \"{{ $json.comments }}\",\n      \"Lead_Status\": \"New Lead\"\n    }\n  ]\n}",
+          "jsonBody": "={\n  \"data\": [\n    {\n      \"Last_Name\": \"{{ $json.name }}\",\n      \"Email\": \"{{ $json.email }}\",\n      \"Phone\": \"{{ $json.mobile }}\",\n      \"Country\": \"{{ $json.country }}\",\n      \"Company\": \"{{ $json.businessName }}\",\n      \"Website\": \"{{ $json.website }}\",\n      \"Lead_Source\": \"Website Inbound(HRB)\",\n      \"Description\": \"{{ $json.comments }}\",\n      \"Lead_Status\": \"New Lead\",\n      \"Owner\": \"5118344000003068065\"\n    }\n  ]\n}",
           "options": {}
         },
         "type": "n8n-nodes-base.httpRequest",
@@ -381,7 +381,7 @@
       }
     },
     "authors": "Dev Scaleupally",
-    "name": "Version b51dcd63",
+    "name": "Version b50b3b93",
     "description": "",
     "autosaved": true
   },

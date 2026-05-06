@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-04T13:05:51.186Z",
+  "updatedAt": "2026-05-05T13:44:16.877Z",
   "createdAt": "2026-04-28T05:41:11.091Z",
   "id": "NXFyJF2PrmITBlBe",
   "name": "Google Contact -> Zoho CRM",
@@ -62,7 +62,7 @@
     {
       "parameters": {
         "operation": "getAll",
-        "limit": 500,
+        "returnAll": true,
         "fields": [
           "emailAddresses",
           "names",
@@ -82,8 +82,8 @@
       "executeOnce": false,
       "credentials": {
         "googleContactsOAuth2Api": {
-          "id": "vDjmRGMeov3iFWGl",
-          "name": "my_test_creds"
+          "id": "PHsd8zJBN5AlabEO",
+          "name": "sales.scaleupally"
         }
       }
     },
@@ -103,9 +103,9 @@
             "displayName": "={{ $json.localContact.fullName }}",
             "displayNameLastFirst": "={{ $json.localContact.firstName }}, {{ $json.localContact.lastName }}",
             "mobile_no_1": "={{ $json.localContact.phone.toInt() }}",
-            "mobile_no_2": "={{ $json.phoneNumbers.mobile[1] }}",
             "Email": "={{ $json.emailAddresses.home[0] }}",
-            "Contact_Created": true
+            "Contact_Created": true,
+            "mobile_no_2": "={{ $json.phoneNumbers.mobile[1].toInt() }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -188,8 +188,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        2704,
-        -160
+        2944,
+        -144
       ],
       "id": "cdb28581-6364-4ed6-a8f6-ad2b5228e5eb",
       "name": "Insert row"
@@ -263,32 +263,7 @@
     },
     {
       "parameters": {
-        "operation": "getAll",
-        "limit": 200,
-        "fields": [
-          "names",
-          "phoneNumbers"
-        ],
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleContacts",
-      "typeVersion": 1,
-      "position": [
-        0,
-        416
-      ],
-      "id": "bf27b3fb-0ef4-4521-9b7a-15a4c63c93fe",
-      "name": "Get many contacts",
-      "credentials": {
-        "googleContactsOAuth2Api": {
-          "id": "Wrw0I0AQG1F1YNc2",
-          "name": "Google Contacts OAuth2 API"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const localContacts = $('Insert row1').all().map(item => ({\n  firstName: item.json.displayName.split(' ')[0] + \" \" + item.json.displayName.split(' ')[1],\n  lastName: item.json.displayNameLastFirst.split(',')[0].trim(),\n  fullName: item.json.displayName,\n  phone: String(item.json.mobile_no_1 || '')\n}));\n\nconst zohoContacts = $('Get Zoho Contacts').all()\n  .filter(item => item.json.data && item.json.data.length > 0)\n  .flatMap(item => item.json.data.map(contact => ({\n    id: contact.id,\n    name: contact.Full_Name,\n    phone: contact.Mobile?.replace(/\\D/g, '') || ''\n  })));\n\nconst results = [];\n\nfor (const lc of localContacts) {\n  const zohoMatch = zohoContacts.find(zc =>\n    lc.phone && zc.phone && lc.phone === zc.phone\n  );\n\n  results.push({\n    json: {\n      status: zohoMatch ? 'matched' : 'unmatched',\n      localContact: lc,\n      id: $input.first().json.data[0].id,\n      zohoContact: zohoMatch || null\n    }\n  });\n}\n\nreturn results;"
+        "jsCode": "const localContacts = $('Insert row1').all().map(item => ({\n  firstName: item.json.displayName.split(' ')[0] + \" \" + item.json.displayName.split(' ')[1],\n  lastName: item.json.displayNameLastFirst.split(',')[0].trim(),\n  fullName: item.json.displayName,\n  phone: String(item.json.mobile_no_1 || '')\n}));\n\nconst zohoContacts = $('Get Zoho Contacts').all()\n  .filter(item => item.json.data && item.json.data.length > 0)\n  .flatMap(item => item.json.data.map(contact => ({\n    id: contact.id,\n    name: contact.Full_Name,\n    phone: contact.Mobile?.replace(/\\D/g, '') || ''\n  })));\n\nconst results = [];\n\nfor (const lc of localContacts) {\n  const zohoMatch = zohoContacts.find(zc =>\n  (lc.phone && zc.phone && lc.phone === zc.phone) ||\n  (lc.fullName && zc.name && zc.name.toLowerCase() === lc.fullName.toLowerCase())\n);\n\n  results.push({\n    json: {\n      status: (zohoMatch && lc.phone === zohoMatch.phone) ? 'matched' : 'unmatched',\n      localContact: lc,\n      id: $input.first().json.data[0].id,\n      zohoContact: zohoMatch || null\n    }\n  });\n}\n\nreturn results;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -483,12 +458,12 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://www.zohoapis.com/crm/v2/Contacts",
+        "url": "https://www.zohoapis.com/crm/v8/Contacts",
         "authentication": "genericCredentialType",
         "genericAuthType": "oAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"data\": [\n    {\n      \"First_Name\": \"{{ $json.localContact.firstName }}\",\n      \"Last_Name\": \"{{ $json.localContact.lastName }}\",\n      \"Phone\": \"{{ $json.localContact.phone }}\"\n    }\n  ]\n}",
+        "jsonBody": "={\n  \"data\": [\n    {\n      \"First_Name\": \"{{ $json.localContact.firstName }}\",\n      \"Last_Name\": \"{{ $json.localContact.lastName }}\",\n      \"Mobile\": \"{{ $json.localContact.phone }}\"\n    }\n  ]\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -539,6 +514,119 @@
       ],
       "id": "4e9b4e1f-c08c-417c-aff0-25019a4084c7",
       "name": "If3"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "Yid1J9mDYfJbxSkH",
+          "mode": "list",
+          "cachedResultName": "Contacts",
+          "cachedResultUrl": "/projects/4byo5YlJWidsMFA8/datatables/Yid1J9mDYfJbxSkH"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "displayName",
+              "keyValue": "={{ $json.localContact.fullName }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Contact_Created": true,
+            "mobile_no_1": "={{ $json.localContact.phone.toInt() }}",
+            "mobile_no_2": "={{ $json.zohoContact.phone.toInt() }}",
+            "Email": "={{ $json.emailAddresses.home[0] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "contactID",
+              "displayName": "contactID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "displayName",
+              "displayName": "displayName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "displayNameLastFirst",
+              "displayName": "displayNameLastFirst",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "mobile_no_1",
+              "displayName": "mobile_no_1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "mobile_no_2",
+              "displayName": "mobile_no_2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Contact_Created",
+              "displayName": "Contact_Created",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2832,
+        192
+      ],
+      "id": "61993dc3-ff82-44ba-9227-816ebf3b643b",
+      "name": "Update row(s)"
     }
   ],
   "connections": {
@@ -596,11 +684,6 @@
             "index": 0
           }
         ]
-      ]
-    },
-    "Get many contacts": {
-      "main": [
-        []
       ]
     },
     "Code in JavaScript": {
@@ -667,20 +750,14 @@
     },
     "Create Contact in Zoho": {
       "main": [
-        [
-          {
-            "node": "Insert row",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "If3": {
       "main": [
         [
           {
-            "node": "Insert row",
+            "node": "Update row(s)",
             "type": "main",
             "index": 0
           }
@@ -704,7 +781,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "b5568270-4516-46cc-8fa9-82a6d05abb79",
+  "versionId": "30a3e33f-6f7c-4c77-a511-4df2748be645",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
