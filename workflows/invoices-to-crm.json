@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-04T14:06:03.611Z",
+  "updatedAt": "2026-05-07T04:58:20.691Z",
   "createdAt": "2026-04-20T10:57:15.406Z",
   "id": "ArEK37NRuIJSM2lc",
   "name": "Invoices to CRM",
@@ -15,7 +15,7 @@
               "triggerAtDay": [
                 1
               ],
-              "triggerAtHour": 9
+              "triggerAtHour": 12
             }
           ]
         }
@@ -1012,8 +1012,8 @@
       }
     ]
   },
-  "versionId": "bcdc3cc0-858f-48b4-8739-23b43cb4297f",
-  "activeVersionId": "185e5b08-cfd9-4409-ab2f-5fa343a85875",
+  "versionId": "aded5157-3917-49a1-abf0-2715a30f7077",
+  "activeVersionId": "aded5157-3917-49a1-abf0-2715a30f7077",
   "triggerCount": 1,
   "shared": [
     {
@@ -1025,9 +1025,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-05-04T06:18:04.000Z",
-    "createdAt": "2026-05-04T06:17:47.026Z",
-    "versionId": "185e5b08-cfd9-4409-ab2f-5fa343a85875",
+    "updatedAt": "2026-05-07T04:58:25.000Z",
+    "createdAt": "2026-05-07T04:58:20.693Z",
+    "versionId": "aded5157-3917-49a1-abf0-2715a30f7077",
     "workflowId": "ArEK37NRuIJSM2lc",
     "nodes": [
       {
@@ -1039,7 +1039,7 @@
                 "triggerAtDay": [
                   1
                 ],
-                "triggerAtHour": 9
+                "triggerAtHour": 12
               }
             ]
           }
@@ -1073,7 +1073,7 @@
       },
       {
         "parameters": {
-          "url": "https://api.refrens.com/businesses/scaleupally/invoices",
+          "url": "https://api.refrens.com/businesses/scaleupally/invoices?addShareLink=true",
           "sendQuery": true,
           "queryParameters": {
             "parameters": [
@@ -1086,12 +1086,8 @@
                 "value": "={{ $json.skip }}"
               },
               {
-                "name": "updatedAt[$gte]",
-                "value": "={{ $('Read Last Run Time').first().json.last_run }}"
-              },
-              {
-                "name": "updatedAt[$lte]",
-                "value": "={{ $now.format('yyyy-MM-dd') }}"
+                "name": "invoiceTitle",
+                "value": "Invoice"
               }
             ]
           },
@@ -1104,7 +1100,13 @@
               }
             ]
           },
-          "options": {}
+          "options": {
+            "batching": {
+              "batch": {
+                "batchSize": 5
+              }
+            }
+          }
         },
         "id": "99a764c7-a3e3-4a4c-b82f-f88f6c6baad0",
         "name": "Fetch Invoices",
@@ -1173,7 +1175,7 @@
             "parameters": [
               {
                 "name": "criteria",
-                "value": "={{ '(Email:equals:' + $json.billedTo.email + ')or(Secondary_Email:equals:' + $json.billedTo.email + ')' }}"
+                "value": "={{ '(Email:equals:' + $json.billedTo.email.trim() + ')or(Secondary_Email:equals:' + $json.billedTo.email.trim() + ')' }}"
               }
             ]
           },
@@ -1242,8 +1244,14 @@
           "genericAuthType": "oAuth2Api",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify({\n  data: [{\n    Invoice_Number: $('Has Email?').item.json.invoiceNumber,\n    Invoice_Date: $('Has Email?').item.json.invoiceDate.split('T')[0],\n    Amount: $('Has Email?').item.json.finalTotal.total,\n    Currency: $('Has Email?').item.json.currency,\n    Name: $('Has Email?').item.json.invoiceNumber + ' - ' + $('Has Email?').item.json.billedTo.name,\n    Item_Description: $('Has Email?').item.json.items.map(i => i.name).join(', '),\n    Status: $('Has Email?').item.json.status,\n    Bill_Type: $('Has Email?').item.json.billType,\n    Invoice_URL: 'https://www.refrens.com/app/invoices/' + $('Has Email?').item.json._id,\n    Contact: { id: $json.data[0].id },\n    duplicate_check_fields: ['Invoice_Number']\n  }]\n}) }}",
-          "options": {}
+          "jsonBody": "={{ JSON.stringify({\n  data: [{\n    Invoice_Number: $('Has Email?').item.json.invoiceNumber,\n    Invoice_Date: $('Has Email?').item.json.invoiceDate.split('T')[0],\n    Amount: $('Has Email?').item.json.finalTotal.total,\n    Currency: $('Has Email?').item.json.currency,\n    Name: $('Has Email?').item.json.invoiceNumber + ' - ' + $('Has Email?').item.json.billedTo.name,\n    Item_Description: $('Has Email?').item.json.items.map(i => i.name).join(', '),\n    Status: $('Has Email?').item.json.status,\n    Bill_Type: $('Has Email?').item.json.billType,\n    Invoice_URL: $('Has Email?').item.json.share.link,\n    Contact: { id: $json.data[0].id },\n    duplicate_check_fields: ['Invoice_Number']\n  }]\n}) }}",
+          "options": {
+            "batching": {
+              "batch": {
+                "batchSize": 5
+              }
+            }
+          }
         },
         "id": "655421a4-73a5-4325-9193-0261defb306a",
         "name": "Upsert Invoice in Zoho",
@@ -1642,7 +1650,8 @@
           -592
         ],
         "id": "148c4ddb-f08e-4145-8f54-7cee5f150497",
-        "name": "Find Unmatched Row"
+        "name": "Find Unmatched Row",
+        "disabled": true
       },
       {
         "parameters": {
@@ -1700,7 +1709,9 @@
             "value": {
               "last_run": "={{$now.toISO().split('T')[0]}}"
             },
-            "matchingColumns": [],
+            "matchingColumns": [
+              "last_run"
+            ],
             "schema": [
               {
                 "id": "last_run",
@@ -1709,7 +1720,8 @@
                 "defaultMatch": false,
                 "display": true,
                 "type": "string",
-                "canBeUsedToMatch": true
+                "canBeUsedToMatch": true,
+                "removed": false
               },
               {
                 "id": "row_number",
@@ -1984,7 +1996,7 @@
       }
     },
     "authors": "Dev Scaleupally",
-    "name": "Version 185e5b08",
+    "name": "Version aded5157",
     "description": "",
     "autosaved": true
   },
