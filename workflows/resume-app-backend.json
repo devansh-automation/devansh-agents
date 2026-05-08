@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-07T05:04:25.871Z",
+  "updatedAt": "2026-05-07T06:23:25.697Z",
   "createdAt": "2026-03-23T07:16:56.111Z",
   "id": "Zinia9sYTgMvpkn0",
   "name": "resume app backend",
@@ -478,7 +478,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        2752,
+        3040,
         1280
       ],
       "id": "8b56d644-2d4d-4347-ae96-fb9f8807e7a1",
@@ -497,7 +497,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        2752,
+        3040,
         1488
       ],
       "id": "cbbb35d4-58ef-4a67-93ea-4bef43746207",
@@ -656,7 +656,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3056,
+        3360,
         1280
       ],
       "id": "54eb7f6c-635d-4359-a570-0fc44d7069f1",
@@ -680,7 +680,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        3248,
+        3584,
         1280
       ],
       "id": "38d34cf5-b962-49ef-93c0-fb058692369f",
@@ -698,6 +698,58 @@
       ],
       "id": "165b83b3-6320-4c66-b642-cdf51d794e90",
       "name": "Get Keys"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"https://www.googleapis.com/drive/v3/files/\" + $json.documentId + \"/permissions\" }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"role\": \"writer\",\n  \"type\": \"user\",\n  \"emailAddress\": \"sales.scaleupally@gmail.com\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2576,
+        1280
+      ],
+      "id": "4ee945de-ebe2-4c77-830a-f5cdfa4d7545",
+      "name": "Grant Editor Access",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "IJ9GwsApNFaPgpOK",
+          "name": "Staffing Scaleupally"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $('Build Placeholder Requests').item.json.docId }}/permissions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"role\": \"reader\",\n  \"type\": \"anyone\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2784,
+        1280
+      ],
+      "id": "9ba588c7-af86-4399-a0c4-4ec69bf3072b",
+      "name": "Grant Viewer Access",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "IJ9GwsApNFaPgpOK",
+          "name": "Staffing Scaleupally"
+        }
+      }
     }
   ],
   "connections": {
@@ -960,7 +1012,7 @@
       "main": [
         [
           {
-            "node": "Scorekeeper",
+            "node": "Grant Editor Access",
             "type": "main",
             "index": 0
           }
@@ -993,6 +1045,28 @@
           }
         ]
       ]
+    },
+    "Grant Editor Access": {
+      "main": [
+        [
+          {
+            "node": "Grant Viewer Access",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grant Viewer Access": {
+      "main": [
+        [
+          {
+            "node": "Scorekeeper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -1020,35 +1094,35 @@
         "json": {
           "headers": {
             "host": "devscaleup.app.n8n.cloud",
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
-            "content-length": "32228",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+            "content-length": "38023",
             "accept": "*/*",
             "accept-encoding": "gzip, br",
-            "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+            "accept-language": "en-US,en;q=0.9",
             "cdn-loop": "cloudflare; loops=1; subreqs=1",
-            "cf-connecting-ip": "2401:4900:8845:a972:3587:9cd0:4755:d87e",
+            "cf-connecting-ip": "2405:201:4041:c84d:2079:70b6:b82b:5fc4",
             "cf-ew-via": "15",
             "cf-ipcountry": "IN",
-            "cf-ray": "9e451d67ea0ca6ed-DEL",
+            "cf-ray": "9f786cc6bd66dcb5-FRA",
             "cf-visitor": "{\"scheme\":\"https\"}",
             "cf-worker": "n8n.cloud",
             "content-type": "application/json",
-            "origin": "https://preview--quixotic-resume-flow-pro.base44.app",
+            "origin": "https://resumeformatter.base44.app",
             "priority": "u=1, i",
-            "referer": "https://preview--quixotic-resume-flow-pro.base44.app/",
-            "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\"",
+            "referer": "https://resumeformatter.base44.app/",
+            "sec-ch-ua": "\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
             "sec-ch-ua-mobile": "?0",
             "sec-ch-ua-platform": "\"Windows\"",
             "sec-fetch-dest": "empty",
             "sec-fetch-mode": "cors",
             "sec-fetch-site": "cross-site",
-            "x-forwarded-for": "2401:4900:8845:a972:3587:9cd0:4755:d87e, 162.158.142.171",
+            "x-forwarded-for": "2405:201:4041:c84d:2079:70b6:b82b:5fc4, 172.71.148.31",
             "x-forwarded-host": "devscaleup.app.n8n.cloud",
             "x-forwarded-port": "443",
             "x-forwarded-proto": "https",
-            "x-forwarded-server": "traefik-prod-users-gwc-70-6d8d5988f7-lb5lj",
+            "x-forwarded-server": "traefik-prod-users-gwc-70-b9cddcbb8-swhgk",
             "x-is-trusted": "yes",
-            "x-real-ip": "2401:4900:8845:a972:3587:9cd0:4755:d87e"
+            "x-real-ip": "2405:201:4041:c84d:2079:70b6:b82b:5fc4"
           },
           "params": {},
           "query": {},
@@ -1056,35 +1130,27 @@
             "message": "looks good",
             "file_url": null,
             "file_type": null,
-            "resume_url": "https://base44.app/api/apps/69bbcee98fb7ee3b7aaa2965/files/mp/public/69bbcee98fb7ee3b7aaa2965/69c0268a2_ABHISHEK_GCPDataEngineer_Exp_5years2.pdf",
+            "resume_url": "https://base44.app/api/apps/69bbcee98fb7ee3b7aaa2965/files/mp/public/69bbcee98fb7ee3b7aaa2965/de8246883_Tarsem_BITechLead.pdf",
             "is_new_file_upload": false,
             "casual_ack_with_new_file": false,
-            "conversation_id": "14d535ba-5b60-48cf-a82f-717c5ea3b355",
+            "conversation_id": "ddbbed44-022a-49e3-b63f-f1b3ab23ca14",
             "history": [
               {
                 "role": "user",
-                "content": "📎 ABHISHEK_GCP Data Engineer_Exp_ 5+ years (2).pdf",
-                "file_url": "https://base44.app/api/apps/69bbcee98fb7ee3b7aaa2965/files/mp/public/69bbcee98fb7ee3b7aaa2965/69c0268a2_ABHISHEK_GCPDataEngineer_Exp_5years2.pdf"
+                "content": "make the attached resume as per the requirement below - \n\nFinancial Reporting & Accounting Analyst\n\nWe’re a Dubai-based performance marketing company looking for a skilled full-time Financial Analyst & Accountant to support us with financial modeling, reporting, and accounting tasks on an ongoing basis.\n\nResponsibilities\n\nBuild and maintain financial models\nPerform financial calculations using various reporting tools\nAnalyze financial data and identify trends and insights\nPrepare weekly and monthly reports (KPIs, financials, variance analysis)\nHandle accounting tasks, including accurate financial record-keeping\nManage and maintain financial data within DualEntry\nWork across multiple data systems to ensure accuracy and consistency\nImprove data quality and reporting processes\nCollaborate with finance team members when required\nDevelop forecasts and identify opportunities to improve business performance\n\nRequirements\n\nProven experience in both financial analysis and accounting\nStrong data entry and financial data management skills\nSolid understanding of accounting principles (double-entry bookkeeping)\nExperience with QB and Fiskl\nStrong knowledge of Microsoft Power BI\nAdvanced Excel / Google Sheets skills\nHigh attention to detail and structured way of working\nAbility to work independently and meet deadlines\nProject Details\nOngoing / long-term collaboration\nRemote work\nCET working hours\nCFA qualification would be a plus\n\nIf you have a strong background in both accounting and financial analysis and enjoy working with data to drive business decisions, we’d love to hear from you.\n\nPlease include examples of reports, models, or accounting work you’ve handled.",
+                "file_url": "https://base44.app/api/apps/69bbcee98fb7ee3b7aaa2965/files/mp/public/69bbcee98fb7ee3b7aaa2965/de8246883_Tarsem_BITechLead.pdf"
               },
               {
                 "role": "assistant",
-                "content": "Got your file! Before I process it — do you have the JD for the role? Paste it here and I’ll tailor the reformatted resume. You can also add any focus areas (skills to highlight or downplay) or just type 'skip' to proceed as-is."
+                "content": "## 👤 TARSEM — Tech Lead\n\n---\n\n### Professional Summary\n\nSeasoned Tech Lead with over 14 years of experience designing and delivering end-to-end data and analytics solutions across retail, telecom, and financial services. I build scalable BI architectures and reporting ecosystems that translate disparate data into operational and executive insights. Hands-on expertise with Power BI, Tableau, DAX, SQL, and ETL tooling enables me to implement performant dashboards and robust data models. I have a strong track record integrating POS, accounting platforms, APIs and cloud databases to produce unified reporting. As a leader I manage cross-functional teams, guide Agile delivery, and translate business requirements into technical blueprints. I prioritize security and governance—implementing row-level security and multi-user access strategies to protect sensitive data. I focus on performance tuning, documentation and stakeholder engagement to ensure sustainable analytics platforms aligned with strategic goals.\n\n---\n\n### Skills\n\n**BI & Visualization:** Power BI, Tableau, DAX, KPI frameworks, Power Query, Power BI Gateway\n**Data Engineering & ETL:** ETL design (SSIS), SQL scripting, data modeling (star schema, dimensional), data cleanup pipelines, VBA, Excel macros\n**Data Integration & APIs:** LightSpeed POS, QuickBooks, Xero, Jira API, Google Sheets, Excel, Microsoft Dynamics 365, PHP, MySQL\n**Databases & Cloud:** SQL Server, AWS-hosted SQL, PostgreSQL, MySQL, MS Access, Power BI DirectQuery\n**Security & Governance:** Row-level security (RLS), multi-user data access strategies, data governance practices\n**Project Leadership & Delivery:** Team management, stakeholder engagement, Agile collaboration, performance optimization, documentation and handover\n\n---\n\n### Projects\n\n### Project 1: Retail BI Analytics Platform\nDesigned and delivered a centralized BI reporting platform for a multi-store home decor retail chain in Hawaii to unify sales, inventory and vendor performance analysis. The platform consolidated data from POS, accounting and ERP systems to enable store-level and executive reporting. Work included end-to-end solution design, ETL integration and interactive dashboard development to support operational decision-making. The solution improved visibility across stores and vendors while supporting scalable refresh and performance needs.\n\n**Responsibilities:**\n➛ Led end-to-end BI solution design including requirements analysis, data blueprinting and dashboard planning.\n➛ Developed ETL pipelines using SSIS to integrate data from LightSpeed POS, QuickBooks and Microsoft Dynamics 365.\n➛ Performed dimensional data modeling (star schema) for vendor, category and store-level insights.\n➛ Built interactive Power BI dashboards for operations, inventory and executive reporting.\n➛ Optimized performance for large datasets through indexing and query tuning.\n\n**Tech Stack:** Power BI, SQL Server, SSIS, QuickBooks, LightSpeed POS, Microsoft Dynamics\n\n---\n### Project 2: Telecom Project Management Dashboard\nBuilt a project-tracking analytics and visualization solution for a Canadian telecom provider to replace limited Jira reporting with tailored metrics and dashboards. The solution automated collection of project and issue data and supported sprint, bug and delivery insights. Deliverables included a staging layer, a metrics-driven data model and Power BI reports to visualize cycle time, bug flow and planned vs actual delivery. The project aligned reporting to Agile workflows and improved delivery transparency.\n\n**Responsibilities:**\n➛ Integrated Jira API with a SQL staging layer to automate project and issue data collection.\n➛ Designed and implemented a data model to support sprint metrics, bug tracking and team velocity.\n➛ Developed Power BI dashboards visualizing cycle time, bug flow and planned vs actual delivery.\n➛ Conducted stakeholder workshops to refine requirements and align reports with Agile processes.\n➛ Enhanced performance with optimized queries and efficient data refresh strategies.\n\n**Tech Stack:** Power BI, SQL, Jira API, Excel, Agile Methodology\n\n---\n### Project 3: Financial Reporting & Forecasting Platform\nDelivered a scalable financial analytics solution for an Australian advisory firm by integrating accounting and business systems to support near real-time financial planning and reporting. The platform consolidated data from Xero, AWS-hosted databases and spreadsheets to provide P&L, budget vs actual and variance analysis. I led a cross-functional team to design KPIs, ETL processes and secure multi-user dashboards for finance leadership. The implementation emphasized reliability of cloud refresh and scalability across advisory clients.\n\n**Responsibilities:**\n➛ Managed a cross-functional team to deliver finance-focused KPIs and executive dashboards.\n➛ Built ETL processes to consolidate data from Xero, AWS SQL, Excel and Google Sheets.\n➛ Created relational data models to support P&L, budget vs actual and variance analysis.\n➛ Implemented Power BI dashboards with row-level security for multi-user environments.\n➛ Ensured reliability of cloud-based refresh and scalability across multiple advisory clients.\n\n**Tech Stack:** Power BI, SQL, Xero, AWS SQL, Excel, Google Sheets, Power BI Gateway\n\n---\n### Project 4: Business Intelligence Optimization for UAE-based Enterprises\nEngaged to improve reporting efficiency for UAE-based enterprises whose existing Power BI reports suffered slow load times and poor mobile experience. The objective was to identify bottlenecks, optimize DAX and data models, and design new socio-economic and financial dashboards. Outcomes included significantly reduced report load times and a set of optimized, mobile-friendly visuals for strategic analysis. The work also produced documentation to support future scalability and handover.\n\n**Responsibilities:**\n➛ Identified and remediated performance bottlenecks to reduce Power BI report loading times.\n➛ Implemented advanced DAX optimization and data model improvements for enhanced responsiveness.\n➛ Created new interactive Power BI dashboards for socio-economic modeling and financial KPIs.\n➛ Integrated SQL-based data sources to enable real-time and accurate data tracking.\n➛ Developed detailed documentation to support scalability and handover.\n\n**Tech Stack:** Power BI, SQL, DAX, Power Query\n\n---\n### Project 5: Financial Reporting for Australian Advisory Firm Using Xero\nBuilt customized interactive financial reporting for an Australia-based advisory firm by consolidating Xero, cloud databases and spreadsheets into a unified reporting structure. The project produced detailed P&L, Actual vs Budget, Gross Profit and variance dashboards to support account directors and finance teams. Work included backend preprocessing, data consolidation and secure report delivery so each director accessed only their clients. The solution translated raw accounting data into actionable business insights.\n\n**Responsibilities:**\n➛ Extracted and merged financial data from Xero, AWS SQL, Excel and Google Sheets for unified reporting.\n➛ Utilized MySQL and PHP for backend data preprocessing and transformation.\n➛ Developed Power BI dashboards with interactive visualizations for financial performance analysis.\n➛ Implemented row-level security so each Account Director could access only their clients' reports.\n➛ Translated raw financial data into meaningful business insights to support decision-making.\n\n**Tech Stack:** Power BI, Xero, AWS SQL, MySQL, Excel, Google Sheets, PHP\n\n---\n### Project 6: Real-Time Analytics for Spine Care\nDelivered real-time analytics for an India-based spine care clinic to evaluate sales, operations and marketing across locations. The solution connected Power BI to PostgreSQL via DirectQuery to enable live dashboards and day-to-day performance tracking. Interactive reports highlighted daily marketing, actual vs target and city-wise KPIs to improve operational visibility. The engagement included SQL optimization and close collaboration with stakeholders to refine outputs.\n\n**Responsibilities:**\n➛ Connected Power BI to PostgreSQL using DirectQuery to enable real-time access to clinic data.\n➛ Developed interactive dashboards for Sales, Operations and Marketing performance including daily marketing and Actual vs Target metrics.\n➛ Wrote and optimized complex SQL queries to ensure accurate and efficient data extraction.\n➛ Designed KPIs to track clinic performance across multiple cities, improving location-wise visibility.\n➛ Collaborated with business stakeholders to gather requirements and iteratively refine report outputs.\n➛ Optimized data connectivity and report load times to enhance user experience and reliability.\n\n**Tech Stack:** undefined\n\n---\n\n### Education\n\n- Bachelor of Business Administration (B.B.A) — Sikkim Manipal University ()\n\n---\n\nHere's the formatted content! Please review each section. You can ask me to make changes — for example: *'Make the summary more concise'* or *'Add Django to Project 2's tech stack'*. When you're happy, just say **'Looks good'** and I'll create the Google Doc."
               },
               {
                 "role": "user",
-                "content": "Jd: NEW REQUIREMENT\n\nDesignation: GCP Data Engineer\n\nJob Description:\n\nWe are looking for an experienced GCP Data Warehouse Engineer to design, build, and optimize scalable data warehouse solutions on Google Cloud Platform (GCP). The ideal candidate should have strong expertise in BigQuery, ETL/ELT pipelines, data modeling, and cloud-based data architectures, SQL along with hands-on experience in handling large-scale data systems.\n\nExperience: 5+ Yrs into GCP Data Engineer\n\nBudget: 1.3 LPM + GST\n\nKey Responsibilities\nDesign and develop scalable data warehouse solutions using GCP services such as BigQuery, Cloud Storage, and Dataflow\nBuild and maintain ETL/ELT pipelines using Apache Beam, Dataflow, and Cloud Composer (Airflow)\nPerform data modeling (Star Schema, Snowflake Schema) for analytics and reporting\nOptimize BigQuery performance using partitioning, clustering, and query tuning\nMigrate data from on-premises systems (SQL Server, Oracle, etc.) to GCP\nDevelop and manage batch and real-time data pipelines using Pub/Sub\nEnsure data quality, governance, and security standards\nCollaborate with business and analytics teams to understand data requirements\nImplement monitoring, logging, and troubleshooting for data pipelines\nSupport CI/CD processes and infrastructure automation (Terraform preferred)\n\nRequired Skills & Qualifications\n5+ years of experience in Data Warehousing / ETL Development\nStrong hands-on experience with GCP services:\nBigQuery\nCloud Dataflow\nCloud Composer (Airflow)\nCloud Storage\nPub/Sub\nStrong proficiency in SQL and Python\nExperience with data modeling and warehouse design\nHands-on experience with large datasets and performance tuning\nExperience in data migration projects to cloud\nKnowledge of CI/CD tools (Git, Jenkins)\nStrong understanding of data security and governance\n\nPreferred Skills\nCertification: Google Cloud Professional Data Engineer\nExperience with Spark / Dataproc / Hadoop\nExposure to multi-cloud environments (Azure/AWS)\nExperience with BI tools such as Power BI, Tableau, or Looker\nKnowledge of DevOps and Infrastructure as Code (Terraform)\n\nSoft Skills\nStrong problem-solving and analytical skills\nExcellent communication and stakeholder management\nAbility to work in an agile and fast-paced environment\nLeadership and mentoring experience\n\nGood to Have\nExperience migrating on-prem or legacy ETL to Spark/Databricks-based platforms\nExposure to streaming or near–real-time data processing\nExperience with multi-cloud data architectures\nRelevant cloud or data platform certifications\n\nKey Deliverables / Success Metrics\nEfficient and scalable data pipelines\nOptimized query performance and cost management\nHigh data quality and reliability\nSuccessful cloud migration and modernization initiatives\n\nCertifications:\nRelevant certifications in SQL, BI-DW, or cloud platforms are highly desirable.\nMicrosoft Certified: Azure Data Fundamentals /Any Cloud Certifications (preferred)."
+                "content": "put project 3 and project 5 as first two projects."
               },
               {
                 "role": "assistant",
-                "content": "## 👤 ABHISHEK — Senior GCP Data Engineer\n\n---\n\n### Professional Summary\n\nSenior GCP Data Engineer with over five years of experience designing and delivering cloud-native data platforms on Google Cloud. I specialize in building scalable data warehouses and hybrid batch/streaming ETL/ELT pipelines using BigQuery, Dataflow (Apache Beam), Pub/Sub and Cloud Composer. I have led migrations from on-premise SQL systems to BigQuery, implemented star and snowflake schemas for analytical workloads, and tuned query performance using partitioning and clustering strategies. I author production data transformation logic in Python and SQL and integrate CI/CD and monitoring practices to improve pipeline reliability and observability. I collaborate closely with analytics and product teams to translate KPIs into robust datasets and performant reporting models. I focus on operational excellence by implementing logging, retry/error handling, and pipeline troubleshooting processes. I deliver pragmatic, scalable solutions in Agile environments that balance performance, cost, and data quality.\n\n---\n\n### Skills\n\n**Cloud Platforms:** Google Cloud Platform (BigQuery, Cloud Dataflow, Cloud Composer/Airflow, Cloud Storage, Pub/Sub)\n**Data Engineering:** ETL/ELT Pipelines, Data Modeling (Star & Snowflake schemas), Data Warehousing, Streaming & Batch Processing\n**Programming & Querying:** Python, SQL, Apache Beam\n**Databases & Big Data:** PostgreSQL, MySQL, Spark (Basics), Hadoop (Exposure)\n**DevOps, Monitoring & BI:** Git, Jenkins, CI/CD Pipelines, Terraform (Basics), Logging, Pipeline Monitoring, Tableau, Looker\n**Methodologies:** Agile, Scrum\n\n---\n\n### Projects\n\n### Project 1: PolicyPro – Enterprise Data Warehouse Platform\nAn enterprise-level data warehouse built to centralize and serve analytics across the organization. The platform ingests both batch and streaming sources into BigQuery and provides governed datasets for downstream reporting. The candidate designed the BigQuery schema, built Dataflow/Apache Beam pipelines for transformation, and implemented Pub/Sub-based real-time ingestion. Emphasis was on scalability, query performance optimization, and ensuring end-to-end data quality and monitoring.\n\n**Responsibilities:**\n➛ Designed and implemented scalable BigQuery data warehouse structures for enterprise reporting\n➛ Built batch and streaming ETL/ELT using Apache Beam and Dataflow to unify diverse data sources\n➛ Implemented Pub/Sub-based real-time ingestion and ensured reliable processing\n➛ Tuned BigQuery performance via partitioning, clustering and query optimization\n➛ Established monitoring, data quality checks and governance across pipelines\n\n**Tech Stack:** BigQuery, Cloud Dataflow (Apache Beam), Cloud Storage, Pub/Sub, Python, SQL\n\n---\n### Project 2: ClaimsX – Data Migration & Processing Platform\nA migration project to move on-premise SQL Server data into a cloud-native BigQuery warehouse to enable faster reporting and analytics. The work included designing data models for reporting, creating scheduled ETL workflows, and optimizing pipelines for throughput and reliability. The candidate led migration activities and implemented orchestration, logging and troubleshooting mechanisms to maintain operational stability.\n\n**Responsibilities:**\n➛ Led end-to-end migration of on-prem SQL Server datasets to BigQuery\n➛ Developed and scheduled ETL workflows using Cloud Composer (Airflow)\n➛ Designed star and snowflake schema models to support reporting requirements\n➛ Optimized pipeline performance through parallelization and tuning\n➛ Implemented logging, monitoring and failure handling for operational resilience\n\n**Tech Stack:** BigQuery, Cloud Composer (Airflow), Dataflow, Cloud Storage, SQL\n\n---\n### Project 3: Customer360 – Analytics Data Platform\nA customer analytics platform that consolidates real-time and historical customer data to support analytics and KPI reporting. The project created streaming ingestion paths and curated BigQuery datasets for analytics teams. The candidate developed transformation logic, optimized queries for large datasets, and partnered with stakeholders to define KPIs and reporting needs.\n\n**Responsibilities:**\n➛ Built real-time ingestion pipelines using Pub/Sub and Dataflow for customer events\n➛ Designed BigQuery datasets and tables optimized for analytics and reporting\n➛ Implemented transformation and aggregation logic to generate business insights\n➛ Tuned queries and storage patterns for performant analytics on large datasets\n➛ Collaborated with analytics teams to define KPIs and reporting requirements\n\n**Tech Stack:** BigQuery, Pub/Sub, Dataflow, Python, SQL\n\n---\n### Project 4: Billing & Payments Data Warehouse\nA financial analytics warehouse to support billing and payment reporting and forecasting. The project focused on batch ETL pipelines to process transactional financial data into structured models for dashboards and forecasts. The candidate designed the warehouse schema, implemented batch processing pipelines, and ensured reconciliation and data validation across systems.\n\n**Responsibilities:**\n➛ Designed a data warehouse for billing and payment analytics and forecasting\n➛ Built batch ETL pipelines to process financial transaction data into BigQuery\n➛ Created structured data models to support reporting and forecasting workflows\n➛ Implemented data validation and reconciliation processes across sources\n➛ Supported dashboard reporting by preparing curated datasets for BI tools\n\n**Tech Stack:** BigQuery, Cloud Storage, Python, SQL\n\n---\n### Project 5: Agent Portal Data Platform\nA platform to capture and analyze user activity from an agent portal using streaming ingestion. The system collected user events for operational analytics and user behavior tracking. The candidate developed streaming pipelines, designed BigQuery tables for operational metrics, and improved system reliability through robust error handling.\n\n**Responsibilities:**\n➛ Developed streaming pipelines using Pub/Sub and Dataflow for user activity ingestion\n➛ Built scalable ingestion systems to capture high-volume event data\n➛ Designed BigQuery schemas to support operational analytics and reporting\n➛ Implemented error handling and retry mechanisms to improve pipeline resilience\n➛ Performed performance tuning to increase system reliability\n\n**Tech Stack:** Dataflow, Pub/Sub, BigQuery, Python\n\n---\n### Project 6: Intelligent Document Processing Data Pipeline\nAn early-stage pipeline to ingest and transform document-derived data into a structured warehouse for reporting. The project focused on ETL of document data, initial warehouse design and data quality activities to enable downstream analytics. The candidate contributed to pipeline development, SQL reporting queries, and monitoring support during initial rollout.\n\n**Responsibilities:**\n➛ Built ETL pipelines for document data ingestion and transformation\n➛ Assisted in designing initial data warehouse structures and schema\n➛ Authored SQL queries for extraction and reporting of processed data\n➛ Performed data validation and cleansing to ensure quality of ingested records\n➛ Supported pipeline monitoring and debugging activities during deployment\n\n**Tech Stack:** Python, SQL, Cloud Storage, ETL\n\n---\n\n### Education\n\n- Bachelor of Technology (B.Tech) — Rajiv Gandhi Proudyogiki Vishwavidyalaya, Bhopal (2020)\n\n---\n\nHere's the formatted content! Please review each section. You can ask me to make changes — for example: *'Make the summary more concise'* or *'Add Django to Project 2's tech stack'*. When you're happy, just say **'Looks good'** and I'll create the Google Doc."
-              },
-              {
-                "role": "user",
-                "content": "add EC2 in the tech stack of project 4"
-              },
-              {
-                "role": "assistant",
-                "content": "## 👤 ABHISHEK — Senior GCP Data Engineer\n\n---\n\n### Professional Summary\n\nSenior GCP Data Engineer with over five years of experience designing and delivering cloud-native data platforms on Google Cloud. I specialize in building scalable data warehouses and hybrid batch/streaming ETL/ELT pipelines using BigQuery, Dataflow (Apache Beam), Pub/Sub and Cloud Composer. I have led migrations from on-premise SQL systems to BigQuery, implemented star and snowflake schemas for analytical workloads, and tuned query performance using partitioning and clustering strategies. I author production data transformation logic in Python and SQL and integrate CI/CD and monitoring practices to improve pipeline reliability and observability. I collaborate closely with analytics and product teams to translate KPIs into robust datasets and performant reporting models. I focus on operational excellence by implementing logging, retry/error handling, and pipeline troubleshooting processes. I deliver pragmatic, scalable solutions in Agile environments that balance performance, cost, and data quality.\n\n---\n\n### Skills\n\n**Cloud Platforms:** Google Cloud Platform (BigQuery, Cloud Dataflow, Cloud Composer/Airflow, Cloud Storage, Pub/Sub)\n**Data Engineering:** ETL/ELT Pipelines, Data Modeling (Star & Snowflake schemas), Data Warehousing, Streaming & Batch Processing\n**Programming & Querying:** Python, SQL, Apache Beam\n**Databases & Big Data:** PostgreSQL, MySQL, Spark (Basics), Hadoop (Exposure)\n**DevOps, Monitoring & BI:** Git, Jenkins, CI/CD Pipelines, Terraform (Basics), Logging, Pipeline Monitoring, Tableau, Looker\n**Methodologies:** Agile, Scrum\n\n---\n\n### Projects\n\n### Project 1: PolicyPro – Enterprise Data Warehouse Platform\nAn enterprise-level data warehouse built to centralize and serve analytics across the organization. The platform ingests both batch and streaming sources into BigQuery and provides governed datasets for downstream reporting. The candidate designed the BigQuery schema, built Dataflow/Apache Beam pipelines for transformation, and implemented Pub/Sub-based real-time ingestion. Emphasis was on scalability, query performance optimization, and ensuring end-to-end data quality and monitoring.\n\n**Responsibilities:**\n➛ Designed and implemented scalable BigQuery data warehouse structures for enterprise reporting\n➛ Built batch and streaming ETL/ELT using Apache Beam and Dataflow to unify diverse data sources\n➛ Implemented Pub/Sub-based real-time ingestion and ensured reliable processing\n➛ Tuned BigQuery performance via partitioning, clustering and query optimization\n➛ Established monitoring, data quality checks and governance across pipelines\n\n**Tech Stack:** BigQuery, Cloud Dataflow (Apache Beam), Cloud Storage, Pub/Sub, Python, SQL\n\n---\n### Project 2: ClaimsX – Data Migration & Processing Platform\nA migration project to move on-premise SQL Server data into a cloud-native BigQuery warehouse to enable faster reporting and analytics. The work included designing data models for reporting, creating scheduled ETL workflows, and optimizing pipelines for throughput and reliability. The candidate led migration activities and implemented orchestration, logging and troubleshooting mechanisms to maintain operational stability.\n\n**Responsibilities:**\n➛ Led end-to-end migration of on-prem SQL Server datasets to BigQuery\n➛ Developed and scheduled ETL workflows using Cloud Composer (Airflow)\n➛ Designed star and snowflake schema models to support reporting requirements\n➛ Optimized pipeline performance through parallelization and tuning\n➛ Implemented logging, monitoring and failure handling for operational resilience\n\n**Tech Stack:** BigQuery, Cloud Composer (Airflow), Dataflow, Cloud Storage, SQL\n\n---\n### Project 3: Customer360 – Analytics Data Platform\nA customer analytics platform that consolidates real-time and historical customer data to support analytics and KPI reporting. The project created streaming ingestion paths and curated BigQuery datasets for analytics teams. The candidate developed transformation logic, optimized queries for large datasets, and partnered with stakeholders to define KPIs and reporting needs.\n\n**Responsibilities:**\n➛ Built real-time ingestion pipelines using Pub/Sub and Dataflow for customer events\n➛ Designed BigQuery datasets and tables optimized for analytics and reporting\n➛ Implemented transformation and aggregation logic to generate business insights\n➛ Tuned queries and storage patterns for performant analytics on large datasets\n➛ Collaborated with analytics teams to define KPIs and reporting requirements\n\n**Tech Stack:** BigQuery, Pub/Sub, Dataflow, Python, SQL\n\n---\n### Project 4: Billing & Payments Data Warehouse\nA financial analytics warehouse to support billing and payment reporting and forecasting. The project focused on batch ETL pipelines to process transactional financial data into structured models for dashboards and forecasts. The candidate designed the warehouse schema, implemented batch processing pipelines, and ensured reconciliation and data validation across systems.\n\n**Responsibilities:**\n➛ Designed a data warehouse for billing and payment analytics and forecasting\n➛ Built batch ETL pipelines to process financial transaction data into BigQuery\n➛ Created structured data models to support reporting and forecasting workflows\n➛ Implemented data validation and reconciliation processes across sources\n➛ Supported dashboard reporting by preparing curated datasets for BI tools\n\n**Tech Stack:** BigQuery, Cloud Storage, Python, SQL, EC2\n\n---\n### Project 5: Agent Portal Data Platform\nA platform to capture and analyze user activity from an agent portal using streaming ingestion. The system collected user events for operational analytics and user behavior tracking. The candidate developed streaming pipelines, designed BigQuery tables for operational metrics, and improved system reliability through robust error handling.\n\n**Responsibilities:**\n➛ Developed streaming pipelines using Pub/Sub and Dataflow for user activity ingestion\n➛ Built scalable ingestion systems to capture high-volume event data\n➛ Designed BigQuery schemas to support operational analytics and reporting\n➛ Implemented error handling and retry mechanisms to improve pipeline resilience\n➛ Performed performance tuning to increase system reliability\n\n**Tech Stack:** Dataflow, Pub/Sub, BigQuery, Python\n\n---\n### Project 6: Intelligent Document Processing Data Pipeline\nAn early-stage pipeline to ingest and transform document-derived data into a structured warehouse for reporting. The project focused on ETL of document data, initial warehouse design and data quality activities to enable downstream analytics. The candidate contributed to pipeline development, SQL reporting queries, and monitoring support during initial rollout.\n\n**Responsibilities:**\n➛ Built ETL pipelines for document data ingestion and transformation\n➛ Assisted in designing initial data warehouse structures and schema\n➛ Authored SQL queries for extraction and reporting of processed data\n➛ Performed data validation and cleansing to ensure quality of ingested records\n➛ Supported pipeline monitoring and debugging activities during deployment\n\n**Tech Stack:** Python, SQL, Cloud Storage, ETL\n\n---\n\n### Education\n\n- Bachelor of Technology (B.Tech) — Rajiv Gandhi Proudyogiki Vishwavidyalaya, Bhopal (2020)\n\n---\n\nHere's the formatted content! Please review each section. You can ask me to make changes — for example: *'Make the summary more concise'* or *'Add Django to Project 2's tech stack'*. When you're happy, just say **'Looks good'** and I'll create the Google Doc."
+                "content": "## 👤 TARSEM — Tech Lead\n\n---\n\n### Professional Summary\n\nSeasoned Tech Lead with over 14 years of experience designing and delivering end-to-end data and analytics solutions across retail, telecom, and financial services. I build scalable BI architectures and reporting ecosystems that translate disparate data into operational and executive insights. Hands-on expertise with Power BI, Tableau, DAX, SQL, and ETL tooling enables me to implement performant dashboards and robust data models. I have a strong track record integrating POS, accounting platforms, APIs and cloud databases to produce unified reporting. As a leader I manage cross-functional teams, guide Agile delivery, and translate business requirements into technical blueprints. I prioritize security and governance—implementing row-level security and multi-user access strategies to protect sensitive data. I focus on performance tuning, documentation and stakeholder engagement to ensure sustainable analytics platforms aligned with strategic goals.\n\n---\n\n### Skills\n\n**BI & Visualization:** Power BI, Tableau, DAX, KPI frameworks, Power Query, Power BI Gateway\n**Data Engineering & ETL:** ETL design (SSIS), SQL scripting, data modeling (star schema, dimensional), data cleanup pipelines, VBA, Excel macros\n**Data Integration & APIs:** LightSpeed POS, QuickBooks, Xero, Jira API, Google Sheets, Excel, Microsoft Dynamics 365, PHP, MySQL\n**Databases & Cloud:** SQL Server, AWS-hosted SQL, PostgreSQL, MySQL, MS Access, Power BI DirectQuery\n**Security & Governance:** Row-level security (RLS), multi-user data access strategies, data governance practices\n**Project Leadership & Delivery:** Team management, stakeholder engagement, Agile collaboration, performance optimization, documentation and handover\n\n---\n\n### Projects\n\n### Project 1: Financial Reporting & Forecasting Platform\nDelivered a scalable financial analytics solution for an Australian advisory firm by integrating accounting and business systems to support near real-time financial planning and reporting. The platform consolidated data from Xero, AWS-hosted databases and spreadsheets to provide P&L, budget vs actual and variance analysis. I led a cross-functional team to design KPIs, ETL processes and secure multi-user dashboards for finance leadership. The implementation emphasized reliability of cloud refresh and scalability across advisory clients.\n\n**Responsibilities:**\n➛ Managed a cross-functional team to deliver finance-focused KPIs and executive dashboards.\n➛ Built ETL processes to consolidate data from Xero, AWS SQL, Excel and Google Sheets.\n➛ Created relational data models to support P&L, budget vs actual and variance analysis.\n➛ Implemented Power BI dashboards with row-level security for multi-user environments.\n➛ Ensured reliability of cloud-based refresh and scalability across multiple advisory clients.\n\n**Tech Stack:** Power BI, SQL, Xero, AWS SQL, Excel, Google Sheets, Power BI Gateway\n\n---\n### Project 2: Financial Reporting for Australian Advisory Firm Using Xero\nBuilt customized interactive financial reporting for an Australia-based advisory firm by consolidating Xero, cloud databases and spreadsheets into a unified reporting structure. The project produced detailed P&L, Actual vs Budget, Gross Profit and variance dashboards to support account directors and finance teams. Work included backend preprocessing, data consolidation and secure report delivery so each director accessed only their clients. The solution translated raw accounting data into actionable business insights.\n\n**Responsibilities:**\n➛ Extracted and merged financial data from Xero, AWS SQL, Excel and Google Sheets for unified reporting.\n➛ Utilized MySQL and PHP for backend data preprocessing and transformation.\n➛ Developed Power BI dashboards with interactive visualizations for financial performance analysis.\n➛ Implemented row-level security so each Account Director could access only their clients' reports.\n➛ Translated raw financial data into meaningful business insights to support decision-making.\n\n**Tech Stack:** Power BI, Xero, AWS SQL, MySQL, Excel, Google Sheets, PHP\n\n---\n### Project 3: Retail BI Analytics Platform\nDesigned and delivered a centralized BI reporting platform for a multi-store home decor retail chain in Hawaii to unify sales, inventory and vendor performance analysis. The platform consolidated data from POS, accounting and ERP systems to enable store-level and executive reporting. Work included end-to-end solution design, ETL integration and interactive dashboard development to support operational decision-making. The solution improved visibility across stores and vendors while supporting scalable refresh and performance needs.\n\n**Responsibilities:**\n➛ Led end-to-end BI solution design including requirements analysis, data blueprinting and dashboard planning.\n➛ Developed ETL pipelines using SSIS to integrate data from LightSpeed POS, QuickBooks and Microsoft Dynamics 365.\n➛ Performed dimensional data modeling (star schema) for vendor, category and store-level insights.\n➛ Built interactive Power BI dashboards for operations, inventory and executive reporting.\n➛ Optimized performance for large datasets through indexing and query tuning.\n\n**Tech Stack:** Power BI, SQL Server, SSIS, QuickBooks, LightSpeed POS, Microsoft Dynamics\n\n---\n### Project 4: Telecom Project Management Dashboard\nBuilt a project-tracking analytics and visualization solution for a Canadian telecom provider to replace limited Jira reporting with tailored metrics and dashboards. The solution automated collection of project and issue data and supported sprint, bug and delivery insights. Deliverables included a staging layer, a metrics-driven data model and Power BI reports to visualize cycle time, bug flow and planned vs actual delivery. The project aligned reporting to Agile workflows and improved delivery transparency.\n\n**Responsibilities:**\n➛ Integrated Jira API with a SQL staging layer to automate project and issue data collection.\n➛ Designed and implemented a data model to support sprint metrics, bug tracking and team velocity.\n➛ Developed Power BI dashboards visualizing cycle time, bug flow and planned vs actual delivery.\n➛ Conducted stakeholder workshops to refine requirements and align reports with Agile processes.\n➛ Enhanced performance with optimized queries and efficient data refresh strategies.\n\n**Tech Stack:** Power BI, SQL, Jira API, Excel, Agile Methodology\n\n---\n### Project 5: Business Intelligence Optimization for UAE-based Enterprises\nEngaged to improve reporting efficiency for UAE-based enterprises whose existing Power BI reports suffered slow load times and poor mobile experience. The objective was to identify bottlenecks, optimize DAX and data models, and design new socio-economic and financial dashboards. Outcomes included significantly reduced report load times and a set of optimized, mobile-friendly visuals for strategic analysis. The work also produced documentation to support future scalability and handover.\n\n**Responsibilities:**\n➛ Identified and remediated performance bottlenecks to reduce Power BI report loading times.\n➛ Implemented advanced DAX optimization and data model improvements for enhanced responsiveness.\n➛ Created new interactive Power BI dashboards for socio-economic modeling and financial KPIs.\n➛ Integrated SQL-based data sources to enable real-time and accurate data tracking.\n➛ Developed detailed documentation to support scalability and handover.\n\n**Tech Stack:** Power BI, SQL, DAX, Power Query\n\n---\n### Project 6: Real-Time Analytics for Spine Care\nDelivered real-time analytics for an India-based spine care clinic to evaluate sales, operations and marketing across locations. The solution connected Power BI to PostgreSQL via DirectQuery to enable live dashboards and day-to-day performance tracking. Interactive reports highlighted daily marketing, actual vs target and city-wise KPIs to improve operational visibility. The engagement included SQL optimization and close collaboration with stakeholders to refine outputs.\n\n**Responsibilities:**\n➛ Connected Power BI to PostgreSQL using DirectQuery to enable real-time access to clinic data.\n➛ Developed interactive dashboards for Sales, Operations and Marketing performance including daily marketing and Actual vs Target metrics.\n➛ Wrote and optimized complex SQL queries to ensure accurate and efficient data extraction.\n➛ Designed KPIs to track clinic performance across multiple cities, improving location-wise visibility.\n➛ Collaborated with business stakeholders to gather requirements and iteratively refine report outputs.\n➛ Optimized data connectivity and report load times to enhance user experience and reliability.\n\n**Tech Stack:** undefined\n\n---\n\n### Education\n\n- Bachelor of Business Administration (B.B.A) — Sikkim Manipal University ()\n\n---\n\nHere's the formatted content! Please review each section. You can ask me to make changes — for example: *'Make the summary more concise'* or *'Add Django to Project 2's tech stack'*. When you're happy, just say **'Looks good'** and I'll create the Google Doc."
               },
               {
                 "role": "user",
@@ -1093,53 +1159,52 @@
             ],
             "stage": "preview",
             "approved_fields": {
-              "CANDIDATE_NAME": "ABHISHEK",
-              "CANDIDATE_ROLE": "Senior GCP Data Engineer",
-              "PROFESSIONAL_SUMMARY": "Senior GCP Data Engineer with over five years of experience designing and delivering cloud-native data platforms on Google Cloud. I specialize in building scalable data warehouses and hybrid batch/streaming ETL/ELT pipelines using BigQuery, Dataflow (Apache Beam), Pub/Sub and Cloud Composer. I have led migrations from on-premise SQL systems to BigQuery, implemented star and snowflake schemas for analytical workloads, and tuned query performance using partitioning and clustering strategies. I author production data transformation logic in Python and SQL and integrate CI/CD and monitoring practices to improve pipeline reliability and observability. I collaborate closely with analytics and product teams to translate KPIs into robust datasets and performant reporting models. I focus on operational excellence by implementing logging, retry/error handling, and pipeline troubleshooting processes. I deliver pragmatic, scalable solutions in Agile environments that balance performance, cost, and data quality.",
-              "SKILL_CATEGORY_1": "Cloud Platforms",
-              "SKILL_CONTENT_1": "Google Cloud Platform (BigQuery, Cloud Dataflow, Cloud Composer/Airflow, Cloud Storage, Pub/Sub)",
-              "SKILL_CATEGORY_2": "Data Engineering",
-              "SKILL_CONTENT_2": "ETL/ELT Pipelines, Data Modeling (Star & Snowflake schemas), Data Warehousing, Streaming & Batch Processing",
-              "SKILL_CATEGORY_3": "Programming & Querying",
-              "SKILL_CONTENT_3": "Python, SQL, Apache Beam",
-              "SKILL_CATEGORY_4": "Databases & Big Data",
-              "SKILL_CONTENT_4": "PostgreSQL, MySQL, Spark (Basics), Hadoop (Exposure)",
-              "SKILL_CATEGORY_5": "DevOps, Monitoring & BI",
-              "SKILL_CONTENT_5": "Git, Jenkins, CI/CD Pipelines, Terraform (Basics), Logging, Pipeline Monitoring, Tableau, Looker",
-              "SKILL_CATEGORY_6": "Methodologies",
-              "SKILL_CONTENT_6": "Agile, Scrum",
-              "PROJECT_TITLE_1": "PolicyPro – Enterprise Data Warehouse Platform",
-              "PROJECT_DESCRIPTION_1": "An enterprise-level data warehouse built to centralize and serve analytics across the organization. The platform ingests both batch and streaming sources into BigQuery and provides governed datasets for downstream reporting. The candidate designed the BigQuery schema, built Dataflow/Apache Beam pipelines for transformation, and implemented Pub/Sub-based real-time ingestion. Emphasis was on scalability, query performance optimization, and ensuring end-to-end data quality and monitoring.",
-              "PROJECT_RESPONSIBILITIES_1": "➛ Designed and implemented scalable BigQuery data warehouse structures for enterprise reporting\n➛ Built batch and streaming ETL/ELT using Apache Beam and Dataflow to unify diverse data sources\n➛ Implemented Pub/Sub-based real-time ingestion and ensured reliable processing\n➛ Tuned BigQuery performance via partitioning, clustering and query optimization\n➛ Established monitoring, data quality checks and governance across pipelines",
-              "PROJECT_TECHSTACK_1": "BigQuery, Cloud Dataflow (Apache Beam), Cloud Storage, Pub/Sub, Python, SQL",
-              "PROJECT_TITLE_2": "ClaimsX – Data Migration & Processing Platform",
-              "PROJECT_DESCRIPTION_2": "A migration project to move on-premise SQL Server data into a cloud-native BigQuery warehouse to enable faster reporting and analytics. The work included designing data models for reporting, creating scheduled ETL workflows, and optimizing pipelines for throughput and reliability. The candidate led migration activities and implemented orchestration, logging and troubleshooting mechanisms to maintain operational stability.",
-              "PROJECT_RESPONSIBILITIES_2": "➛ Led end-to-end migration of on-prem SQL Server datasets to BigQuery\n➛ Developed and scheduled ETL workflows using Cloud Composer (Airflow)\n➛ Designed star and snowflake schema models to support reporting requirements\n➛ Optimized pipeline performance through parallelization and tuning\n➛ Implemented logging, monitoring and failure handling for operational resilience",
-              "PROJECT_TECHSTACK_2": "BigQuery, Cloud Composer (Airflow), Dataflow, Cloud Storage, SQL",
-              "PROJECT_TITLE_3": "Customer360 – Analytics Data Platform",
-              "PROJECT_DESCRIPTION_3": "A customer analytics platform that consolidates real-time and historical customer data to support analytics and KPI reporting. The project created streaming ingestion paths and curated BigQuery datasets for analytics teams. The candidate developed transformation logic, optimized queries for large datasets, and partnered with stakeholders to define KPIs and reporting needs.",
-              "PROJECT_RESPONSIBILITIES_3": "➛ Built real-time ingestion pipelines using Pub/Sub and Dataflow for customer events\n➛ Designed BigQuery datasets and tables optimized for analytics and reporting\n➛ Implemented transformation and aggregation logic to generate business insights\n➛ Tuned queries and storage patterns for performant analytics on large datasets\n➛ Collaborated with analytics teams to define KPIs and reporting requirements",
-              "PROJECT_TECHSTACK_3": "BigQuery, Pub/Sub, Dataflow, Python, SQL",
-              "PROJECT_TITLE_4": "Billing & Payments Data Warehouse",
-              "PROJECT_DESCRIPTION_4": "A financial analytics warehouse to support billing and payment reporting and forecasting. The project focused on batch ETL pipelines to process transactional financial data into structured models for dashboards and forecasts. The candidate designed the warehouse schema, implemented batch processing pipelines, and ensured reconciliation and data validation across systems.",
-              "PROJECT_RESPONSIBILITIES_4": "➛ Designed a data warehouse for billing and payment analytics and forecasting\n➛ Built batch ETL pipelines to process financial transaction data into BigQuery\n➛ Created structured data models to support reporting and forecasting workflows\n➛ Implemented data validation and reconciliation processes across sources\n➛ Supported dashboard reporting by preparing curated datasets for BI tools",
-              "PROJECT_TECHSTACK_4": "BigQuery, Cloud Storage, Python, SQL, EC2",
-              "PROJECT_TITLE_5": "Agent Portal Data Platform",
-              "PROJECT_DESCRIPTION_5": "A platform to capture and analyze user activity from an agent portal using streaming ingestion. The system collected user events for operational analytics and user behavior tracking. The candidate developed streaming pipelines, designed BigQuery tables for operational metrics, and improved system reliability through robust error handling.",
-              "PROJECT_RESPONSIBILITIES_5": "➛ Developed streaming pipelines using Pub/Sub and Dataflow for user activity ingestion\n➛ Built scalable ingestion systems to capture high-volume event data\n➛ Designed BigQuery schemas to support operational analytics and reporting\n➛ Implemented error handling and retry mechanisms to improve pipeline resilience\n➛ Performed performance tuning to increase system reliability",
-              "PROJECT_TECHSTACK_5": "Dataflow, Pub/Sub, BigQuery, Python",
-              "PROJECT_TITLE_6": "Intelligent Document Processing Data Pipeline",
-              "PROJECT_DESCRIPTION_6": "An early-stage pipeline to ingest and transform document-derived data into a structured warehouse for reporting. The project focused on ETL of document data, initial warehouse design and data quality activities to enable downstream analytics. The candidate contributed to pipeline development, SQL reporting queries, and monitoring support during initial rollout.",
-              "PROJECT_RESPONSIBILITIES_6": "➛ Built ETL pipelines for document data ingestion and transformation\n➛ Assisted in designing initial data warehouse structures and schema\n➛ Authored SQL queries for extraction and reporting of processed data\n➛ Performed data validation and cleansing to ensure quality of ingested records\n➛ Supported pipeline monitoring and debugging activities during deployment",
-              "PROJECT_TECHSTACK_6": "Python, SQL, Cloud Storage, ETL",
-              "EDUCATION_DEGREE_1": "Bachelor of Technology (B.Tech)",
-              "EDUCATION_INSTITUTE_1": "Rajiv Gandhi Proudyogiki Vishwavidyalaya, Bhopal",
-              "EDUCATION_YEAR_1": "2020",
+              "CANDIDATE_NAME": "TARSEM",
+              "CANDIDATE_ROLE": "Tech Lead",
+              "PROFESSIONAL_SUMMARY": "Seasoned Tech Lead with over 14 years of experience designing and delivering end-to-end data and analytics solutions across retail, telecom, and financial services. I build scalable BI architectures and reporting ecosystems that translate disparate data into operational and executive insights. Hands-on expertise with Power BI, Tableau, DAX, SQL, and ETL tooling enables me to implement performant dashboards and robust data models. I have a strong track record integrating POS, accounting platforms, APIs and cloud databases to produce unified reporting. As a leader I manage cross-functional teams, guide Agile delivery, and translate business requirements into technical blueprints. I prioritize security and governance—implementing row-level security and multi-user access strategies to protect sensitive data. I focus on performance tuning, documentation and stakeholder engagement to ensure sustainable analytics platforms aligned with strategic goals.",
+              "SKILL_CATEGORY_1": "BI & Visualization",
+              "SKILL_CONTENT_1": "Power BI, Tableau, DAX, KPI frameworks, Power Query, Power BI Gateway",
+              "SKILL_CATEGORY_2": "Data Engineering & ETL",
+              "SKILL_CONTENT_2": "ETL design (SSIS), SQL scripting, data modeling (star schema, dimensional), data cleanup pipelines, VBA, Excel macros",
+              "SKILL_CATEGORY_3": "Data Integration & APIs",
+              "SKILL_CONTENT_3": "LightSpeed POS, QuickBooks, Xero, Jira API, Google Sheets, Excel, Microsoft Dynamics 365, PHP, MySQL",
+              "SKILL_CATEGORY_4": "Databases & Cloud",
+              "SKILL_CONTENT_4": "SQL Server, AWS-hosted SQL, PostgreSQL, MySQL, MS Access, Power BI DirectQuery",
+              "SKILL_CATEGORY_5": "Security & Governance",
+              "SKILL_CONTENT_5": "Row-level security (RLS), multi-user data access strategies, data governance practices",
+              "SKILL_CATEGORY_6": "Project Leadership & Delivery",
+              "SKILL_CONTENT_6": "Team management, stakeholder engagement, Agile collaboration, performance optimization, documentation and handover",
+              "PROJECT_TITLE_1": "Financial Reporting & Forecasting Platform",
+              "PROJECT_DESCRIPTION_1": "Delivered a scalable financial analytics solution for an Australian advisory firm by integrating accounting and business systems to support near real-time financial planning and reporting. The platform consolidated data from Xero, AWS-hosted databases and spreadsheets to provide P&L, budget vs actual and variance analysis. I led a cross-functional team to design KPIs, ETL processes and secure multi-user dashboards for finance leadership. The implementation emphasized reliability of cloud refresh and scalability across advisory clients.",
+              "PROJECT_RESPONSIBILITIES_1": "➛ Managed a cross-functional team to deliver finance-focused KPIs and executive dashboards.\n➛ Built ETL processes to consolidate data from Xero, AWS SQL, Excel and Google Sheets.\n➛ Created relational data models to support P&L, budget vs actual and variance analysis.\n➛ Implemented Power BI dashboards with row-level security for multi-user environments.\n➛ Ensured reliability of cloud-based refresh and scalability across multiple advisory clients.",
+              "PROJECT_TECHSTACK_1": "Power BI, SQL, Xero, AWS SQL, Excel, Google Sheets, Power BI Gateway",
+              "PROJECT_TITLE_2": "Financial Reporting for Australian Advisory Firm Using Xero",
+              "PROJECT_DESCRIPTION_2": "Built customized interactive financial reporting for an Australia-based advisory firm by consolidating Xero, cloud databases and spreadsheets into a unified reporting structure. The project produced detailed P&L, Actual vs Budget, Gross Profit and variance dashboards to support account directors and finance teams. Work included backend preprocessing, data consolidation and secure report delivery so each director accessed only their clients. The solution translated raw accounting data into actionable business insights.",
+              "PROJECT_RESPONSIBILITIES_2": "➛ Extracted and merged financial data from Xero, AWS SQL, Excel and Google Sheets for unified reporting.\n➛ Utilized MySQL and PHP for backend data preprocessing and transformation.\n➛ Developed Power BI dashboards with interactive visualizations for financial performance analysis.\n➛ Implemented row-level security so each Account Director could access only their clients' reports.\n➛ Translated raw financial data into meaningful business insights to support decision-making.",
+              "PROJECT_TECHSTACK_2": "Power BI, Xero, AWS SQL, MySQL, Excel, Google Sheets, PHP",
+              "PROJECT_TITLE_3": "Retail BI Analytics Platform",
+              "PROJECT_DESCRIPTION_3": "Designed and delivered a centralized BI reporting platform for a multi-store home decor retail chain in Hawaii to unify sales, inventory and vendor performance analysis. The platform consolidated data from POS, accounting and ERP systems to enable store-level and executive reporting. Work included end-to-end solution design, ETL integration and interactive dashboard development to support operational decision-making. The solution improved visibility across stores and vendors while supporting scalable refresh and performance needs.",
+              "PROJECT_RESPONSIBILITIES_3": "➛ Led end-to-end BI solution design including requirements analysis, data blueprinting and dashboard planning.\n➛ Developed ETL pipelines using SSIS to integrate data from LightSpeed POS, QuickBooks and Microsoft Dynamics 365.\n➛ Performed dimensional data modeling (star schema) for vendor, category and store-level insights.\n➛ Built interactive Power BI dashboards for operations, inventory and executive reporting.\n➛ Optimized performance for large datasets through indexing and query tuning.",
+              "PROJECT_TECHSTACK_3": "Power BI, SQL Server, SSIS, QuickBooks, LightSpeed POS, Microsoft Dynamics",
+              "PROJECT_TITLE_4": "Telecom Project Management Dashboard",
+              "PROJECT_DESCRIPTION_4": "Built a project-tracking analytics and visualization solution for a Canadian telecom provider to replace limited Jira reporting with tailored metrics and dashboards. The solution automated collection of project and issue data and supported sprint, bug and delivery insights. Deliverables included a staging layer, a metrics-driven data model and Power BI reports to visualize cycle time, bug flow and planned vs actual delivery. The project aligned reporting to Agile workflows and improved delivery transparency.",
+              "PROJECT_RESPONSIBILITIES_4": "➛ Integrated Jira API with a SQL staging layer to automate project and issue data collection.\n➛ Designed and implemented a data model to support sprint metrics, bug tracking and team velocity.\n➛ Developed Power BI dashboards visualizing cycle time, bug flow and planned vs actual delivery.\n➛ Conducted stakeholder workshops to refine requirements and align reports with Agile processes.\n➛ Enhanced performance with optimized queries and efficient data refresh strategies.",
+              "PROJECT_TECHSTACK_4": "Power BI, SQL, Jira API, Excel, Agile Methodology",
+              "PROJECT_TITLE_5": "Business Intelligence Optimization for UAE-based Enterprises",
+              "PROJECT_DESCRIPTION_5": "Engaged to improve reporting efficiency for UAE-based enterprises whose existing Power BI reports suffered slow load times and poor mobile experience. The objective was to identify bottlenecks, optimize DAX and data models, and design new socio-economic and financial dashboards. Outcomes included significantly reduced report load times and a set of optimized, mobile-friendly visuals for strategic analysis. The work also produced documentation to support future scalability and handover.",
+              "PROJECT_RESPONSIBILITIES_5": "➛ Identified and remediated performance bottlenecks to reduce Power BI report loading times.\n➛ Implemented advanced DAX optimization and data model improvements for enhanced responsiveness.\n➛ Created new interactive Power BI dashboards for socio-economic modeling and financial KPIs.\n➛ Integrated SQL-based data sources to enable real-time and accurate data tracking.\n➛ Developed detailed documentation to support scalability and handover.",
+              "PROJECT_TECHSTACK_5": "Power BI, SQL, DAX, Power Query",
+              "PROJECT_TITLE_6": "Real-Time Analytics for Spine Care",
+              "PROJECT_DESCRIPTION_6": "Delivered real-time analytics for an India-based spine care clinic to evaluate sales, operations and marketing across locations. The solution connected Power BI to PostgreSQL via DirectQuery to enable live dashboards and day-to-day performance tracking. Interactive reports highlighted daily marketing, actual vs target and city-wise KPIs to improve operational visibility. The engagement included SQL optimization and close collaboration with stakeholders to refine outputs.",
+              "PROJECT_RESPONSIBILITIES_6": "➛ Connected Power BI to PostgreSQL using DirectQuery to enable real-time access to clinic data.\n➛ Developed interactive dashboards for Sales, Operations and Marketing performance including daily marketing and Actual vs Target metrics.\n➛ Wrote and optimized complex SQL queries to ensure accurate and efficient data extraction.\n➛ Designed KPIs to track clinic performance across multiple cities, improving location-wise visibility.\n➛ Collaborated with business stakeholders to gather requirements and iteratively refine report outputs.\n➛ Optimized data connectivity and report load times to enhance user experience and reliability.",
+              "EDUCATION_DEGREE_1": "Bachelor of Business Administration (B.B.A)",
+              "EDUCATION_INSTITUTE_1": "Sikkim Manipal University",
+              "EDUCATION_YEAR_1": "",
               "EDUCATION_DEGREE_2": "",
               "EDUCATION_INSTITUTE_2": "",
               "EDUCATION_YEAR_2": ""
             },
-            "raw_resume_text": "ABHISHEK\nGCP Data Engineer\nPROFESSIONAL SUMMARY\nGCP Data Engineer with 5+ years of experience in designing, building, and optimizing\nscalable data warehouse and data pipeline solutions on Google Cloud Platform. Strong\nexpertise in BigQuery, Cloud Dataflow, Cloud Composer (Airflow), and Pub/Sub for batch\nand real-time data processing. Experienced in ETL/ELT development, data modeling (Star &\nSnowflake schema), and large-scale data migration from on-prem systems to cloud. Proven\nability to optimize query performance, ensure data quality, and implement CI/CD pipelines in\nAgile environments.\nCORE TECHNICAL SKILLS\nCategory Skills\nGCP Services \nBigQuery, Cloud Dataflow, Cloud Composer (Airflow), Cloud Storage,\nPub/Sub\nProgramming \nPython, SQL\nData\nEngineering\nETL/ELT Pipelines, Data Modeling, Data Warehousing\nData Modeling \nStar Schema, Snowflake Schema, Reference Tables\nStreaming &\nBatch\nPub/Sub, Apache Beam, Real-time & Batch Processing\nDatabases \nPostgreSQL, MySQL\nDevOps & CI/CD \nGit, Jenkins, CI/CD Pipelines, Terraform (Basics)\n\nBig Data \nSpark (Basics), Hadoop (Exposure)\nMonitoring \nLogging, Debugging, Pipeline Monitoring\nBI Tools \nTableau, Looker\nMethodologies \nAgile, Scrum\nPROJECT EXPERIENCE\n1. PolicyPro – Enterprise Data Warehouse Platform\nRole: Senior GCP Data Engineer\nDuration: Apr 2025 – Present\nTech Stack: BigQuery, Dataflow, Cloud Storage, Pub/Sub, Python, SQL\nKey Contributions:\n● Designed and implemented scalable data warehouse solutions using BigQuery\n● Built ETL/ELT pipelines using Apache Beam and Dataflow for batch and streaming\ndata\n● Implemented Pub/Sub for real-time data ingestion from multiple sources\n● Optimized BigQuery queries using partitioning, clustering, and query tuning\n● Ensured data quality, monitoring, and governance across pipelines\n2. ClaimsX – Data Migration & Processing Platform\nRole: GCP Data Engineer\nDuration: Dec 2023 – Mar 2025\nTech Stack: BigQuery, Cloud Composer (Airflow), Dataflow, Cloud Storage, SQL\nKey Contributions:\n● Led migration of on-prem SQL Server data to BigQuery data warehouse\n● Developed and scheduled ETL workflows using Cloud Composer (Airflow)\n● Designed data models using star and snowflake schema for reporting\n● Improved pipeline performance through optimization and parallel processing\n● Implemented logging, monitoring, and troubleshooting for pipeline failures\n\n3. Customer360 – Analytics Data Platform\nRole: Data Engineer\nDuration: Oct 2022 – Nov 2023\nTech Stack: BigQuery, Pub/Sub, Dataflow, Python, SQL\nKey Contributions:\n● Built real-time data pipelines using Pub/Sub and Dataflow\n● Designed BigQuery datasets for customer analytics and reporting\n● Performed data transformation and aggregation for business insights\n● Optimized query performance for large-scale datasets\n● Collaborated with analytics teams to define KPIs and reporting requirements\n4. Billing & Payments Data Warehouse\nRole: Data Engineer\nDuration: Jan 2022 – Sep 2022\nTech Stack: BigQuery, Cloud Storage, Python, SQL\nKey Contributions:\n● Designed data warehouse for billing and payment analytics\n● Built batch ETL pipelines for financial data processing\n● Created structured data models for reporting and forecasting\n● Ensured data validation and reconciliation across systems\n● Supported dashboard reporting using BI tools\n5. Agent Portal Data Platform\nRole: Data Engineer\nDuration: Jul 2021 – Dec 2021\nTech Stack: Dataflow, Pub/Sub, BigQuery, Python\nKey Contributions:\n● Developed streaming pipelines using Pub/Sub and Dataflow\n● Built scalable data ingestion systems for user activity tracking\n● Designed BigQuery tables for operational analytics\n● Implemented error handling and retry mechanisms in pipelines\n● Improved system reliability and performance\n6. Intelligent Document Processing Data Pipeline\n\nRole: Junior Data Engineer\nDuration: Sep 2020 – Jun 2021\nTech Stack: Python, SQL, Cloud Storage, ETL\nKey Contributions:\n● Built ETL pipelines for document data ingestion and transformation\n● Assisted in designing initial data warehouse structures\n● Wrote SQL queries for data extraction and reporting\n● Performed data validation and cleansing\n● Supported pipeline monitoring and debugging activities\nEDUCATION\nBachelor of Technology (B.Tech) – Rajiv Gandhi Proudyogiki Vishwavidyalaya,\nBhopal\nGraduation: 2020"
+            "raw_resume_text": "TECH LEAD- TARSEM\nProfessional Summary:\nResults-driven Tech Lead with over 14 years of experience in designing, developing, and delivering\nend-to-end data and analytics solutions across retail, telecom, and financial services sectors. Specializing in\nBI architecture, data modeling, ETL development, and dashboard design, with proven hands-on expertise in\ntools such as Power BI, SQL, Tableau, and SSIS. Adept at building scalable reporting ecosystems that\ntransform raw data into actionable insights, supporting both operational and executive-level\ndecision-making.\nRenowned for leading cross-functional teams and managing complex projects from concept to deployment.\nSkilled at translating business requirements into technical solutions, implementing security frameworks like\nrow-level security, and driving data governance practices. A strong communicator with a track record of\nstakeholder engagement, Agile collaboration, and delivering high-performance analytics platforms that align\nwith strategic business goals.\nSkill Summary:\nBI Architecture & Strategy: Power BI, Tableau, DAX, KPI frameworks\nData Engineering: ETL design (SSIS, SQL), Data Modeling (Star Schema, Dimensional)\nData Integration: Xero, QuickBooks, Jira API, LightSpeed POS, Excel, AWS SQL\nDatabase Systems: SQL Server, MS Access, AWS-hosted SQL\nSecurity & Governance: Row-level security, multi-user data access strategies\nProject Leadership: Team management, stakeholder engagement, Agile collaboration\nAutomation & Scripting: SQL scripting, VBA, Excel macros, data cleanup pipelines\nProjects:\nProject 1: Retail BI Analytics Platform\nDescription:\nDesigned and delivered a centralized BI reporting system for a multi-store home decor retail chain in Hawaii.\nThe platform enabled unified analysis of sales, inventory, and vendor performance by integrating data from\nmultiple business tools.\nResponsibilities:\n➛Led end-to-end BI solution design including requirement analysis, data blueprinting, and dashboard\nplanning.\n\n➛Developed ETL pipelines using SSIS to integrate data from LightSpeed POS, QuickBooks, and Microsoft\nDynamics 365.\n➛Performed dimensional data modeling (star schema) for vendor, category, and store-level insights.\n➛Built interactive Power BI dashboards for operations, inventory, and executive reporting.\n➛Optimized performance for large datasets through indexing and query tuning.\nTech Stack: Power BI, SQL Server, SSIS, QuickBooks, LightSpeed POS, Microsoft Dynamics\nProject 2: Telecom Project Management Dashboard\nDescription:\nBuilt a robust analytics and visualization solution for a Canadian telecom provider to improve software\nproject tracking and delivery insights, replacing limited Jira reporting with custom metrics and dashboards.\nResponsibilities:\n➛Integrated Jira API with SQL staging to automate the collection of project and issue data.\n➛Designed and implemented a data model to support sprint metrics, bug tracking, and team velocity.\n➛Developed Power BI dashboards visualizing cycle time, bug flow, and planned vs actual delivery.\n➛Conducted stakeholder workshops to refine requirements and align with Agile workflows.\n➛Enhanced performance with optimized queries and efficient data refresh strategies.\nTech Stack: Power BI, SQL, Jira API, Excel, Agile Methodology\nProject 3: Financial Reporting & Forecasting Platform\nDescription:\nDelivered a scalable financial analytics solution for an Australian advisory firm, integrating data from\naccounting and business systems to support real-time financial planning and reporting.\nResponsibilities:\n➛Managed a cross-functional team to deliver KPIs and dashboards tailored to finance leadership.\n➛Built ETL processes to consolidate data from Xero, AWS SQL, Excel, and Google Sheets.\n➛Created relational data models to support P&L, budget vs actual, and variance analysis.\n➛Implemented Power BI dashboards with row-level security for multi-user environments.\n➛Ensured reliability of cloud-based refresh and scalability across multiple advisory clients.\nTech Stack: Power BI, SQL, Xero, AWS SQL, Excel, Google Sheets, Power BI Gateway\nProject 4: Business Intelligence Optimization for UAE-based Enterprises\nDescription:\nThis project aimed to enhance the reporting efficiency of UAE-based companies transitioning toward a\nglobally competitive, knowledge-based economy. The client had existing Power BI reports that suffered from\nslow performance (15-second load times). The objective was to optimize these reports, improve the mobile\nuser experience, and design new dashboards focused on socio-economic and financial analysis.\n\nResponsibilities:\n➛Identified and addressed performance bottlenecks to reduce Power BI report loading time from 15\nseconds.\n➛Implemented advanced DAX optimization and data model improvements for enhanced performance.\n➛Created new interactive Power BI dashboards for Socio-economic Modeling and financial KPIs.\n➛Integrated SQL-based data sources to enable real-time, accurate data tracking.\n➛Developed detailed documentation for future scalability and handover.\nTech Stack: Power BI, SQL, DAX, Power Query\nProject 5: Financial Reporting for Australian Advisory Firm Using Xero\nDescription:\nThe client, an Australia-based financial advisory firm, required interactive and detailed financial reporting\nusing Xero data, which lacked advanced analytics capabilities. The project involved building customized\nPower BI dashboards by consolidating data from Xero, AWS SQL, Excel, and Google Sheets. Key reports\nfocused on P&L, Actual vs Budget, Gross Profit, and Variance.\nResponsibilities:\n➛Extracted and merged financial data from Xero, AWS SQL, Excel, and Google Sheets for a unified reporting\nstructure.\n➛Utilized MySQL and PHP for backend data preprocessing and transformation.\n➛Developed Power BI dashboards with interactive visualizations for financial performance analysis.\n➛Implemented Row-level Security (RLS) so each Account Director could access only their clients’ reports.\n➛Translated raw financial data into meaningful business insights to support strategic decision-making.\nTech Stack: Power BI, Xero, AWS SQL, MySQL, Excel, Google Sheets, PHP\nProject 6 : Real-Time Analytics for Spine Care\nDescription:\nThis project supported India’s pioneering spine care clinic focused on non-surgical back and neck pain\ntreatments. The organization faced challenges in evaluating Sales, Operations, and Marketing effectiveness\nacross locations. The goal was to build real-time dashboards to provide actionable insights for better\ndecision-making.\nResponsibilities:\n➛Connected Power BI to PostgreSQL using Direct Query to enable real-time access to clinic data.\n➛Developed interactive dashboards for Sales, Operations, and Marketing performance, including Daily\nMarketing and Actual vs Target metrics.\n➛Wrote and optimized complex SQL queries to ensure accurate and efficient data extraction.\n➛Designed KPIs to track clinic performance across various cities, improving visibility into location-wise\nperformance.\n➛Collaborated closely with business stakeholders to gather requirements and continuously refine report\n\noutputs.\n➛Optimized data connectivity and report load times to enhance user experience and reliability.\nTech Stack: Power BI, PostgreSQL, SQL\nEducational Qualification\nBachelor of Business Administration (B.B.A),\nSikkim Manipal University"
           },
           "webhookUrl": "https://devscaleup.app.n8n.cloud/webhook/resume_agent",
           "executionMode": "production"
@@ -1148,717 +1213,10 @@
           "item": 0
         }
       }
-    ],
-    "Gatekeeper": [
-      {
-        "json": {
-          "output": "{\n  \"action\": \"CREATE_DOC\",\n  \"reply\": \"Love it — creating the Google Doc now. I’ll share the link when it’s ready 🙌\",\n  \"resume_url\": \"https://base44.app/api/apps/69bbcee98fb7ee3b7aaa2965/files/mp/public/69bbcee98fb7ee3b7aaa2965/69c0268a2_ABHISHEK_GCPDataEngineer_Exp_5years2.pdf\",\n  \"job_description\": \"Jd: NEW REQUIREMENT\\n\\nDesignation: GCP Data Engineer\\n\\nJob Description:\\n\\nWe are looking for an experienced GCP Data Warehouse Engineer to design, build, and optimize scalable data warehouse solutions on Google Cloud Platform (GCP). The ideal candidate should have strong expertise in BigQuery, ETL/ELT pipelines, data modeling, and cloud-based data architectures, SQL along with hands-on experience in handling large-scale data systems.\\n\\nExperience: 5+ Yrs into GCP Data Engineer\\n\\nBudget: 1.3 LPM + GST\\n\\nKey Responsibilities\\nDesign and develop scalable data warehouse solutions using GCP services such as BigQuery, Cloud Storage, and Dataflow\\nBuild and maintain ETL/ELT pipelines using Apache Beam, Dataflow, and Cloud Composer (Airflow)\\nPerform data modeling (Star Schema, Snowflake Schema) for analytics and reporting\\nOptimize BigQuery performance using partitioning, clustering, and query tuning\\nMigrate data from on-premises systems (SQL Server, Oracle, etc.) to GCP\\nDevelop and manage batch and real-time data pipelines using Pub/Sub\\nEnsure data quality, governance, and security standards\\nCollaborate with business and analytics teams to understand data requirements\\nImplement monitoring, logging, and troubleshooting for data pipelines\\nSupport CI/CD processes and infrastructure automation (Terraform preferred)\\n\\nRequired Skills & Qualifications\\n5+ years of experience in Data Warehousing / ETL Development\\nStrong hands-on experience with GCP services:\\nBigQuery\\nCloud Dataflow\\nCloud Composer (Airflow)\\nCloud Storage\\nPub/Sub\\nStrong proficiency in SQL and Python\\nExperience with data modeling and warehouse design\\nHands-on experience with large datasets and performance tuning\\nExperience in data migration projects to cloud\\nKnowledge of CI/CD tools (Git, Jenkins)\\nStrong understanding of data security and governance\\n\\nPreferred Skills\\nCertification: Google Cloud Professional Data Engineer\\nExperience with Spark / Dataproc / Hadoop\\nExposure to multi-cloud environments (Azure/AWS)\\nExperience with BI tools such as Power BI, Tableau, or Looker\\nKnowledge of DevOps and Infrastructure as Code (Terraform)\\n\\nSoft Skills\\nStrong problem-solving and analytical skills\\nExcellent communication and stakeholder management\\nAbility to work in an agile and fast-paced environment\\nLeadership and mentoring experience\\n\\nGood to Have\\nExperience migrating on-prem or legacy ETL to Spark/Databricks-based platforms\\nExposure to streaming or near–real-time data processing\\nExperience with multi-cloud data architectures\\nRelevant cloud or data platform certifications\\n\\nKey Deliverables / Success Metrics\\nEfficient and scalable data pipelines\\nOptimized query performance and cost management\\nHigh data quality and reliability\\nSuccessful cloud migration and modernization initiatives\\n\\nCertifications:\\nRelevant certifications in SQL, BI-DW, or cloud platforms are highly desirable.\\nMicrosoft Certified: Azure Data Fundamentals /Any Cloud Certifications (preferred).\",\n  \"highlight_areas\": \"Add EC2 to the tech stack of Project 4 (Billing & Payments Data Warehouse)\",\n  \"revision_request\": null\n}"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "Build Placeholder Requests": [
-      {
-        "json": {
-          "docId": "1e2AlS-wnnts-mGx9Bshjzm46tG_21q-bHznVdp3dPYU",
-          "webViewLink": "https://docs.google.com/document/d/1e2AlS-wnnts-mGx9Bshjzm46tG_21q-bHznVdp3dPYU/edit",
-          "body": {
-            "requests": [
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{CANDIDATE_NAME}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "ABHISHEK"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROFESSIONAL_SUMMARY}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Senior GCP Data Engineer with over five years of experience designing and delivering cloud-native data platforms on Google Cloud. I specialize in building scalable data warehouses and hybrid batch/streaming ETL/ELT pipelines using BigQuery, Dataflow (Apache Beam), Pub/Sub and Cloud Composer. I have led migrations from on-premise SQL systems to BigQuery, implemented star and snowflake schemas for analytical workloads, and tuned query performance using partitioning and clustering strategies. I author production data transformation logic in Python and SQL and integrate CI/CD and monitoring practices to improve pipeline reliability and observability. I collaborate closely with analytics and product teams to translate KPIs into robust datasets and performant reporting models. I focus on operational excellence by implementing logging, retry/error handling, and pipeline troubleshooting processes. I deliver pragmatic, scalable solutions in Agile environments that balance performance, cost, and data quality."
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{SKILL_CATEGORY_1}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Cloud Platforms"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{SKILL_CONTENT_1}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Google Cloud Platform (BigQuery, Cloud Dataflow, Cloud Composer/Airflow, Cloud Storage, Pub/Sub)"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{SKILL_CATEGORY_2}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Data Engineering"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{SKILL_CONTENT_2}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "ETL/ELT Pipelines, Data Modeling (Star & Snowflake schemas), Data Warehousing, Streaming & Batch Processing"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{SKILL_CATEGORY_3}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Programming & Querying"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{SKILL_CONTENT_3}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Python, SQL, Apache Beam"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{SKILL_CATEGORY_4}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Databases & Big Data"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{SKILL_CONTENT_4}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "PostgreSQL, MySQL, Spark (Basics), Hadoop (Exposure)"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{SKILL_CATEGORY_5}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "DevOps, Monitoring & BI"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{SKILL_CONTENT_5}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Git, Jenkins, CI/CD Pipelines, Terraform (Basics), Logging, Pipeline Monitoring, Tableau, Looker"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{SKILL_CATEGORY_6}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Methodologies"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{SKILL_CONTENT_6}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Agile, Scrum"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_TITLE_1}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "PolicyPro – Enterprise Data Warehouse Platform"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_DESCRIPTION_1}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "An enterprise-level data warehouse built to centralize and serve analytics across the organization. The platform ingests both batch and streaming sources into BigQuery and provides governed datasets for downstream reporting. The candidate designed the BigQuery schema, built Dataflow/Apache Beam pipelines for transformation, and implemented Pub/Sub-based real-time ingestion. Emphasis was on scalability, query performance optimization, and ensuring end-to-end data quality and monitoring."
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_RESPONSIBILITIES_1}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "➛ Designed and implemented scalable BigQuery data warehouse structures for enterprise reporting\n➛ Built batch and streaming ETL/ELT using Apache Beam and Dataflow to unify diverse data sources\n➛ Implemented Pub/Sub-based real-time ingestion and ensured reliable processing\n➛ Tuned BigQuery performance via partitioning, clustering and query optimization\n➛ Established monitoring, data quality checks and governance across pipelines"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_TECHSTACK_1}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "BigQuery, Cloud Dataflow (Apache Beam), Cloud Storage, Pub/Sub, Python, SQL"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_TITLE_2}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "ClaimsX – Data Migration & Processing Platform"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_DESCRIPTION_2}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "A migration project to move on-premise SQL Server data into a cloud-native BigQuery warehouse to enable faster reporting and analytics. The work included designing data models for reporting, creating scheduled ETL workflows, and optimizing pipelines for throughput and reliability. The candidate led migration activities and implemented orchestration, logging and troubleshooting mechanisms to maintain operational stability."
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_RESPONSIBILITIES_2}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "➛ Led end-to-end migration of on-prem SQL Server datasets to BigQuery\n➛ Developed and scheduled ETL workflows using Cloud Composer (Airflow)\n➛ Designed star and snowflake schema models to support reporting requirements\n➛ Optimized pipeline performance through parallelization and tuning\n➛ Implemented logging, monitoring and failure handling for operational resilience"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_TECHSTACK_2}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "BigQuery, Cloud Composer (Airflow), Dataflow, Cloud Storage, SQL"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_TITLE_3}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Customer360 – Analytics Data Platform"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_DESCRIPTION_3}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "A customer analytics platform that consolidates real-time and historical customer data to support analytics and KPI reporting. The project created streaming ingestion paths and curated BigQuery datasets for analytics teams. The candidate developed transformation logic, optimized queries for large datasets, and partnered with stakeholders to define KPIs and reporting needs."
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_RESPONSIBILITIES_3}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "➛ Built real-time ingestion pipelines using Pub/Sub and Dataflow for customer events\n➛ Designed BigQuery datasets and tables optimized for analytics and reporting\n➛ Implemented transformation and aggregation logic to generate business insights\n➛ Tuned queries and storage patterns for performant analytics on large datasets\n➛ Collaborated with analytics teams to define KPIs and reporting requirements"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_TECHSTACK_3}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "BigQuery, Pub/Sub, Dataflow, Python, SQL"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_TITLE_4}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Billing & Payments Data Warehouse"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_DESCRIPTION_4}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "A financial analytics warehouse to support billing and payment reporting and forecasting. The project focused on batch ETL pipelines to process transactional financial data into structured models for dashboards and forecasts. The candidate designed the warehouse schema, implemented batch processing pipelines, and ensured reconciliation and data validation across systems."
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_RESPONSIBILITIES_4}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "➛ Designed a data warehouse for billing and payment analytics and forecasting\n➛ Built batch ETL pipelines to process financial transaction data into BigQuery\n➛ Created structured data models to support reporting and forecasting workflows\n➛ Implemented data validation and reconciliation processes across sources\n➛ Supported dashboard reporting by preparing curated datasets for BI tools"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_TECHSTACK_4}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "BigQuery, Cloud Storage, Python, SQL, EC2"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_TITLE_5}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Agent Portal Data Platform"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_DESCRIPTION_5}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "A platform to capture and analyze user activity from an agent portal using streaming ingestion. The system collected user events for operational analytics and user behavior tracking. The candidate developed streaming pipelines, designed BigQuery tables for operational metrics, and improved system reliability through robust error handling."
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_RESPONSIBILITIES_5}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "➛ Developed streaming pipelines using Pub/Sub and Dataflow for user activity ingestion\n➛ Built scalable ingestion systems to capture high-volume event data\n➛ Designed BigQuery schemas to support operational analytics and reporting\n➛ Implemented error handling and retry mechanisms to improve pipeline resilience\n➛ Performed performance tuning to increase system reliability"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_TECHSTACK_5}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Dataflow, Pub/Sub, BigQuery, Python"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_TITLE_6}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Intelligent Document Processing Data Pipeline"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_DESCRIPTION_6}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "An early-stage pipeline to ingest and transform document-derived data into a structured warehouse for reporting. The project focused on ETL of document data, initial warehouse design and data quality activities to enable downstream analytics. The candidate contributed to pipeline development, SQL reporting queries, and monitoring support during initial rollout."
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_RESPONSIBILITIES_6}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "➛ Built ETL pipelines for document data ingestion and transformation\n➛ Assisted in designing initial data warehouse structures and schema\n➛ Authored SQL queries for extraction and reporting of processed data\n➛ Performed data validation and cleansing to ensure quality of ingested records\n➛ Supported pipeline monitoring and debugging activities during deployment"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{PROJECT_TECHSTACK_6}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Python, SQL, Cloud Storage, ETL"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{EDUCATION_DEGREE_1}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Bachelor of Technology (B.Tech)"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{EDUCATION_INSTITUTE_1}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "Rajiv Gandhi Proudyogiki Vishwavidyalaya, Bhopal"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{EDUCATION_YEAR_1}}",
-                    "matchCase": true
-                  },
-                  "replaceText": "2020"
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{EDUCATION_DEGREE_2}}",
-                    "matchCase": true
-                  },
-                  "replaceText": ""
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{EDUCATION_INSTITUTE_2}}",
-                    "matchCase": true
-                  },
-                  "replaceText": ""
-                }
-              },
-              {
-                "replaceAllText": {
-                  "containsText": {
-                    "text": "{{EDUCATION_YEAR_2}}",
-                    "matchCase": true
-                  },
-                  "replaceText": ""
-                }
-              }
-            ]
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "Scorekeeper": [
-      {
-        "json": {
-          "output": "{\n  \"overall_fit\": 89.3,\n  \"ats_score\": 88,\n  \"matched_keywords\": [\n    \"GCP\",\n    \"BigQuery\",\n    \"Cloud Dataflow\",\n    \"Cloud Composer\",\n    \"Cloud Storage\",\n    \"Pub/Sub\",\n    \"Apache Beam\",\n    \"ETL/ELT\",\n    \"Data modeling\",\n    \"Star Schema\",\n    \"Snowflake Schema\",\n    \"SQL\",\n    \"Python\",\n    \"Data migration\",\n    \"CI/CD\",\n    \"Git\",\n    \"Jenkins\",\n    \"Terraform\",\n    \"Data governance\",\n    \"Performance tuning\",\n    \"Streaming\",\n    \"Monitoring\",\n    \"Airflow\",\n    \"Spark/Dataproc\",\n    \"BI tools\"\n  ],\n  \"missing_keywords\": [\n    \"Data security\",\n    \"Google Cloud Professional Data Engineer\",\n    \"Multi-cloud\"\n  ],\n  \"strong_matches\": [\n    \"Extensive hands-on BigQuery design and performance tuning (partitioning, clustering, query optimization)\",\n    \"Proven implementation of batch and streaming ETL/ELT using Dataflow (Apache Beam) and Pub/Sub\",\n    \"Led on-premise to BigQuery migrations and designed star/snowflake schemas for analytics\",\n    \"Solid engineering practices: Python + SQL for transformations, CI/CD (Git/Jenkins), monitoring and observability\"\n  ],\n  \"gaps\": [\n    \"No explicit mention of data security/compliance controls (encryption, IAM, policies)\",\n    \"Absence of Google Cloud Professional Data Engineer certification\",\n    \"Terraform listed as 'Basics' — IaC/automation competency may be limited for infrastructure-heavy roles\",\n    \"Spark/Dataproc experience appears limited/basic (resume indicates 'Basics' / 'Exposure'), potentially weak for heavy Spark workloads\"\n  ]\n}"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "Make new copy file in Placeholders folder": [
-      {
-        "json": {
-          "kind": "drive#file",
-          "id": "1e2AlS-wnnts-mGx9Bshjzm46tG_21q-bHznVdp3dPYU",
-          "name": "ABHISHEK_Senior GCP Data Engineer",
-          "mimeType": "application/vnd.google-apps.document"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "Move file to Final Resumes folder": [
-      {
-        "json": {
-          "kind": "drive#file",
-          "id": "1e2AlS-wnnts-mGx9Bshjzm46tG_21q-bHznVdp3dPYU",
-          "name": "ABHISHEK_Senior GCP Data Engineer",
-          "mimeType": "application/vnd.google-apps.document"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "API request to populate our final file": [
-      {
-        "json": {
-          "replies": [
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            },
-            {
-              "replaceAllText": {
-                "occurrencesChanged": 1
-              }
-            }
-          ],
-          "writeControl": {
-            "requiredRevisionId": "AIxLkSu-abbogmC35UAES6dIbOGIyILRBvBt2hxo5owCqE4xFkcgkmZnNXvvdTKUCnST3WPRA5RsRRNNcxAE_HQFFe42apJq7BMlDVGF9ffb"
-          },
-          "documentId": "1e2AlS-wnnts-mGx9Bshjzm46tG_21q-bHznVdp3dPYU"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "Get Keys": [
-      {
-        "json": {
-          "action": "CREATE_DOC",
-          "reply": "Love it — creating the Google Doc now. I’ll share the link when it’s ready 🙌",
-          "resume_url": "https://base44.app/api/apps/69bbcee98fb7ee3b7aaa2965/files/mp/public/69bbcee98fb7ee3b7aaa2965/69c0268a2_ABHISHEK_GCPDataEngineer_Exp_5years2.pdf",
-          "job_description": "Jd: NEW REQUIREMENT\n\nDesignation: GCP Data Engineer\n\nJob Description:\n\nWe are looking for an experienced GCP Data Warehouse Engineer to design, build, and optimize scalable data warehouse solutions on Google Cloud Platform (GCP). The ideal candidate should have strong expertise in BigQuery, ETL/ELT pipelines, data modeling, and cloud-based data architectures, SQL along with hands-on experience in handling large-scale data systems.\n\nExperience: 5+ Yrs into GCP Data Engineer\n\nBudget: 1.3 LPM + GST\n\nKey Responsibilities\nDesign and develop scalable data warehouse solutions using GCP services such as BigQuery, Cloud Storage, and Dataflow\nBuild and maintain ETL/ELT pipelines using Apache Beam, Dataflow, and Cloud Composer (Airflow)\nPerform data modeling (Star Schema, Snowflake Schema) for analytics and reporting\nOptimize BigQuery performance using partitioning, clustering, and query tuning\nMigrate data from on-premises systems (SQL Server, Oracle, etc.) to GCP\nDevelop and manage batch and real-time data pipelines using Pub/Sub\nEnsure data quality, governance, and security standards\nCollaborate with business and analytics teams to understand data requirements\nImplement monitoring, logging, and troubleshooting for data pipelines\nSupport CI/CD processes and infrastructure automation (Terraform preferred)\n\nRequired Skills & Qualifications\n5+ years of experience in Data Warehousing / ETL Development\nStrong hands-on experience with GCP services:\nBigQuery\nCloud Dataflow\nCloud Composer (Airflow)\nCloud Storage\nPub/Sub\nStrong proficiency in SQL and Python\nExperience with data modeling and warehouse design\nHands-on experience with large datasets and performance tuning\nExperience in data migration projects to cloud\nKnowledge of CI/CD tools (Git, Jenkins)\nStrong understanding of data security and governance\n\nPreferred Skills\nCertification: Google Cloud Professional Data Engineer\nExperience with Spark / Dataproc / Hadoop\nExposure to multi-cloud environments (Azure/AWS)\nExperience with BI tools such as Power BI, Tableau, or Looker\nKnowledge of DevOps and Infrastructure as Code (Terraform)\n\nSoft Skills\nStrong problem-solving and analytical skills\nExcellent communication and stakeholder management\nAbility to work in an agile and fast-paced environment\nLeadership and mentoring experience\n\nGood to Have\nExperience migrating on-prem or legacy ETL to Spark/Databricks-based platforms\nExposure to streaming or near–real-time data processing\nExperience with multi-cloud data architectures\nRelevant cloud or data platform certifications\n\nKey Deliverables / Success Metrics\nEfficient and scalable data pipelines\nOptimized query performance and cost management\nHigh data quality and reliability\nSuccessful cloud migration and modernization initiatives\n\nCertifications:\nRelevant certifications in SQL, BI-DW, or cloud platforms are highly desirable.\nMicrosoft Certified: Azure Data Fundamentals /Any Cloud Certifications (preferred).",
-          "highlight_areas": "Add EC2 to the tech stack of Project 4 (Billing & Payments Data Warehouse)",
-          "revision_request": null
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
     ]
   },
-  "versionId": "ff1f9a62-f332-40e5-b506-3f584d971efd",
-  "activeVersionId": "11c94f6f-6740-47e0-b06f-9032f92ddbee",
+  "versionId": "ab243e64-98b7-488d-9a69-291366b56ba7",
+  "activeVersionId": "ab243e64-98b7-488d-9a69-291366b56ba7",
   "triggerCount": 1,
   "shared": [
     {
@@ -1870,9 +1228,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-03-30T08:03:06.000Z",
-    "createdAt": "2026-03-30T08:03:01.254Z",
-    "versionId": "11c94f6f-6740-47e0-b06f-9032f92ddbee",
+    "updatedAt": "2026-05-07T06:23:03.000Z",
+    "createdAt": "2026-05-07T06:22:02.502Z",
+    "versionId": "ab243e64-98b7-488d-9a69-291366b56ba7",
     "workflowId": "Zinia9sYTgMvpkn0",
     "nodes": [
       {
@@ -2347,7 +1705,7 @@
         "type": "@n8n/n8n-nodes-langchain.agent",
         "typeVersion": 3.1,
         "position": [
-          2560,
+          3040,
           1280
         ],
         "id": "8b56d644-2d4d-4347-ae96-fb9f8807e7a1",
@@ -2366,7 +1724,7 @@
         "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
         "typeVersion": 1.3,
         "position": [
-          2640,
+          3040,
           1488
         ],
         "id": "cbbb35d4-58ef-4a67-93ea-4bef43746207",
@@ -2525,7 +1883,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          2912,
+          3360,
           1280
         ],
         "id": "54eb7f6c-635d-4359-a570-0fc44d7069f1",
@@ -2549,7 +1907,7 @@
         "type": "n8n-nodes-base.respondToWebhook",
         "typeVersion": 1.5,
         "position": [
-          3136,
+          3584,
           1280
         ],
         "id": "38d34cf5-b962-49ef-93c0-fb058692369f",
@@ -2567,6 +1925,58 @@
         ],
         "id": "165b83b3-6320-4c66-b642-cdf51d794e90",
         "name": "Get Keys"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ \"https://www.googleapis.com/drive/v3/files/\" + $json.documentId + \"/permissions\" }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"role\": \"writer\",\n  \"type\": \"user\",\n  \"emailAddress\": \"sales.scaleupally@gmail.com\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2576,
+          1280
+        ],
+        "id": "4ee945de-ebe2-4c77-830a-f5cdfa4d7545",
+        "name": "Grant Editor Access",
+        "credentials": {
+          "oAuth2Api": {
+            "id": "IJ9GwsApNFaPgpOK",
+            "name": "Staffing Scaleupally"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://www.googleapis.com/drive/v3/files/{{ $('Build Placeholder Requests').item.json.docId }}/permissions",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"role\": \"reader\",\n  \"type\": \"anyone\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2784,
+          1280
+        ],
+        "id": "9ba588c7-af86-4399-a0c4-4ec69bf3072b",
+        "name": "Grant Viewer Access",
+        "credentials": {
+          "oAuth2Api": {
+            "id": "IJ9GwsApNFaPgpOK",
+            "name": "Staffing Scaleupally"
+          }
+        }
       }
     ],
     "connections": {
@@ -2829,7 +2239,7 @@
         "main": [
           [
             {
-              "node": "Scorekeeper",
+              "node": "Grant Editor Access",
               "type": "main",
               "index": 0
             }
@@ -2862,10 +2272,32 @@
             }
           ]
         ]
+      },
+      "Grant Editor Access": {
+        "main": [
+          [
+            {
+              "node": "Grant Viewer Access",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Grant Viewer Access": {
+        "main": [
+          [
+            {
+              "node": "Scorekeeper",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dev Scaleupally",
-    "name": "Version 11c94f6f",
+    "name": "Version ab243e64",
     "description": "",
     "autosaved": true
   },
