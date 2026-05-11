@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-07T08:03:32.144Z",
+  "updatedAt": "2026-05-11T05:51:34.857Z",
   "createdAt": "2026-04-28T05:41:11.091Z",
   "id": "NXFyJF2PrmITBlBe",
   "name": "Google Contact -> Zoho CRM",
@@ -19,7 +19,7 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        112,
+        -96,
         -208
       ],
       "id": "81e881c1-23a5-4bef-8198-be332424bc2e",
@@ -52,7 +52,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        784,
+        816,
         -208
       ],
       "id": "40f0bebc-6b15-4134-8dad-6603c8d28f4a",
@@ -81,7 +81,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        336,
+        160,
         -208
       ],
       "id": "cf6f9794-e9f7-44ca-a3f5-51f8ec1acea4",
@@ -283,8 +283,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        2960,
-        256
+        2800,
+        -224
       ],
       "id": "61993dc3-ff82-44ba-9227-816ebf3b643b",
       "name": "Update row(s)"
@@ -433,36 +433,6 @@
     },
     {
       "parameters": {
-        "operation": "getAll",
-        "returnAll": true,
-        "fields": [
-          "emailAddresses",
-          "addresses",
-          "names",
-          "organizations",
-          "urls",
-          "occupations",
-          "phoneNumbers"
-        ],
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleContacts",
-      "typeVersion": 1,
-      "position": [
-        544,
-        -208
-      ],
-      "id": "a0cf8422-7c5a-4747-82e3-64118caa6421",
-      "name": "Get many contacts",
-      "credentials": {
-        "googleContactsOAuth2Api": {
-          "id": "FmwYaPGNHi0Weojz",
-          "name": "vikas_contacts"
-        }
-      }
-    },
-    {
-      "parameters": {
         "operation": "get",
         "dataTableId": {
           "__rl": true,
@@ -476,8 +446,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1712,
-        576
+        1728,
+        672
       ],
       "id": "e1df993d-9226-47d7-b8fd-0b9679d0b97b",
       "name": "Get row(s)",
@@ -546,6 +516,56 @@
       ],
       "id": "fb6f5c91-1306-464b-be48-81610fe67dff",
       "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "fields": [
+          "emailAddresses",
+          "addresses",
+          "names",
+          "organizations",
+          "urls",
+          "occupations",
+          "phoneNumbers"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleContacts",
+      "typeVersion": 1,
+      "position": [
+        576,
+        -384
+      ],
+      "id": "a0cf8422-7c5a-4747-82e3-64118caa6421",
+      "name": "Get Manu Contacts",
+      "credentials": {
+        "googleContactsOAuth2Api": {
+          "id": "NofFvB6SXpcYKF30",
+          "name": "manu_contacts"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleContacts",
+      "typeVersion": 1,
+      "position": [
+        480,
+        208
+      ],
+      "id": "9d806e2e-ea32-46cf-b1bd-08388e547cad",
+      "name": "Get Pranay Contacts",
+      "credentials": {
+        "googleContactsOAuth2Api": {
+          "id": "FmwYaPGNHi0Weojz",
+          "name": "vikas_contacts"
+        }
+      }
     }
   ],
   "connections": {
@@ -587,7 +607,7 @@
       "main": [
         [
           {
-            "node": "Get many contacts",
+            "node": "Get Manu Contacts",
             "type": "main",
             "index": 0
           }
@@ -627,17 +647,6 @@
         []
       ]
     },
-    "Get many contacts": {
-      "main": [
-        [
-          {
-            "node": "If1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Get row(s)": {
       "main": [
         []
@@ -664,6 +673,22 @@
           }
         ]
       ]
+    },
+    "Get Manu Contacts": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Pranay Contacts": {
+      "main": [
+        []
+      ]
     }
   },
   "settings": {
@@ -675,7 +700,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "4e4107ff-4fce-46ac-aacc-076f6ad9b3a6",
+  "versionId": "82283bd3-df1a-472e-804b-aa3b6ee688d8",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
