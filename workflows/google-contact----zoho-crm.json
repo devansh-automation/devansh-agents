@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-11T05:51:34.857Z",
+  "updatedAt": "2026-05-11T11:09:47.106Z",
   "createdAt": "2026-04-28T05:41:11.091Z",
   "id": "NXFyJF2PrmITBlBe",
   "name": "Google Contact -> Zoho CRM",
@@ -546,26 +546,6 @@
           "name": "manu_contacts"
         }
       }
-    },
-    {
-      "parameters": {
-        "operation": "getAll",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleContacts",
-      "typeVersion": 1,
-      "position": [
-        480,
-        208
-      ],
-      "id": "9d806e2e-ea32-46cf-b1bd-08388e547cad",
-      "name": "Get Pranay Contacts",
-      "credentials": {
-        "googleContactsOAuth2Api": {
-          "id": "FmwYaPGNHi0Weojz",
-          "name": "vikas_contacts"
-        }
-      }
     }
   ],
   "connections": {
@@ -684,11 +664,6 @@
           }
         ]
       ]
-    },
-    "Get Pranay Contacts": {
-      "main": [
-        []
-      ]
     }
   },
   "settings": {
@@ -700,7 +675,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "82283bd3-df1a-472e-804b-aa3b6ee688d8",
+  "versionId": "af81fe2f-86a7-44b3-aa5b-d5ebc6975abc",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
