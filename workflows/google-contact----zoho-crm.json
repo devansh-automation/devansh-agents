@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-11T11:09:47.106Z",
+  "updatedAt": "2026-05-12T08:24:43.266Z",
   "createdAt": "2026-04-28T05:41:11.091Z",
   "id": "NXFyJF2PrmITBlBe",
   "name": "Google Contact -> Zoho CRM",
@@ -542,10 +542,518 @@
       "name": "Get Manu Contacts",
       "credentials": {
         "googleContactsOAuth2Api": {
+          "id": "dCnUfYnO0ELRGlKa",
+          "name": "pranay_contacts"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0cf172f6-bd26-4dde-b7fb-81a626df624b",
+              "leftValue": "={{ $json.names.displayName.toLowerCase().trim() }}",
+              "rightValue": "client",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1008,
+        1328
+      ],
+      "id": "934d869c-6a71-4de2-bcca-f0565b5bdf4c",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const localContacts = $('Insert row1').all().map(item => ({\n  firstName: item.json.firstName || \"\",\n  lastName: item.json.lastName || \"\",\n  fullName: item.json.cleanName || \"\",\n  originalName: item.json.fullNameOriginal || \"\",\n  phone: String(item.json.mobile1 || '').replace(/\\D/g, ''),\n  leadSource: item.json.leadSource || \"\",\n  contactType: item.json.contactType || \"\",\n  companyName: item.json.companyName || \"\"\n}));\n\nconst zohoContacts = $('Get Zoho Contacts').all()\n  .filter(item => item.json.data && item.json.data.length > 0)\n  .flatMap(item =>\n    item.json.data.map(contact => ({\n      id: contact.id,\n      name: contact.Full_Name || \"\",\n      phone: (contact.Mobile || \"\").replace(/\\D/g, '')\n    }))\n  );\n\nconst results = [];\n\nfor (const lc of localContacts) {\n  const zohoMatch = zohoContacts.find(zc =>\n    (lc.phone && zc.phone && lc.phone === zc.phone) ||\n    (lc.fullName &&\n      zc.name &&\n      zc.name.toLowerCase().trim() === lc.fullName.toLowerCase().trim())\n  );\n\n  results.push({\n    json: {\n      status: zohoMatch ? \"matched\" : \"unmatched\",\n      localContact: lc,\n      zohoContact: zohoMatch || null\n    }\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1536,
+        1328
+      ],
+      "id": "948c3acb-89b1-4505-b012-a8a28efda415",
+      "name": "Code in JavaScript2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"master\": \"zoho\",\n  \"admin\": \"{{ $json[\"Whose contacts would you like to access?\"] }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        1328
+      ],
+      "id": "82350127-213d-4601-99ff-cf682ee4c21a",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "Yid1J9mDYfJbxSkH",
+          "mode": "list",
+          "cachedResultName": "Contacts",
+          "cachedResultUrl": "/projects/4byo5YlJWidsMFA8/datatables/Yid1J9mDYfJbxSkH"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "={{ $('Get row(s)2').item.json.id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "contact_status": "created"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "contactID",
+              "displayName": "contactID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "displayName",
+              "displayName": "displayName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "first_name",
+              "displayName": "first_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "last_name",
+              "displayName": "last_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "mobile_1",
+              "displayName": "mobile_1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "mobile_2",
+              "displayName": "mobile_2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Organisation",
+              "displayName": "Organisation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "contact_status",
+              "displayName": "contact_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2832,
+        1312
+      ],
+      "id": "148d24ee-23fd-4c26-942d-6c86ad28a088",
+      "name": "Update row(s)2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const fullName = item.json.names?.displayName || \"\";\n  const lowerName = fullName.toLowerCase();\n\n  let leadSource = \"\";\n  let contactType = \"\";\n  let cleanName = fullName;\n\n  // Detect Lead Source\n  if (lowerName.includes(\"fiverr\")) {\n    leadSource = \"Fiverr\";\n  } else if (lowerName.includes(\"upwork\")) {\n    leadSource = \"Upwork\";\n  } else if (lowerName.includes(\"skype\")) {\n    leadSource = \"Skype\";\n  } else if (lowerName.includes(\"pph\")) {\n    leadSource = \"PPH\";\n  } else if (lowerName.includes(\"website\")) {\n    leadSource = \"Website\";\n  }\n\n  // Detect Contact Type\n  if (lowerName.includes(\"client\")) {\n    contactType = \"Client\";\n  }\n\n  // Clean name\n  cleanName = cleanName\n    .replace(/fiverr/gi, \"\")\n    .replace(/upwork/gi, \"\")\n    .replace(/skype/gi, \"\")\n    .replace(/pph/gi, \"\")\n    .replace(/website/gi, \"\")\n    .replace(/client/gi, \"\")\n    .replace(/\\(\\)/g, \"\")\n    .replace(/\\s+/g, \" \")\n    .trim();\n\n  // Split first + last name\n  const splitName = cleanName.split(\" \");\n  const firstName = splitName[0] || \"\";\n  const lastName = splitName.slice(1).join(\" \") || \"Unknown\";\n\n  // Get all available phone numbers\n  const allPhones = [\n    item.json.phoneNumbers?.mobile?.[0] || \"\",\n    item.json.phoneNumbers?.home?.[0] || \"\",\n    item.json.phoneNumbers?.work?.[0] || \"\",\n    item.json.phoneNumbers?.other?.[0] || \"\"\n  ].filter(phone => phone);\n\n  // Remove duplicate phone numbers while keeping first occurrence\n  const uniquePhones = [...new Set(allPhones)];\n\n  return {\n    json: {\n      contactId: item.json.contactId || \"\",\n\n      displayName: fullName,\n\n      firstName,\n      lastName,\n\n      contactType,\n      leadSource,\n\n      emails:\n        item.json.emailAddresses?.home?.[0] ||\n        item.json.emailAddresses?.work?.[0] ||\n        item.json.emailAddresses?.other?.[0] ||\n        \"\",\n\n      phoneNumbers: {\n        primaryPhone: uniquePhones[0] || \"\",\n        secondaryPhone: uniquePhones[1] || \"\"\n      },\n\n      addresses:\n        item.json.addresses?.[0]?.formattedValue ||\n        item.json.addresses?.[0]?.streetAddress ||\n        \"\",\n\n      organization:\n        item.json.organizations?.[0]?.name || \"\",\n\n      url:\n        item.json.urls?.[0]?.value || \"\",\n\n      occupation:\n        item.json.occupations?.[0]?.value || \"\"\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        1168
+      ],
+      "id": "87df9ae2-fde7-40a6-bef5-7699c8066f84",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "Yid1J9mDYfJbxSkH",
+          "mode": "list",
+          "cachedResultName": "Contacts",
+          "cachedResultUrl": "/projects/4byo5YlJWidsMFA8/datatables/Yid1J9mDYfJbxSkH"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "contactOwner",
+              "keyValue": "Manu"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1776,
+        1344
+      ],
+      "id": "44086dd0-0dba-4804-b477-76084034458d",
+      "name": "Get row(s)2",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f2588e59-93d6-40bb-ba72-b216a04de453",
+              "leftValue": "={{ $json.Organisation }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2016,
+        1344
+      ],
+      "id": "bfbca4cf-2db8-408b-9864-9becc1ed5ab9",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "fields": [
+          "emailAddresses",
+          "addresses",
+          "names",
+          "organizations",
+          "urls",
+          "occupations",
+          "phoneNumbers"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleContacts",
+      "typeVersion": 1,
+      "position": [
+        672,
+        1104
+      ],
+      "id": "99288484-9f3f-4284-bcf0-09de3d10300a",
+      "name": "Get Manu Contacts1",
+      "credentials": {
+        "googleContactsOAuth2Api": {
           "id": "NofFvB6SXpcYKF30",
           "name": "manu_contacts"
         }
       }
+    },
+    {
+      "parameters": {
+        "formTitle": "Select Admin",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Whose contacts would you like to access?",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Manu"
+                  },
+                  {
+                    "option": "Pranay"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -16,
+        1328
+      ],
+      "id": "1adecb98-e18c-403b-879a-458f3f4f5968",
+      "name": "On form submission",
+      "webhookId": "4cfc6fe0-ad14-4a0d-89d8-ea0e5e8517b0"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f2a9b6d0-115a-47e8-84d8-c305a38e876f",
+              "leftValue": "={{ $json.admin }}",
+              "rightValue": "Manu",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        368,
+        1328
+      ],
+      "id": "f47a36a6-8a5c-45d6-a17b-20881e6653d6",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "fields": [
+          "emailAddresses",
+          "names",
+          "organizations",
+          "occupations",
+          "phoneNumbers",
+          "urls"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleContacts",
+      "typeVersion": 1,
+      "position": [
+        672,
+        1472
+      ],
+      "id": "b59d6717-e1eb-4f6a-89ea-3bf49600903d",
+      "name": "Get Pranay contacts",
+      "credentials": {
+        "googleContactsOAuth2Api": {
+          "id": "dCnUfYnO0ELRGlKa",
+          "name": "pranay_contacts"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d6c922e6-7f98-4564-8cfa-02d73f4a9d06",
+              "leftValue": "={{ $('Edit Fields1').item.json.admin }}",
+              "rightValue": "Manu",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2256,
+        1328
+      ],
+      "id": "5fa45e40-79b3-4e05-9355-53dcb22dd381",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.zohoapis.com/crm/v8/Contacts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": [\n    {\n      \"First_Name\": \"{{ $json.first_name }}\",\n      \"Last_Name\": \"{{ $json.last_name }}\",\n      \"Mobile\": \"{{ $json.mobile_1 }}\",\n      \"Lead_Source\": \"Google Contact\",\n      \"Owner\": \"5118344000000350001\",\n      \"Contact_Type\": \"Client\",\n      \"Email\": \"{{ $json.Email || '' }}\"\n    }\n  ]\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 5,
+              "batchInterval": 5000
+            }
+          },
+          "response": {
+            "response": {}
+          },
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2544,
+        1200
+      ],
+      "id": "aa9e406a-8449-4924-b9ff-4a1b873487b5",
+      "name": "Create Contact for Manu",
+      "retryOnFail": true,
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.zohoapis.com/crm/v8/Contacts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": [\n    {\n      \"First_Name\": \"{{ $json.first_name }}\",\n      \"Last_Name\": \"{{ $json.last_name }}\",\n      \"Mobile\": \"{{ $json.mobile_1 }}\",\n      \"Lead_Source\": \"Google Contact\",\n      \"Owner\": \"5118344000003068001\",\n      \"Contact_Type\": \"Client\",\n      \"Email\": \"{{ $json.Email || '' }}\"\n    }\n  ]\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 5,
+              "batchInterval": 5000
+            }
+          },
+          "response": {
+            "response": {}
+          },
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2544,
+        1472
+      ],
+      "id": "5f901b42-3feb-4638-9e80-4be063589a9f",
+      "name": "Create Contact for Pranay",
+      "retryOnFail": true,
+      "credentials": {
+        "oAuth2Api": {
+          "id": "kLkpyrqVf8bU8wEr",
+          "name": "Zoho CRM API"
+        }
+      },
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -664,6 +1172,163 @@
           }
         ]
       ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)2": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Manu Contacts1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "Get Manu Contacts1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Pranay contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Pranay contacts": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "Create Contact for Manu",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Contact for Pranay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Contact for Manu": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Contact for Pranay": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -675,7 +1340,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "af81fe2f-86a7-44b3-aa5b-d5ebc6975abc",
+  "versionId": "0ac7364c-8831-422d-976e-6ca5e6fd1525",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
